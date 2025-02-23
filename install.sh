@@ -46,7 +46,7 @@ done
 # update home folders
 xdg-user-dirs-update 2>&1 
 
-installing yay
+#installing yay
 echo "installing yay"
 git clone $yay_repo "$TEMP_DIR/yay"
 
@@ -90,7 +90,7 @@ done
 if [ -d "$HOME_DIR/.local/bin" ]; then
     chmod +x "$HOME_DIR/.local/bin/*"
 else
-    pecho "Directory $HOME_DIR/.local/bin does not exist"
+    echo "Directory $HOME_DIR/.local/bin does not exist"
 fi
 
 echo "Changing your shell to zsh"
@@ -123,10 +123,13 @@ fc-cache -rv >/dev/null 2>&1
 
 # enable service
 echo "Enabling service"
-sudo systemctl enable sddm
-sudo systemctl enable bluetooth
-sudo systemctl enable NetworkManager
-sudo systemctl enable udisks2
+for service in sddm bluetooth NetworkManager udisks2; do
+    if systemctl list-unit-files | grep -q "^$service"; then
+        sudo systemctl enable "$service"
+    else
+        echo "Warning: Service $service not found!"
+    fi
+done
 
 # download wallpaper
 echo "Downloading wallpapers"
@@ -135,7 +138,11 @@ choice=${choice:-y}
 choice=$(echo "$choice") | tr '[:upper:]' '[:lower:]'
 
 if [[ "$choice" == "y" ]]; then
-    git clone $wal_repo "$HOME/Pictures/wallpapers"
+    if [[ ! -d "$HOME/Pictures/wallpapers" ]]; then
+        git clone $wal_repo "$HOME/Pictures/wallpapers"
+    else
+        echo "Wallpapers directory already exists."
+    fi
 fi
 
 ########## --------- exit ---------- ##########
@@ -143,7 +150,7 @@ echo "Installation complete"
 
 read -p "${CAT} Reboot Now? [Y/n]: " choice
 choice=${choice:-n}
-choice=$(echo "$choice)" | tr '[:upper:]' '[:lower:]'
+choice=$(echo "$choice)" | tr '[:upper:]' '[:lower:]')
 
 if [[ "$choice" == "n" ]]; then
     exit 0
