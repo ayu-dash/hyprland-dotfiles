@@ -39,26 +39,26 @@ depedencies=(waybar swaync git rofi-wayland rofi-calc rofi-emoji xdg-user-dirs t
 
 yay_depedencies=(wlogout hyprshot noto-fonts ttf-ms-win11-auto noto-fonts-emoji ttf-material-design-icons-webfont ttf-font-awesome nerd-fonts catppuccin-gtk-theme-mocha bibata-cursor-theme onlyoffice-bin sddm-theme-tokyo-night-git)
 
-# for depedency in "${depedencies[@]}"; do
-#     sudo pacman -S --noconfirm $depedency
-# done
+for depedency in "${depedencies[@]}"; do
+    sudo pacman -S --noconfirm $depedency
+done
 
-# # update home folders
-# xdg-user-dirs-update 2>&1 
+# update home folders
+xdg-user-dirs-update 2>&1 
 
-# installing yay
-# echo "installing yay"
-# git clone $yay_repo "$TEMP_DIR/yay"
+installing yay
+echo "installing yay"
+git clone $yay_repo "$TEMP_DIR/yay"
 
-# cd "$TEMP_DIR/yay"
-# makepkg -si
-# cd "-"
+cd "$TEMP_DIR/yay"
+makepkg -si
+cd "-"
 
-# for depedency in "${yay_depedencies[@]}"; do
-#     yay -S --noconfirm $depedency
-# done
+for depedency in "${yay_depedencies[@]}"; do
+    yay -S --noconfirm $depedency
+done
 
-# echo "Installing dotfiles"
+echo "Installing dotfiles"
 
 [ ! -d $CONFIG_DIR ] && mkdir -p "$CONFIG_DIR"
 [ ! -d $BIN_DIR ] && mkdir -p "$BIN_DIR"
@@ -133,4 +133,17 @@ choice=$(echo "$choice") | tr '[:upper:]' '[:lower:]'
 
 if [[ "$choice" == "y" ]]; then
     git clone $wal_repo "$HOME/Pictures/wallpapers"
+fi
+
+########## --------- exit ---------- ##########
+print_color $WARN " Installation complete"
+
+read -p "${CAT} Reboot Now? [Y/n]: " choice
+choice=${choice:-n}
+choice=$(echo "$choice)" | tr '[:upper:]' '[:lower:]'
+
+if [[ "$choice" == "n" ]]; then
+    exit 0
+else
+    systemctl reboot
 fi
