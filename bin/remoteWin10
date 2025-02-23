@@ -1,0 +1,68 @@
+#!/bin/bash
+
+USERNAME="wtfWin10"
+PASSWORD="win10"
+DOMAIN="win10"
+SERVER="192.168.122.41"
+
+PARAMS="-grab-keyboard /size:100% /dynamic-resolution /sound"
+
+get_state() {
+    sudo virsh domstate "$DOMAIN"
+}
+
+start_rdp() {
+    echo "Starting RDP to $SERVER..."
+    xfreerdp3 /v:$SERVER /u:$USERNAME /p:$PASSWORD $PARAMS > /dev/null 2>&1 &
+
+    if [[ $? -eq 0 ]]; then
+        echo "RDP started successfully."
+    else
+        echo "Failed to start RDP."
+        return 1
+    fi
+}
+
+is_server_ready() {
+    for _ in {1..10}; do
+        response=$(ping -c 1 "$SERVER")
+
+        if echo "$response" | grep -iq "Destination Host Unreachable"; then
+            continue
+        else
+            echo "Server is ready"
+            return 0
+        fi
+    done
+
+    echo "Server is not reachable after several attempts."
+    return 1
+}
+
+stop() {
+    echo "Disconnecting RDP session..."
+    sudo virsh shutdown "$DOMAIN"
+    pkill xfreerdp3
+}
+
+start() {
+    local state=$(get_state)  
+
+    if [ "$state" == "shut off" ]; then
+        echo "VM State: $state"
+        echo "Starting VM"
+        sudo virsh start "$DOMAIN"
+    else
+        echo "VM State: $state"
+        echo "VM is running"
+    fi
+
+    if is_server_ready; then
+        start_rdp
+    fi
+}
+
+case "$1" in
+    start) start;;
+    stop) stop;;
+esac

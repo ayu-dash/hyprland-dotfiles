@@ -1,0 +1,69 @@
+configuration {
+	hover-select:				true;
+	me-select-entry:			"";
+	me-accept-entry:			"MousePrimary";
+}
+
+@import "shared.rasi"
+@import "~/.config/hypr/Colors/catppucin-mocha-rofi.css"
+
+window {
+    transparency:                "real";
+    location:                    north;
+    anchor:                      center;
+    fullscreen:                  false;
+    width:                       180px;
+    x-offset:                    0px;
+    y-offset:                    10px;
+    margin:                      0px;
+    padding:                     1px;
+    border-radius:               8px;
+    cursor:                      "default";
+    background-image:            @border-color;
+}
+
+mainbox {
+    enabled:                     true;
+    spacing:                     10px;
+    border-radius:               8px;
+    margin:                      0px;
+    padding:                     10px;
+    background-color:            @crust;
+    children:                    [ "listview" ];
+}
+
+listview {
+    enabled:                     true;
+    columns:                     3;
+    lines:                       1;
+    cycle:                       true;
+    scrollbar:                   false;
+    layout:                      vertical;
+    spacing:                     10px;
+    background-color:            transparent;
+    cursor:                      "default";
+}
+
+element {
+    enabled:                     true;
+    padding:                     10px;
+    border:                      0px solid;
+    border-radius:               8px;
+    background-color:            @base;
+    text-color:                  @text;
+    cursor:                      pointer;
+}
+
+element-text {
+    font:                        "JetbrainsMono NF Bold 14";
+    background-color:            transparent;
+    text-color:                  inherit;
+    cursor:                      inherit;
+    vertical-align:              0.5;
+    horizontal-align:            0.5;
+}
+
+element selected.normal {
+    background-color:            @blue;
+    text-color:                  @crust;
+}
