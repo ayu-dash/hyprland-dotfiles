@@ -4,5 +4,6 @@
     "editor.fontLigatures": true,
     "window.menuBarVisibility": "toggle",
     "explorer.confirmDelete": false,
-    "php.validate.executablePath": "/opt/lampp/bin/php"
+    "php.validate.executablePath": "/opt/lampp/bin/php",
+    "terminal.integrated.sendKeybindingsToShell": true
 }

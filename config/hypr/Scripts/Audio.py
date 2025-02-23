@@ -26,25 +26,19 @@ def isMicMuted():
 
 def getVolumeIcon(value, isMuted):
     if value == 0 or isMuted:
-        # return path.join(icon_dir, 'volume-mute.png')
-        return 'audio-volume-muted'
+        return path.join(icon_dir, 'volume-mute.png')
     elif value <= 30:
-        # return path.join(icon_dir, 'volume-low.png')
-        return 'audio-volume-low'
+        return path.join(icon_dir, 'volume-low.png')
     elif value <= 60:
-        # return path.join(icon_dir, 'volume-mid.png')
-        return 'audio-volume-medium'
+        return path.join(icon_dir, 'volume-mid.png')
     else:
-        # return path.join(icon_dir, 'volume-high.png')
-        return 'audio-volume-high'
+        return path.join(icon_dir, 'volume-high.png')
 
 def getMicIcon(isMuted):
     if isMuted:
-        # return path.join(icon_dir, 'microphone-mute.png')
-        return 'microphone-sensitivity-muted'
+        return path.join(icon_dir, 'microphone-mute.png')
     else:
-        # return path.join(icon_dir, 'microphone.png')
-        return 'microphone-sensitivity-high'
+        return path.join(icon_dir, 'microphone.png')
 
 def audioUnmute():
     subprocess.run(['wpctl', 'set-mute', '@DEFAULT_AUDIO_SINK@', '0'])

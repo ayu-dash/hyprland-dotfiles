@@ -36,7 +36,7 @@ if [[ "$choice" == "n" ]]; then
     exit 0
 fi
 
-depedencies=(waybar swaync git rofi-wayland rofi-calc rofi-emoji xdg-user-dirs thunar gvfs tumbler thunar-archive-plugin kitty swww hyprlock hypridle cliphist bluez bluez-utils blueman nm-connection-editor network-manager-applet gtk3 vlc viewnior qt5-wayland qt6-wayland udiskie udisks2 nwg-look firefox btop base-devel imagemagick zsh fastfetch networkmanager unrar unzip dconf-editor xarchiver python sddm iwd gedit)
+depedencies=(waybar swaync git rofi-wayland rofi-calc rofi-emoji xdg-user-dirs thunar gvfs tumbler thunar-archive-plugin kitty swww hyprlock hypridle cliphist bluez bluez-utils blueman nm-connection-editor network-manager-applet gtk3 vlc viewnior qt5-wayland qt6-wayland udiskie udisks2 nwg-look firefox btop base-devel imagemagick zsh fastfetch brightnessctl networkmanager unrar unzip dconf-editor xarchiver python sddm iwd gedit)
 
 yay_depedencies=(wlogout hyprshot noto-fonts ttf-ms-win11-auto noto-fonts-emoji ttf-material-design-icons-webfont ttf-font-awesome nerd-fonts onlyoffice-bin sddm-theme-tokyo-night-git visual-studio-code-bin)
 
@@ -103,19 +103,7 @@ fi
 #install theme and icon
 tar xvf assets/Sweet-cursors.tar.xz -C $ICONS_DIR
 tar xvf assets/candy-icons.tar.xz -C $ICONS_DIR
-tar xvf assets/Catppuccin-Mocha-Standard-Lavender-Dark.zip -C $THEMES_DIR
-
-# echo "Changing your shell to zsh"
-
-# if [[ $SHELL != "/usr/bin/zsh" ]]; then
-#     if chsh -s /usr/bin/zsh; then
-#         echo "Shell changed to zsh successfully"
-#     else
-#         echo "Error changing your shell to zsh."
-#     fi
-# else
-#     echo "Your shell is already zsh"
-# fi
+tar xvf assets/Catppuccin-Mocha-Standard-Lavender-Dark.tar.xz -C $THEMES_DIR
 
 # install oh-my-zsh
 echo "Installing oh my zsh"
