@@ -8,6 +8,8 @@ oh_my_zsh_repo="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/i
 HOME_DIR="$HOME"
 DOTFILES_DIR="$HOME_DIR/hyprland-dotfiles"
 CONFIG_DIR="$HOME_DIR/.config"
+THEMES_DIR="$HOME_DIR/.themes"
+ICONS_DIR="$HOME_DIR/.icons"
 BIN_DIR="$HOME_DIR/.local/bin"
 TEMP_DIR="/tmp/installation"
 
@@ -36,7 +38,7 @@ fi
 
 depedencies=(waybar swaync git rofi-wayland rofi-calc rofi-emoji xdg-user-dirs thunar gvfs tumbler thunar-archive-plugin kitty swww hyprlock hypridle cliphist bluez bluez-utils blueman nm-connection-editor network-manager-applet gtk3 vlc viewnior qt5-wayland qt6-wayland udiskie udisks2 nwg-look firefox btop base-devel imagemagick zsh fastfetch networkmanager unrar unzip dconf-editor xarchiver python sddm iwd gedit)
 
-yay_depedencies=(wlogout hyprshot noto-fonts ttf-ms-win11-auto noto-fonts-emoji ttf-material-design-icons-webfont ttf-font-awesome nerd-fonts catppuccin-gtk-theme-mocha bibata-cursor-theme onlyoffice-bin sddm-theme-tokyo-night-git visual-studio-code-bin xampp)
+yay_depedencies=(wlogout hyprshot noto-fonts ttf-ms-win11-auto noto-fonts-emoji ttf-material-design-icons-webfont ttf-font-awesome nerd-fonts onlyoffice-bin sddm-theme-tokyo-night-git visual-studio-code-bin xampp)
 
 for depedency in "${depedencies[@]}"; do
     sudo pacman -S --noconfirm $depedency
@@ -63,12 +65,14 @@ done
 
 # install vscode extention
 echo "installing vscode extensions"
-cat $DOTFILES_DIR/misc/CodeExtensions.txt | xargs -n 1 code --install-extension
+cat $DOTFILES_DIR/etc/CodeExtensions.txt | xargs -n 1 code --install-extension
 
 echo "Installing dotfiles"
 
 [ ! -d $CONFIG_DIR ] && mkdir -p "$CONFIG_DIR"
 [ ! -d $BIN_DIR ] && mkdir -p "$BIN_DIR"
+[ ! -d $THEMES_DIR ] && mkdir -p "$THEMES_DIR"
+[ ! -d $ICONS_DIR ] && mkdir -p "$ICONS_DIR"
 
 for dir in $DOTFILES_DIR/config/*; do
     dir_name=$(basename "$dir")
@@ -82,17 +86,13 @@ for dir in $DOTFILES_DIR/config/*; do
     fi
 done
 
-for dir in $DOTFILES_DIR/bin; do
-    dir_name=$(basename "$dir")
-
-    if cp -R "${dir}" "$BIN_DIR" ; then
-        echo " Configuration installed succesfully $dir_name"
-        sleep 1
-    else
-        echo "configuration failed to been installed."
-        sleep 1
-    fi
-done
+if cp -R "$DOTFILES_DIR/bin/"* "$BIN_DIR/"; then
+    echo "Configuration installed successfully in $BIN_DIR"
+    sleep 1
+else
+    echo "Configuration failed to install."
+    sleep 1
+fi
 
 if [ -d "$HOME_DIR/.local/bin" ]; then
     chmod +x "$HOME_DIR/.local/bin/*"
@@ -100,17 +100,22 @@ else
     echo "Directory $HOME_DIR/.local/bin does not exist"
 fi
 
-echo "Changing your shell to zsh"
+#install theme and icon
+tar xvf assets/Sweet-cursors.tar.xz -C $ICONS_DIR
+tar xvf assets/candy-icons.tar.xz -C $ICONS_DIR
+tar xvf assets/Catppuccin-Mocha-Standard-Lavender-Dark.zip -C $THEMES_DIR
 
-if [[ $SHELL != "/usr/bin/zsh" ]]; then
-    if chsh -s /usr/bin/zsh; then
-        echo "Shell changed to zsh successfully"
-    else
-        echo "Error changing your shell to zsh."
-    fi
-else
-    echo "Your shell is already zsh"
-fi
+# echo "Changing your shell to zsh"
+
+# if [[ $SHELL != "/usr/bin/zsh" ]]; then
+#     if chsh -s /usr/bin/zsh; then
+#         echo "Shell changed to zsh successfully"
+#     else
+#         echo "Error changing your shell to zsh."
+#     fi
+# else
+#     echo "Your shell is already zsh"
+# fi
 
 # install oh-my-zsh
 echo "Installing oh my zsh"
@@ -123,8 +128,8 @@ git clone https://github.com/zsh-users/zsh-history-substring-search.git ~/.oh-my
 
 cp -f "$DOTFILES_DIR/.gtkrc-2.0" "$HOME_DIR"
 cp -f "$DOTFILES_DIR/.zshrc" "$HOME"
-sudo cp -f "$DOTFILES_DIR/misc/NetworkManager.conf" "/etc/NetworkManager/NetworkManager.conf"
-sudo cp -f "$DOTFILES_DIR/misc/sddm.conf" "/etc/sddm.conf"
+sudo cp -f "$DOTFILES_DIR/etc/NetworkManager.conf" "/etc/NetworkManager/NetworkManager.conf"
+sudo cp -f "$DOTFILES_DIR/etc/sddm.conf" "/etc/sddm.conf"
 
 fc-cache -rv >/dev/null 2>&1
 
