@@ -1,0 +1,10 @@
+bmewburn.vscode-intelephense-client
+catppuccin.catppuccin-vsc
+ms-python.debugpy
+ms-python.python
+ms-python.vscode-pylance
+ms-vscode.cpptools
+oderwat.indent-rainbow
+pkief.material-icon-theme
+rangav.vscode-thunder-client
+ritwickdey.liveserver

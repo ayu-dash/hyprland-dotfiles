@@ -1,0 +1,8 @@
+{
+    "workbench.colorTheme": "Catppuccin Mocha",
+    "editor.fontFamily": "'JetBrainsMono Nerd Font', 'Fira Code', 'Droid Sans Mono', 'monospace', monospace",
+    "editor.fontLigatures": true,
+    "window.menuBarVisibility": "toggle",
+    "explorer.confirmDelete": false,
+    "php.validate.executablePath": "/opt/lampp/bin/php"
+}
