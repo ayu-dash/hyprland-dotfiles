@@ -5,7 +5,7 @@ yay_repo="https://aur.archlinux.org/yay-git.git"
 wal_repo="https://github.com/ayu-dash/wallpapers.git"
 oh_my_zsh_repo="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
 
-HOME_DIR="$HOME/Documents/projects"
+HOME_DIR="$HOME"
 DOTFILES_DIR="$HOME_DIR/hyprland-dotfiles"
 CONFIG_DIR="$HOME_DIR/.config"
 BIN_DIR="$HOME_DIR/.local/bin"
@@ -116,6 +116,9 @@ git clone https://github.com/zsh-users/zsh-history-substring-search.git ~/.oh-my
 
 cp -f "$DOTFILES_DIR/.gtkrc-2.0" "$HOME_DIR"
 cp -f "$DOTFILES_DIR/.zshrc" "$HOME"
+sudo cp -f "$DOTFILES_DIR/misc/NetworkManager.conf" "/etc/NetworkManager/NetworkManager.conf"
+sudo cp -f "$DOTFILES_DIR/misc/sddm.conf" "/etc/sddm.conf"
+
 fc-cache -rv >/dev/null 2>&1
 
 # enable service
@@ -136,7 +139,7 @@ if [[ "$choice" == "y" ]]; then
 fi
 
 ########## --------- exit ---------- ##########
-print_color $WARN " Installation complete"
+echo "Installation complete"
 
 read -p "${CAT} Reboot Now? [Y/n]: " choice
 choice=${choice:-n}
