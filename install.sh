@@ -35,7 +35,7 @@ if [[ "$choice" == "n" ]]; then
 fi
 
 
-depedencies=(waybar swaync git rofi-wayland rofi-calc rofi-emoji xdg-user-dirs thunar gvfs tumbler kitty swww hyprlock hypridle cliphist bluez bluez-utils blueman nm-connection-editor network-manager-applet gtk3 vlc viewnior qt5-wayland qt6-wayland udiskie udisks2 nwg-look firefox btop base-devel imagemagick zsh fastfetch networkmanager unrar unzip dconf-editor xarchiver python sddm iwd)
+depedencies=(waybar swaync git rofi-wayland rofi-calc rofi-emoji xdg-user-dirs thunar gvfs tumbler thunar-archive-plugin kitty swww hyprlock hypridle cliphist bluez bluez-utils blueman nm-connection-editor network-manager-applet gtk3 vlc viewnior qt5-wayland qt6-wayland udiskie udisks2 nwg-look firefox btop base-devel imagemagick zsh fastfetch networkmanager unrar unzip dconf-editor xarchiver python sddm iwd)
 
 yay_depedencies=(wlogout hyprshot noto-fonts ttf-ms-win11-auto noto-fonts-emoji ttf-material-design-icons-webfont ttf-font-awesome nerd-fonts catppuccin-gtk-theme-mocha bibata-cursor-theme onlyoffice-bin sddm-theme-tokyo-night-git)
 
