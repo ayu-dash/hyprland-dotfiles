@@ -148,7 +148,7 @@ fi
 ########## --------- exit ---------- ##########
 echo "Installation complete"
 
-read -p "${CAT} Reboot Now? [Y/n]: " choice
+read -p "Reboot Now? [Y/n]: " choice
 choice=${choice:-n}
 choice=$(echo "$choice)" | tr '[:upper:]' '[:lower:]')
 
