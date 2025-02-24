@@ -133,7 +133,7 @@ done
 
 # download wallpaper
 echo "Downloading wallpapers"
-read -p "${CAT} Dowload wallpapers? [Y/n]: " choice
+read -p "Dowload wallpapers? [Y/n]: " choice
 choice=${choice:-y}
 choice=$(echo "$choice") | tr '[:upper:]' '[:lower:]'
 
