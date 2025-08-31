@@ -2,7 +2,7 @@ import subprocess
 import os.path as path
 from .Shared import ROFI_THEMES
 
-THEME = path.join(ROFI_THEMES, 'RofiClipboard')
+THEME = path.join(ROFI_THEMES, 'RofiClipboardV2')
 
 def exec():
     process = subprocess.Popen(

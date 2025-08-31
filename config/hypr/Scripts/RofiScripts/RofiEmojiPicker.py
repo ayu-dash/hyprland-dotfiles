@@ -2,7 +2,7 @@ import subprocess
 import os.path as path
 from .Shared import ROFI_THEMES
 
-THEME = path.join(ROFI_THEMES, 'RofiEmojiPicker')
+THEME = path.join(ROFI_THEMES, 'RofiEmojiPickerV2')
 
 def exec():
     subprocess.run([
