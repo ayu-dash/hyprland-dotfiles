@@ -1,6 +1,7 @@
 import subprocess
 import json
 import argparse
+from Utils import notify
 from Utils import getPid
 
 PROCESS = 'hypridle'
@@ -16,8 +17,10 @@ def status():
 def toggle():
     if getPid(PROCESS):
         subprocess.run(['killall', PROCESS])
+        notify('system-lock-screen', 'Kahfein enabled!')
     else:
         subprocess.Popen([PROCESS])
+        notify('system-lock-screen', 'Kahfein disabled!')
 
 def main():
     parser = argparse.ArgumentParser()

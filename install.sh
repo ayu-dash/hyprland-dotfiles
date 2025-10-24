@@ -36,7 +36,7 @@ if [[ "$choice" == "n" ]]; then
     exit 0
 fi
 
-depedencies=(waybar swaync git rofi-wayland rofi-calc rofi-emoji xdg-desktop-portal-gtk xdg-desktop-portal-hyprland xdg-user-dirs thunar gvfs tumbler thunar-archive-plugin kitty swww hyprlock hypridle cliphist bluez bluez-utils blueman nm-connection-editor network-manager-applet gtk3 vlc viewnior qt5-wayland qt6-wayland udiskie udisks2 nwg-look firefox btop base-devel imagemagick zsh fastfetch brightnessctl networkmanager unrar unzip dconf-editor xarchiver python sddm iwd gedit)
+depedencies=(waybar swaync git rofi-wayland rofi-calc rofi-emoji xdg-desktop-portal-gtk xdg-desktop-portal-hyprland xdg-user-dirs thunar gvfs tumbler thunar-archive-plugin kitty swww hyprlock hypridle hyprpolkitagent cliphist bluez bluez-utils blueman nm-connection-editor network-manager-applet keepassxc gtk3 vlc viewnior qt5-wayland qt6-wayland udiskie udisks2 nwg-look nwg-displays firefox btop base-devel create_ap imagemagick zsh fastfetch brightnessctl networkmanager unrar unzip dconf-editor xarchiver python ly gedit)
 
 yay_depedencies=(wlogout hyprshot noto-fonts ttf-ms-win11-auto noto-fonts-emoji ttf-material-design-icons-webfont ttf-font-awesome nerd-fonts onlyoffice-bin sddm-theme-tokyo-night-git visual-studio-code-bin)
 
@@ -116,14 +116,14 @@ git clone https://github.com/zsh-users/zsh-history-substring-search.git ~/.oh-my
 
 cp -f "$DOTFILES_DIR/.gtkrc-2.0" "$HOME_DIR"
 cp -f "$DOTFILES_DIR/.zshrc" "$HOME"
-sudo cp -f "$DOTFILES_DIR/etc/NetworkManager.conf" "/etc/NetworkManager/NetworkManager.conf"
-sudo cp -f "$DOTFILES_DIR/etc/sddm.conf" "/etc/sddm.conf"
+# sudo cp -f "$DOTFILES_DIR/etc/NetworkManager.conf" "/etc/NetworkManager/NetworkManager.conf"
+# sudo cp -f "$DOTFILES_DIR/etc/sddm.conf" "/etc/sddm.conf"
 
 fc-cache -rv >/dev/null 2>&1
 
 # enable service
 echo "Enabling service"
-for service in sddm bluetooth NetworkManager udisks2; do
+for service in ly bluetooth NetworkManager udisks2; do
     if systemctl list-unit-files | grep -q "^$service"; then
         sudo systemctl enable "$service"
     else

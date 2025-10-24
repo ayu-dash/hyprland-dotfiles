@@ -2,8 +2,8 @@
 
 test -d /proc/sys/net/ipv4/conf/ap0 && {
 	pgrep -x create_ap &>/dev/null && {
-		list="$(sudo create_ap --list-clients ap0)"
-		list=$(echo "$list" | sed -z 's/\n/\\n/g')
+		list="$(pkexec create_ap --list-clients wlo1)"
+		list=$(pkexec "$list" | sed -z 's/\n/\\n/g')
 	}
 
 	cat <<EOF

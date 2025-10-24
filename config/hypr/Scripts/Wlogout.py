@@ -7,11 +7,13 @@ STYLE = path.expanduser('~/.config/wlogout/Style.css')
 PROCESS = 'wlogout'
 
 W_PARAMS = {
-    1920: 36
+    1920: 36,
+    1360: 32,
 }
 
 H_PARAMS = {
-    1080: 27
+    1080: 27,
+    768: 24,
 }
 
 def getMonitorRes():

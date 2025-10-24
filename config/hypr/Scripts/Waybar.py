@@ -3,8 +3,8 @@ import argparse
 import os.path as path
 from Utils import readFile, getPid
 
-CONFIG = readFile(path.expanduser('~/.config/waybar/config'))
-STYLE = readFile(path.expanduser('~/.config/waybar/style'))
+CONFIG = readFile(path.expanduser('~/.config/waybar/config')).strip()
+STYLE = readFile(path.expanduser('~/.config/waybar/style')).strip()
 PROCESS = 'waybar'
 
 def runWaybar():
@@ -41,6 +41,8 @@ def main():
             killWaybar()
         case 'reload':
             reloadWaybar()
+
+    print(CONFIG)
 
 if __name__ == '__main__':
     main()

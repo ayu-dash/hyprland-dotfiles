@@ -2,13 +2,13 @@
   "layer": "top",
   "position": "right",
   "margin": "10 2 10 0",
+  "output": "eDP-1",
   "reload_style_on_change": true,
     "include": [
     "$HOME/.config/waybar/Modules.jsonc",
     "$HOME/.config/waybar/CustomModules.jsonc"
   ],
   "modules-left": [
-    "custom/updates",
     "hyprland/workspaces",
     "group/info"
   ],
@@ -396,10 +396,10 @@
   },
   "custom/hotspot": {
     "format": "{} ",
-    "exec": "~/.config/waybar/bin/hotspot",
+    "exec": "python $HOME/.config/hypr/Scripts/Hostpot.py status",
     "return-type": "json",
-    "on-click": "hash wihotspot && wihotspot",
-    "interval": 5
+    "on-click": "python $HOME/.config/hypr/Scripts/Hostpot.py toggle",
+    "interval": "once"
   },
   "custom/mark": {
     "format": "",
