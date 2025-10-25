@@ -36,9 +36,9 @@ if [[ "$choice" == "n" ]]; then
     exit 0
 fi
 
-depedencies=(waybar swaync git rofi-wayland rofi-calc rofi-emoji xdg-desktop-portal-gtk xdg-desktop-portal-hyprland xdg-user-dirs thunar gvfs tumbler thunar-archive-plugin kitty swww hyprlock hypridle hyprpolkitagent cliphist bluez bluez-utils blueman nm-connection-editor network-manager-applet keepassxc gtk3 vlc viewnior qt5-wayland qt6-wayland udiskie udisks2 nwg-look nwg-displays firefox btop base-devel create_ap imagemagick zsh fastfetch brightnessctl networkmanager unrar unzip dconf-editor xarchiver python ly gedit)
+depedencies=(waybar swaync git rofi-wayland rofi-calc rofi-emoji xdg-desktop-portal-gtk xdg-desktop-portal-hyprland xdg-user-dirs nautilus kitty swww hyprlock hypridle hyprpolkitagent cliphist bluez bluez-utils blueman nm-connection-editor network-manager-applet gtk3 vlc viewnior qt5-wayland qt6-wayland udiskie udisks2 nwg-look nwg-displays firefox btop base-devel imagemagick fastfetch brightnessctl networkmanager unrar unzip dconf-editor xarchiver python ly micro swappy fish upower)
 
-yay_depedencies=(wlogout hyprshot noto-fonts ttf-ms-win11-auto noto-fonts-emoji ttf-material-design-icons-webfont ttf-font-awesome nerd-fonts onlyoffice-bin sddm-theme-tokyo-night-git visual-studio-code-bin)
+yay_depedencies=(wlogout hyprshot noto-fonts ttf-ms-win10-auto noto-fonts-emoji ttf-material-design-icons-webfont ttf-font-awesome nerd-fonts onlyoffice-bin visual-studio-code-bin catppuccin-gtk-theme-mocha hyprpicker hyprshade create_ap)
 
 for depedency in "${depedencies[@]}"; do
     sudo pacman -S --noconfirm $depedency
@@ -103,19 +103,22 @@ fi
 #install theme and icon
 tar xvf assets/Sweet-cursors.tar.xz -C $ICONS_DIR
 tar xvf assets/candy-icons.tar.xz -C $ICONS_DIR
-tar xvf assets/Catppuccin-Mocha-Standard-Lavender-Dark.tar.xz -C $THEMES_DIR
+# tar xvf assets/Catppuccin-Mocha-Standard-Lavender-Dark.tar.xz -C $THEMES_DIR
+
+# activate fish shell
+chsh -s /usr/bin/fish
 
 # install oh-my-zsh
-echo "Installing oh my zsh"
-RUNZSH=no sh -c "$(curl -fsSL $oh_my_zsh_repo)"
+# echo "Installing oh my zsh"
+# RUNZSH=no sh -c "$(curl -fsSL $oh_my_zsh_repo)"
 
-git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
-git clone https://github.com/zsh-users/zsh-completions.git ~/.oh-my-zsh/custom/plugins/zsh-completions
-git clone https://github.com/zsh-users/zsh-history-substring-search.git ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search
+# git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+# git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+# git clone https://github.com/zsh-users/zsh-completions.git ~/.oh-my-zsh/custom/plugins/zsh-completions
+# git clone https://github.com/zsh-users/zsh-history-substring-search.git ~/.oh-my-zsh/custom/plugins/zsh-history-substring-search
 
 cp -f "$DOTFILES_DIR/.gtkrc-2.0" "$HOME_DIR"
-cp -f "$DOTFILES_DIR/.zshrc" "$HOME"
+# cp -f "$DOTFILES_DIR/.zshrc" "$HOME"
 # sudo cp -f "$DOTFILES_DIR/etc/NetworkManager.conf" "/etc/NetworkManager/NetworkManager.conf"
 # sudo cp -f "$DOTFILES_DIR/etc/sddm.conf" "/etc/sddm.conf"
 
