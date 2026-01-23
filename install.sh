@@ -119,13 +119,13 @@ draw_progress_bar() {
     local filled=$((current * width / total))
     local empty=$((width - filled))
     
-    # Build the bar string
+    # Build the bar string using standard ASCII
     local bar=""
     if [ $filled -gt 0 ]; then
-        bar=$(printf "%0.s█" $(seq 1 $filled))
+        bar=$(printf "%0.s#" $(seq 1 $filled))
     fi
     if [ $empty -gt 0 ]; then
-        bar="${bar}$(printf "%0.s░" $(seq 1 $empty))"
+        bar="${bar}$(printf "%0.s." $(seq 1 $empty))"
     fi
     
     echo -ne "\r  ${WHITE}[${bar}]${NC} ${percentage}% "
@@ -137,6 +137,13 @@ install_packages_from_file() {
     local total=$(count_packages "$file")
     local current=0
     
+    # Refresh sudo credential cache to prevent prompt interfering with UI
+    if [[ "$installer" == *"sudo"* ]]; then
+        sudo -v
+        # Keep-alive: update existing sudo time stamp if set, otherwise do nothing.
+        while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+    fi
+    
     # Hide cursor
     tput civis
     
@@ -144,16 +151,17 @@ install_packages_from_file() {
         [[ -z "$package" || "$package" =~ ^# ]] && continue
         ((current++))
         
+        # Clear line
+        echo -ne "\r\033[K"
         draw_progress_bar $current $total
         echo -ne "Installing ${CYAN}$package${NC}..."
         
         $installer -S --noconfirm "$package" > /dev/null 2>&1
         
-        # Clear line description part only (keep bar)
-        echo -ne "\033[K"
     done < "$file"
     
     # Show full bar at end
+    echo -ne "\r\033[K"
     draw_progress_bar $total $total
     echo -ne " ${GREEN}Done!${NC}\n"
     
