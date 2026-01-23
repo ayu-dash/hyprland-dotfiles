@@ -151,21 +151,22 @@ install_packages_from_file() {
         [[ -z "$package" || "$package" =~ ^# ]] && continue
         ((current++))
         
-        # Clear line
+        # Show progress header
         echo -ne "\r\033[K"
         draw_progress_bar $current $total
-        echo -ne "Installing ${CYAN}$package${NC}..."
+        echo -e "Installing ${CYAN}$package${NC}..."
         
-        $installer -S --noconfirm "$package" > /dev/null 2>&1
+        # Show cursor for installer output
+        tput cnorm
         
+        # Run installer WITHOUT hiding output
+        $installer -S --noconfirm "$package"
+        
+        # Hide cursor again for next bar update
+        tput civis
     done < "$file"
     
     # Show full bar at end
-    echo -ne "\r\033[K"
-    draw_progress_bar $total $total
-    echo -ne " ${GREEN}Done!${NC}\n"
-    
-    # Restore cursor
     tput cnorm
 }
 
