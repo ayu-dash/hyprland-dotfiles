@@ -30,7 +30,6 @@ qt6-wayland
 udiskie
 udisks2
 nwg-look
-nwg-displays
 firefox
 btop
 base-devel

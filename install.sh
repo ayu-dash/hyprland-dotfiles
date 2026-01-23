@@ -111,23 +111,54 @@ count_packages() {
     grep -v '^#' "$file" | grep -v '^$' | wc -l
 }
 
+draw_progress_bar() {
+    local current=$1
+    local total=$2
+    local width=30
+    local percentage=$((current * 100 / total))
+    local filled=$((current * width / total))
+    local empty=$((width - filled))
+    
+    # Build the bar string
+    local bar=""
+    if [ $filled -gt 0 ]; then
+        bar=$(printf "%0.s█" $(seq 1 $filled))
+    fi
+    if [ $empty -gt 0 ]; then
+        bar="${bar}$(printf "%0.s░" $(seq 1 $empty))"
+    fi
+    
+    echo -ne "\r  ${WHITE}[${bar}]${NC} ${percentage}% "
+}
+
 install_packages_from_file() {
     local file="$1"
     local installer="$2"
     local total=$(count_packages "$file")
     local current=0
     
+    # Hide cursor
+    tput civis
+    
     while IFS= read -r package || [[ -n "$package" ]]; do
         [[ -z "$package" || "$package" =~ ^# ]] && continue
         ((current++))
-        echo -ne "\r  ${CYAN}[$current/$total]${NC} Installing ${WHITE}$package${NC}...          "
+        
+        draw_progress_bar $current $total
+        echo -ne "Installing ${CYAN}$package${NC}..."
+        
         $installer -S --noconfirm "$package" > /dev/null 2>&1
-        if [[ $? -eq 0 ]]; then
-            echo -ne "\r  ${GREEN}[$current/$total]${NC} ${GREEN}✓${NC} $package                    \n"
-        else
-            echo -ne "\r  ${RED}[$current/$total]${NC} ${RED}✗${NC} $package                    \n"
-        fi
+        
+        # Clear line description part only (keep bar)
+        echo -ne "\033[K"
     done < "$file"
+    
+    # Show full bar at end
+    draw_progress_bar $total $total
+    echo -ne " ${GREEN}Done!${NC}\n"
+    
+    # Restore cursor
+    tput cnorm
 }
 
 # ── Installation Modules ────────────────────────────────────────────────────
