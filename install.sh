@@ -49,10 +49,10 @@ print_logo() {
                                                                         
 EOF
     echo -e "${NC}"
-    echo -e "${WHITE}                    ╭─────────────────────────────╮${NC}"
-    echo -e "${WHITE}                    │   ${MAGENTA}D O T F I L E S  v2.0${WHITE}   │${NC}"
-    echo -e "${WHITE}                    │      ${GRAY}by ${CYAN}ayudash${WHITE}            │${NC}"
-    echo -e "${WHITE}                    ╰─────────────────────────────╯${NC}"
+    echo -e "${WHITE}                    ╭───────────────────────────────╮${NC}"
+    echo -e "${WHITE}                    │    ${MAGENTA}D O T F I L E S  v2.0${WHITE}     │${NC}"
+    echo -e "${WHITE}                    │         ${GRAY}by ${CYAN}ayudash${WHITE}           │${NC}"
+    echo -e "${WHITE}                    ╰───────────────────────────────╯${NC}"
     echo ""
 }
 
@@ -130,205 +130,192 @@ install_packages_from_file() {
     done < "$file"
 }
 
-# ── Pre-flight Checks ───────────────────────────────────────────────────────
+# ── Installation Modules ────────────────────────────────────────────────────
 
-clear
-
-if [[ $EUID -eq 0 ]]; then
-    echo -e "${RED}Error: Do not run as root!${NC}"
-    exit 1
-fi
-
-# ── Update Repository ───────────────────────────────────────────────────────
-
-if [ -d "$DOTFILES_DIR/.git" ]; then
-    echo -e "  ${CYAN}▶${NC}  Checking for updates..."
-    cd "$DOTFILES_DIR"
-    
-    # Fetch latest
-    git fetch origin > /dev/null 2>&1
-    
-    LOCAL=$(git rev-parse HEAD)
-    REMOTE=$(git rev-parse @{u} 2>/dev/null)
-    
-    if [ "$LOCAL" != "$REMOTE" ]; then
-        echo -e "  ${YELLOW}⚠${NC}  New version available!"
-        echo -ne "  ${YELLOW}?${NC}  Update to latest version? [Y/n] "
-        read update_choice
-        update_choice=${update_choice:-y}
+update_repo() {
+    if [ -d "$DOTFILES_DIR/.git" ]; then
+        echo -e "  ${CYAN}▶${NC}  Checking for updates..."
+        cd "$DOTFILES_DIR"
         
-        if [[ "${update_choice,,}" == "y" ]]; then
-            git pull origin main > /dev/null 2>&1 || git pull origin master > /dev/null 2>&1
-            echo -e "  ${GREEN}✓${NC}  Updated to latest version"
-            echo -e "  ${GRAY}ℹ${NC}  Restarting installer..."
-            sleep 1
-            exec "$0" "$@"
+        git fetch origin > /dev/null 2>&1
+        
+        LOCAL=$(git rev-parse HEAD)
+        REMOTE=$(git rev-parse @{u} 2>/dev/null)
+        
+        if [ "$LOCAL" != "$REMOTE" ]; then
+            echo -e "  ${YELLOW}⚠${NC}  New version available!"
+            echo -ne "  ${YELLOW}?${NC}  Update to latest version? [Y/n] "
+            read update_choice
+            update_choice=${update_choice:-y}
+            
+            if [[ "${update_choice,,}" == "y" ]]; then
+                git pull origin main > /dev/null 2>&1 || git pull origin master > /dev/null 2>&1
+                echo -e "  ${GREEN}✓${NC}  Updated to latest version"
+                echo -e "  ${GRAY}ℹ${NC}  Restarting installer..."
+                sleep 1
+                exec "$0" "$@"
+            fi
+        else
+            echo -e "  ${GREEN}✓${NC}  Already on latest version"
         fi
-    else
-        echo -e "  ${GREEN}✓${NC}  Already on latest version"
+        
+        cd - > /dev/null
     fi
-    
-    cd - > /dev/null
-fi
+}
 
-# ── Welcome ─────────────────────────────────────────────────────────────────
+install_packages_task() {
+    print_header "📦 Installing Packages"
 
-print_logo
-
-echo -e "  ${DIM}This installer will set up your Hyprland environment.${NC}"
-echo -e "  ${DIM}It will install packages, copy configs, and configure your shell.${NC}"
-echo ""
-echo -e "  ${YELLOW}⚠${NC}  ${WHITE}Warning:${NC} This will replace existing configurations!"
-echo ""
-
-choice=$(confirm_prompt "Continue with installation? [y/N]" "n")
-
-if [[ "$choice" != "y" ]]; then
+    print_step "Installing official packages..."
+    install_packages_from_file "$PACMAN_PACKAGES" "sudo pacman"
     echo ""
-    echo -e "  ${DIM}Installation cancelled.${NC}"
+
+    print_step "Setting up Yay (AUR helper)..."
+    if ! command -v yay &> /dev/null; then
+        mkdir -p "$TEMP_DIR"
+        git clone "$YAY_REPO" "$TEMP_DIR/yay" > /dev/null 2>&1 &
+        spinner $! "Cloning yay repository..."
+        print_success "Yay cloned"
+        cd "$TEMP_DIR/yay" && makepkg -si --noconfirm > /dev/null 2>&1
+        print_success "Yay installed"
+        cd - > /dev/null
+    else
+        print_info "Yay already installed, skipping"
+    fi
     echo ""
-    exit 0
-fi
 
-echo ""
+    print_step "Installing AUR packages..."
+    install_packages_from_file "$YAY_PACKAGES" "yay"
+    echo ""
 
-# ── Package Installation ────────────────────────────────────────────────────
-
-print_header "📦 Installing Packages"
-
-print_step "Installing official packages..."
-install_packages_from_file "$PACMAN_PACKAGES" "sudo pacman"
-echo ""
-
-print_step "Setting up Yay (AUR helper)..."
-if ! command -v yay &> /dev/null; then
-    mkdir -p "$TEMP_DIR"
-    git clone "$YAY_REPO" "$TEMP_DIR/yay" > /dev/null 2>&1 &
-    spinner $! "Cloning yay repository..."
-    print_success "Yay cloned"
-    cd "$TEMP_DIR/yay" && makepkg -si --noconfirm > /dev/null 2>&1
-    print_success "Yay installed"
-    cd - > /dev/null
-else
-    print_info "Yay already installed, skipping"
-fi
-echo ""
-
-print_step "Installing AUR packages..."
-install_packages_from_file "$YAY_PACKAGES" "yay"
-echo ""
-
-print_step "Installing VS Code extensions..."
-if command -v code &> /dev/null && [ -f "$DOTFILES_DIR/etc/CodeExtensions.txt" ]; then
-    xargs -n 1 code --install-extension < "$DOTFILES_DIR/etc/CodeExtensions.txt" > /dev/null 2>&1 &
-    spinner $! "Installing extensions..."
-    print_success "VS Code extensions installed"
-else
-    print_info "VS Code not found, skipping"
-fi
-
-# ── Dotfiles Installation ───────────────────────────────────────────────────
-
-print_header "📁 Installing Dotfiles"
-
-mkdir -p "$CONFIG_DIR" "$BIN_DIR" "$THEMES_DIR" "$ICONS_DIR"
-xdg-user-dirs-update 2>&1
-
-print_step "Copying configuration files..."
-for dir in "$DOTFILES_DIR/config/"*; do
-    dir_name=$(basename "$dir")
-    if cp -R "$dir" "$CONFIG_DIR/" 2>/dev/null; then
-        print_success "$dir_name"
+    print_step "Installing VS Code extensions..."
+    if command -v code &> /dev/null && [ -f "$DOTFILES_DIR/etc/CodeExtensions.txt" ]; then
+        xargs -n 1 code --install-extension < "$DOTFILES_DIR/etc/CodeExtensions.txt" > /dev/null 2>&1 &
+        spinner $! "Installing extensions..."
+        print_success "VS Code extensions installed"
     else
-        print_error "$dir_name"
+        print_info "VS Code not found, skipping"
     fi
-done
-echo ""
+}
 
-print_step "Installing scripts..."
-if cp -R "$DOTFILES_DIR/bin/"* "$BIN_DIR/" 2>/dev/null; then
-    chmod +x "$BIN_DIR"/* 2>/dev/null
-    print_success "Scripts copied to ~/.local/bin"
-else
-    print_error "Failed to copy scripts"
-fi
+install_dotfiles_task() {
+    print_header "📁 Installing Dotfiles"
 
-# ── Shell Configuration ─────────────────────────────────────────────────────
+    mkdir -p "$CONFIG_DIR" "$BIN_DIR" "$THEMES_DIR" "$ICONS_DIR"
+    xdg-user-dirs-update 2>&1
 
-print_header "🐚 Configuring Shell"
-
-print_step "Installing Oh My Zsh..."
-RUNZSH=no sh -c "$(curl -fsSL $OH_MY_ZSH_REPO)" > /dev/null 2>&1 &
-spinner $! "Setting up Oh My Zsh..."
-print_success "Oh My Zsh installed"
-
-print_step "Installing Zsh plugins..."
-ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
-plugins=(
-    "zsh-autosuggestions"
-    "zsh-syntax-highlighting"
-    "zsh-completions"
-    "zsh-history-substring-search"
-)
-
-for plugin in "${plugins[@]}"; do
-    git clone "https://github.com/zsh-users/$plugin" "$ZSH_CUSTOM/plugins/$plugin" 2>/dev/null
-    print_success "$plugin"
-done
-
-cp -f "$DOTFILES_DIR/.zshrc" "$HOME/"
-chsh -s /usr/bin/zsh
-print_success "Default shell set to Zsh"
-
-# ── Themes & Icons ──────────────────────────────────────────────────────────
-
-print_header "🎨 Installing Themes & Icons"
-
-if [ -d "$DOTFILES_DIR/assets/icons" ]; then
-    print_step "Extracting icon packs..."
-    for archive in "$DOTFILES_DIR/assets/icons"/*.tar.xz; do
-        [ -f "$archive" ] || continue
-        name=$(basename "$archive" .tar.xz)
-        tar xf "$archive" -C "$ICONS_DIR" 2>/dev/null
-        print_success "$name"
+    print_step "Copying configuration files..."
+    for dir in "$DOTFILES_DIR/config/"*; do
+        dir_name=$(basename "$dir")
+        if cp -R "$dir" "$CONFIG_DIR/" 2>/dev/null; then
+            print_success "$dir_name"
+        else
+            print_error "$dir_name"
+        fi
     done
-fi
+    echo ""
 
-if [ -d "$DOTFILES_DIR/assets/themes" ]; then
-    print_step "Extracting GTK themes..."
-    for archive in "$DOTFILES_DIR/assets/themes"/*.tar.xz; do
-        [ -f "$archive" ] || continue
-        name=$(basename "$archive" .tar.xz)
-        tar xf "$archive" -C "$THEMES_DIR" 2>/dev/null
-        print_success "$name"
-    done
-fi
-
-print_step "Rebuilding font cache..."
-fc-cache -rv >/dev/null 2>&1 &
-spinner $! "Updating font cache..."
-print_success "Font cache updated"
-
-# ── System Services ─────────────────────────────────────────────────────────
-
-print_header "⚙️  Enabling Services"
-
-SERVICES=(ly bluetooth NetworkManager udisks2 tailscaled)
-
-for service in "${SERVICES[@]}"; do
-    if systemctl list-unit-files | grep -q "^$service"; then
-        sudo systemctl enable "$service" > /dev/null 2>&1
-        print_success "$service"
+    print_step "Installing scripts..."
+    if cp -R "$DOTFILES_DIR/bin/"* "$BIN_DIR/" 2>/dev/null; then
+        chmod +x "$BIN_DIR"/* 2>/dev/null
+        print_success "Scripts copied to ~/.local/bin"
     else
-        print_warning "$service not found"
+        print_error "Failed to copy scripts"
     fi
-done
+}
 
-# ── Completion ──────────────────────────────────────────────────────────────
+configure_shell_task() {
+    print_header "🐚 Configuring Shell"
 
-echo ""
-echo -e "${GREEN}"
-cat << 'EOF'
+    print_step "Installing Oh My Zsh..."
+    if [ ! -d "$HOME/.oh-my-zsh" ]; then
+        RUNZSH=no sh -c "$(curl -fsSL $OH_MY_ZSH_REPO)" > /dev/null 2>&1 &
+        spinner $! "Setting up Oh My Zsh..."
+        print_success "Oh My Zsh installed"
+    else
+        print_info "Oh My Zsh already installed"
+    fi
+
+    print_step "Installing Zsh plugins..."
+    ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+    plugins=(
+        "zsh-autosuggestions"
+        "zsh-syntax-highlighting"
+        "zsh-completions"
+        "zsh-history-substring-search"
+    )
+
+    for plugin in "${plugins[@]}"; do
+        if [ ! -d "$ZSH_CUSTOM/plugins/$plugin" ]; then
+            git clone "https://github.com/zsh-users/$plugin" "$ZSH_CUSTOM/plugins/$plugin" 2>/dev/null
+            print_success "$plugin"
+        else
+             print_info "$plugin already installed"
+        fi
+    done
+
+    cp -f "$DOTFILES_DIR/.zshrc" "$HOME/"
+    chsh -s /usr/bin/zsh
+    print_success "Default shell set to Zsh"
+}
+
+install_themes_task() {
+    print_header "🎨 Installing Themes & Icons"
+
+    if [ -d "$DOTFILES_DIR/assets/icons" ]; then
+        print_step "Extracting icon packs..."
+        for archive in "$DOTFILES_DIR/assets/icons"/*.tar.xz; do
+            [ -f "$archive" ] || continue
+            name=$(basename "$archive" .tar.xz)
+            tar xf "$archive" -C "$ICONS_DIR" 2>/dev/null
+            print_success "$name"
+        done
+    fi
+
+    if [ -d "$DOTFILES_DIR/assets/themes" ]; then
+        print_step "Extracting GTK themes..."
+        for archive in "$DOTFILES_DIR/assets/themes"/*.tar.xz; do
+            [ -f "$archive" ] || continue
+            name=$(basename "$archive" .tar.xz)
+            tar xf "$archive" -C "$THEMES_DIR" 2>/dev/null
+            print_success "$name"
+        done
+    fi
+
+    print_step "Rebuilding font cache..."
+    fc-cache -rv >/dev/null 2>&1 &
+    spinner $! "Updating font cache..."
+    print_success "Font cache updated"
+}
+
+enable_services_task() {
+    print_header "⚙️  Enabling Services"
+
+    SERVICES=(ly bluetooth NetworkManager udisks2 tailscaled)
+
+    for service in "${SERVICES[@]}"; do
+        if systemctl list-unit-files | grep -q "^$service"; then
+            sudo systemctl enable "$service" > /dev/null 2>&1
+            print_success "$service"
+        else
+            print_warning "$service not found"
+        fi
+    done
+}
+
+full_install() {
+    install_packages_task
+    install_dotfiles_task
+    configure_shell_task
+    install_themes_task
+    enable_services_task
+    show_completion
+}
+
+show_completion() {
+    echo ""
+    echo -e "${GREEN}"
+    cat << 'EOF'
     ╭──────────────────────────────────────────────────────────────╮
     │                                                              │
     │   ✓  Installation Complete!                                  │
@@ -338,17 +325,62 @@ cat << 'EOF'
     │                                                              │
     ╰──────────────────────────────────────────────────────────────╯
 EOF
-echo -e "${NC}"
+    echo -e "${NC}"
 
-choice=$(confirm_prompt "Reboot now? [y/N]" "n")
+    choice=$(confirm_prompt "Reboot now? [y/N]" "n")
 
-if [[ "$choice" == "y" ]]; then
+    if [[ "$choice" == "y" || "$choice" == "yes" ]]; then
+        echo ""
+        print_info "Rebooting in 3 seconds..."
+        sleep 3
+        systemctl reboot
+    fi
+
     echo ""
-    print_info "Rebooting in 3 seconds..."
-    sleep 3
-    systemctl reboot
+    echo -e "  ${DIM}Run 'Hyprland' to start your new desktop!${NC}"
+    echo ""
+}
+
+# ── Main Menu ──────────────────────────────────────────────────────────────
+
+main_menu() {
+    print_logo
+    
+    echo -e "  ${DIM}This installer will set up your Hyprland environment.${NC}"
+    echo ""
+    echo -e "  ${BOLD}Select an option:${NC}"
+    echo ""
+    echo -e "  ${CYAN}1)${NC} Full Installation        ${DIM}(Packages, Configs, Themes, Shell)${NC}"
+    echo -e "  ${CYAN}2)${NC} Install Packages Only    ${DIM}(Pacman, AUR, VSCode)${NC}"
+    echo -e "  ${CYAN}3)${NC} Install Dotfiles Only    ${DIM}(~/.config, ~/.local/bin)${NC}"
+    echo -e "  ${CYAN}4)${NC} Install Themes Only      ${DIM}(Icons, GTK Themes)${NC}"
+    echo -e "  ${CYAN}5)${NC} Configure Shell Only     ${DIM}(Zsh, Oh My Zsh)${NC}"
+    echo -e "  ${RED}0)${NC} Quit"
+    echo ""
+    
+    echo -ne "  ${YELLOW}?${NC}  Enter choice [1-5]: "
+    read choice
+    echo ""
+
+    case $choice in
+        1) full_install ;;
+        2) install_packages_task; show_completion ;;
+        3) install_dotfiles_task; show_completion ;;
+        4) install_themes_task; show_completion ;;
+        5) configure_shell_task; show_completion ;;
+        0) echo -e "  ${DIM}Bye!${NC}"; exit 0 ;;
+        *) echo -e "  ${RED}Invalid choice!${NC}"; sleep 1; clear; main_menu ;;
+    esac
+}
+
+# ── Entry Point ─────────────────────────────────────────────────────────────
+
+clear
+
+if [[ $EUID -eq 0 ]]; then
+    echo -e "${RED}Error: Do not run as root!${NC}"
+    exit 1
 fi
 
-echo ""
-echo -e "  ${DIM}Run 'Hyprland' to start your new desktop!${NC}"
-echo ""
+update_repo
+main_menu
