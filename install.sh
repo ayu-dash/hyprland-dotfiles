@@ -213,12 +213,27 @@ install_packages_task() {
     print_step "Setting up Yay (AUR helper)..."
     if ! command -v yay &> /dev/null; then
         mkdir -p "$TEMP_DIR"
-        git clone "$YAY_REPO" "$TEMP_DIR/yay" > /dev/null 2>&1 &
-        spinner $! "Cloning yay repository..."
-        print_success "Yay cloned"
-        cd "$TEMP_DIR/yay" && makepkg -si --noconfirm > /dev/null 2>&1
-        print_success "Yay installed"
-        cd - > /dev/null
+        
+        # Clone with progress
+        echo -e "  ${GRAY}Cloning yay repository...${NC}"
+        if git clone --progress "$YAY_REPO" "$TEMP_DIR/yay"; then
+            print_success "Yay cloned"
+            
+            # Build and install visible to user
+            echo -e "  ${GRAY}Building yay (this may take a while)...${NC}"
+            cd "$TEMP_DIR/yay" 
+            if makepkg -si --noconfirm; then
+                print_success "Yay installed"
+            else
+                print_error "Failed to install Yay"
+                echo -e "  ${YELLOW}⚠ Skipping AUR packages${NC}"
+                return 1
+            fi
+            cd - > /dev/null
+        else
+            print_error "Failed to clone Yay"
+            return 1
+        fi
     else
         print_info "Yay already installed, skipping"
     fi
