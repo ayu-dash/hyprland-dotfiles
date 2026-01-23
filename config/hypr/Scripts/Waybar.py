@@ -1,49 +1,27 @@
+"""
+Waybar process management module.
+Provides functions to start and stop Waybar.
+"""
+
 import subprocess
-import argparse
-import os.path as path
-from Utils import readFile, getPid
 
-CONFIG = readFile(path.expanduser('~/.config/waybar/config')).strip()
-STYLE = readFile(path.expanduser('~/.config/waybar/style')).strip()
-PROCESS = 'waybar'
+from Utils import get_pid
 
-def runWaybar():
-    pid = getPid(PROCESS)
-    if not pid:
-        subprocess.Popen([
-            PROCESS,
-            '--log-level', 'error',
-            '--config', CONFIG,
-            '--style', STYLE
-        ])
 
-def killWaybar():
-    subprocess.run(['killall', PROCESS])
-
-def reloadWaybar():
-        killWaybar()
-        runWaybar()
-
-def main():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        'action',
-        choices=['run', 'kill', 'reload']
+def kill_waybar() -> None:
+    """Kill all running Waybar instances."""
+    subprocess.run(
+        ["killall", "waybar"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
     )
 
-    args = parser.parse_args()
 
-    match(args.action):
-        case 'run':
-            runWaybar()
-        case 'kill':
-            killWaybar()
-        case 'reload':
-            reloadWaybar()
-
-    print(CONFIG)
-
-if __name__ == '__main__':
-    main()
-    
+def run_waybar() -> None:
+    """Start Waybar if not already running."""
+    if not get_pid("waybar"):
+        subprocess.Popen(
+            ["waybar"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )

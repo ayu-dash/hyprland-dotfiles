@@ -1,96 +1,141 @@
-import subprocess
+"""
+Audio volume and microphone control module.
+Provides functions for adjusting volume, muting, and sending notifications.
+"""
+
 import argparse
-import os.path as path
-from Utils import notify, notifyWithProgress
+import subprocess
+from pathlib import Path
+from typing import TypedDict
 
-MIN = 0
-MAX = 100
-DEFAULT_STEP=5
+from Utils import notify, notify_with_progress
 
-icon_dir  = path.expanduser('~/.config/swaync/icons')
 
-def getVolume():
-    output = subprocess.run(['wpctl', 'get-volume', '@DEFAULT_AUDIO_SINK@'], capture_output=True, text=True)
-    result = output.stdout.strip().split()
+# Constants
+MIN_VOLUME: int = 0
+MAX_VOLUME: int = 100
+DEFAULT_STEP: int = 5
 
-    isMuted = result[-1] != '[MUTED]'
-    currVolume = int(float(result[1]) * 100)
+ICON_DIR: Path = Path.home() / ".config/hypr/Themes/NierAutomata/Swaync/Icons"
 
-    return {'value': currVolume, 'muted': isMuted}
 
-def isMicMuted():
-    output = subprocess.run(['wpctl', 'get-volume', '@DEFAULT_AUDIO_SOURCE@'], capture_output=True, text=True)
-    result = output.stdout.strip().split()
+class VolumeInfo(TypedDict):
+    """Type definition for volume information."""
+    value: int
+    muted: bool
 
-    return result[-1] != '[MUTED]'
 
-def getVolumeIcon(value, isMuted):
-    if value == 0 or isMuted:
-        return path.join(icon_dir, 'volume-mute.png')
-    elif value <= 30:
-        return path.join(icon_dir, 'volume-low.png')
-    elif value <= 60:
-        return path.join(icon_dir, 'volume-mid.png')
-    else:
-        return path.join(icon_dir, 'volume-high.png')
-
-def getMicIcon(isMuted):
-    if isMuted:
-        return path.join(icon_dir, 'microphone-mute.png')
-    else:
-        return path.join(icon_dir, 'microphone.png')
-
-def audioUnmute():
-    subprocess.run(['wpctl', 'set-mute', '@DEFAULT_AUDIO_SINK@', '0'])
-
-def audioMuteToggle():
-    currVolume = getVolume()
-    status = 'Muted' if currVolume['muted'] else 'Unmuted'
-
-    subprocess.run(['wpctl', 'set-mute', '@DEFAULT_AUDIO_SINK@', 'toggle'])
-    notify(getVolumeIcon(currVolume['value'], currVolume['muted']), f'Volume is {status}')
-
-def micMuteToggle():
-    isMuted = isMicMuted()
-    status = 'Muted' if isMuted else 'Unmuted'
-
-    subprocess.run(['wpctl', 'set-mute', '@DEFAULT_AUDIO_SOURCE@', 'toggle'])
-    notify(getMicIcon(isMuted), f'Microphone is {status}')
-
-def adjustVolume(step, action='raise'):
-    currVolume = getVolume()
-    newVolume = currVolume['value'] + step if action == 'raise' else currVolume['value'] - step
-
-    newVolume = min(newVolume, MAX)
-    audioUnmute()
-    subprocess.run(['wpctl', 'set-volume', '@DEFAULT_AUDIO_SINK@', f'{newVolume}%'])
-    notifyWithProgress(getVolumeIcon(newVolume, False), f'Volume Level: {newVolume}%', newVolume)
-
-def main():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        'audioAction',
-        choices=['raiseVolume', 'lowerVolume', 'muteToggle', 'micToggle']
+def get_volume() -> VolumeInfo:
+    """Get current volume level and mute status."""
+    result = subprocess.run(
+        ["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"],
+        capture_output=True,
+        text=True
     )
+    parts = result.stdout.strip().split()
 
+    is_muted = "[MUTED]" in parts
+    current_volume = int(float(parts[1]) * 100)
+
+    return {"value": current_volume, "muted": is_muted}
+
+
+def is_mic_muted() -> bool:
+    """Check if the microphone is muted."""
+    result = subprocess.run(
+        ["wpctl", "get-volume", "@DEFAULT_AUDIO_SOURCE@"],
+        capture_output=True,
+        text=True
+    )
+    return "[MUTED]" in result.stdout
+
+
+def get_volume_icon(value: int, is_muted: bool) -> str:
+    """Get the appropriate volume icon based on level and mute status."""
+    if value == 0 or is_muted:
+        return str(ICON_DIR / "volume-mute.png")
+    elif value <= 30:
+        return str(ICON_DIR / "volume-low.png")
+    elif value <= 60:
+        return str(ICON_DIR / "volume-medium.png")
+    return str(ICON_DIR / "volume-high.png")
+
+
+def get_mic_icon(is_muted: bool) -> str:
+    """Get the appropriate microphone icon based on mute status."""
+    icon_name = "mic-off.png" if is_muted else "mic-on.png"
+    return str(ICON_DIR / icon_name)
+
+
+def audio_unmute() -> None:
+    """Unmute the audio sink."""
+    subprocess.run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "0"])
+
+
+def audio_mute_toggle() -> None:
+    """Toggle audio mute and send notification."""
+    volume_info = get_volume()
+    subprocess.run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
+
+    # Status is inverted because we check before toggle
+    status = "Muted" if not volume_info["muted"] else "Unmuted"
+    icon = get_volume_icon(volume_info["value"], not volume_info["muted"])
+    notify(icon, f"Volume is {status}", level="critical")
+
+
+def mic_mute_toggle() -> None:
+    """Toggle microphone mute and send notification."""
+    was_muted = is_mic_muted()
+    subprocess.run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"])
+
+    status = "Unmuted" if was_muted else "Muted"
+    icon = get_mic_icon(not was_muted)
+    notify(icon, f"Microphone is {status}", level="critical")
+
+
+def adjust_volume(step: int, action: str = "raise") -> None:
+    """Adjust volume by the specified step amount."""
+    volume_info = get_volume()
+
+    if action == "raise":
+        new_volume = min(volume_info["value"] + step, MAX_VOLUME)
+    else:
+        new_volume = max(volume_info["value"] - step, MIN_VOLUME)
+
+    audio_unmute()
+    subprocess.run(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", f"{new_volume}%"])
+
+    icon = get_volume_icon(new_volume, False)
+    notify_with_progress(icon, f"Volume Level: {new_volume}%", new_volume, level="critical")
+
+
+def main() -> None:
+    """Parse arguments and execute the requested audio action."""
+    parser = argparse.ArgumentParser(description="Audio control utility")
     parser.add_argument(
-        '--step',
+        "action",
+        choices=["raiseVolume", "lowerVolume", "muteToggle", "micToggle"],
+        help="Audio action to perform"
+    )
+    parser.add_argument(
+        "--step",
         type=int,
-        default=DEFAULT_STEP
+        default=DEFAULT_STEP,
+        help="Volume adjustment step (default: 5)"
     )
 
     args = parser.parse_args()
 
-    match args.audioAction:
-        case 'raiseVolume':
-            adjustVolume(args.step, 'raise')
-        case 'lowerVolume':
-            adjustVolume(args.step, 'lower')
-        case 'muteToggle':
-            audioMuteToggle()
-        case 'micToggle':
-            micMuteToggle()
+    match args.action:
+        case "raiseVolume":
+            adjust_volume(args.step, "raise")
+        case "lowerVolume":
+            adjust_volume(args.step, "lower")
+        case "muteToggle":
+            audio_mute_toggle()
+        case "micToggle":
+            mic_mute_toggle()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

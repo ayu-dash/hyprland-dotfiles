@@ -1,0 +1,82 @@
+/*
+ * =============================================================================
+ * NierAutomata Color Palette for GTK Applications
+ * =============================================================================
+ */
+
+/* ── Core Background & Text ────────────────────────────────────────────── */
+@define-color background #1c1b19;
+@define-color background-alt #24221f;
+
+@define-color foreground #d8d4c9;
+@define-color foreground-alt #a8a396;
+
+/* ── Surface Layers (Depth) ────────────────────────────────────────────── */
+@define-color surface-0 #1c1b19;
+@define-color surface-1 #262421;
+@define-color surface-2 #2f2d29;
+@define-color surface-3 #3a3833;
+
+/* ── Accent System ─────────────────────────────────────────────────────── */
+@define-color accent #c9b458;
+@define-color accent-alt #e6d98c;
+@define-color accent-dim #8f8450;
+
+/* ── Semantic Colors ───────────────────────────────────────────────────── */
+@define-color success #7fa17a;
+@define-color warning #c4a24f;
+@define-color info #7a9ba1;
+@define-color danger #a45a52;
+
+/* ── Border & Focus ────────────────────────────────────────────────────── */
+@define-color border #3a3833;
+@define-color border-focus #c9b458;
+@define-color border-urgent #a45a52;
+
+/* ── Selection & Cursor ────────────────────────────────────────────────── */
+@define-color selection-bg #3f3c36;
+@define-color selection-fg #f0ede4;
+@define-color cursor #c9b458;
+
+/* ── Overlay & State ───────────────────────────────────────────────────── */
+@define-color overlay rgba(0, 0, 0, 0.53);
+@define-color shadow rgba(0, 0, 0, 0.67);
+@define-color highlight #4a463f;
+@define-color disabled #6f6b61;
+
+/* ── Terminal ANSI Colors ──────────────────────────────────────────────── */
+/* Normal colors (0-7) */
+@define-color color0 #1c1b19;
+/* Black   */
+@define-color color1 #a45a52;
+/* Red     */
+@define-color color2 #7fa17a;
+/* Green   */
+@define-color color3 #c4a24f;
+/* Yellow  */
+@define-color color4 #7a9ba1;
+/* Blue    */
+@define-color color5 #9a7f9a;
+/* Magenta */
+@define-color color6 #8fb5ad;
+/* Cyan    */
+@define-color color7 #d8d4c9;
+/* White   */
+
+/* Bright colors (8-15) */
+@define-color color8 #3a3833;
+/* Bright Black   */
+@define-color color9 #c46a62;
+/* Bright Red     */
+@define-color color10 #9fc29a;
+/* Bright Green   */
+@define-color color11 #e6d98c;
+/* Bright Yellow  */
+@define-color color12 #9fc4ca;
+/* Bright Blue    */
+@define-color color13 #c0a0c0;
+/* Bright Magenta */
+@define-color color14 #b7dcd3;
+/* Bright Cyan    */
+@define-color color15 #f0ede4;
+/* Bright White   */

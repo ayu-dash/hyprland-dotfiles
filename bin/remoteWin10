@@ -1,11 +1,75 @@
 #!/bin/bash
 
-USERNAME="wtfWin10"
-PASSWORD="win10"
-DOMAIN="win10"
-SERVER="192.168.122.41"
+# =============================================================================
+# Remote Windows 10 - RDP Connection Script
+# =============================================================================
+# Connects to a Windows 10 VM via RDP. Configuration is saved to a file
+# and loaded automatically on subsequent runs.
+# =============================================================================
 
-PARAMS="-grab-keyboard /size:100% /dynamic-resolution /sound"
+CONFIG_FILE="$HOME/.config/remoteWin10.conf"
+
+# ── Load or Create Configuration ────────────────────────────────────────────
+
+load_config() {
+    if [ -f "$CONFIG_FILE" ]; then
+        source "$CONFIG_FILE"
+        return 0
+    fi
+    return 1
+}
+
+save_config() {
+    mkdir -p "$(dirname "$CONFIG_FILE")"
+    cat > "$CONFIG_FILE" << EOF
+# Remote Windows 10 Configuration
+USERNAME="$USERNAME"
+PASSWORD="$PASSWORD"
+DOMAIN="$DOMAIN"
+SERVER="$SERVER"
+EOF
+    echo "✓ Configuration saved to $CONFIG_FILE"
+}
+
+prompt_config() {
+    echo "=== Remote Windows 10 Setup ==="
+    echo ""
+    
+    read -p "VM Domain name [win10]: " DOMAIN
+    DOMAIN=${DOMAIN:-win10}
+    
+    read -p "Server IP address: " SERVER
+    while [ -z "$SERVER" ]; do
+        echo "Server IP is required!"
+        read -p "Server IP address: " SERVER
+    done
+    
+    read -p "Username [win10]: " USERNAME
+    USERNAME=${USERNAME:-win10}
+    
+    read -sp "Password: " PASSWORD
+    echo ""
+    
+    if [ -z "$PASSWORD" ]; then
+        PASSWORD="win10"
+        echo "(Using default password)"
+    fi
+    
+    save_config
+}
+
+# ── Initialize Configuration ────────────────────────────────────────────────
+
+if ! load_config; then
+    echo "No configuration found."
+    prompt_config
+fi
+
+# ── RDP Parameters ──────────────────────────────────────────────────────────
+
+PARAMS="-grab-keyboard /size:100% /dynamic-resolution /cert:ignore /sound"
+
+# ── Functions ───────────────────────────────────────────────────────────────
 
 get_state() {
     sudo virsh domstate "$DOMAIN"
@@ -16,26 +80,25 @@ start_rdp() {
     xfreerdp3 /v:$SERVER /u:$USERNAME /p:$PASSWORD $PARAMS > /dev/null 2>&1 &
 
     if [[ $? -eq 0 ]]; then
-        echo "RDP started successfully."
+        echo "✓ RDP started successfully."
     else
-        echo "Failed to start RDP."
+        echo "✗ Failed to start RDP."
         return 1
     fi
 }
 
 is_server_ready() {
-    for _ in {1..10}; do
-        response=$(ping -c 1 "$SERVER")
-
-        if echo "$response" | grep -iq "Destination Host Unreachable"; then
-            continue
-        else
-            echo "Server is ready"
+    echo "Waiting for server..."
+    for i in {1..10}; do
+        if ping -c 1 -W 1 "$SERVER" > /dev/null 2>&1; then
+            echo "✓ Server is ready"
             return 0
         fi
+        echo "  Attempt $i/10..."
+        sleep 1
     done
 
-    echo "Server is not reachable after several attempts."
+    echo "✗ Server is not reachable after several attempts."
     return 1
 }
 
@@ -43,18 +106,19 @@ stop() {
     echo "Disconnecting RDP session..."
     sudo virsh shutdown "$DOMAIN"
     pkill xfreerdp3
+    echo "✓ Stopped"
 }
 
 start() {
-    local state=$(get_state)  
+    local state=$(get_state)
 
     if [ "$state" == "shut off" ]; then
         echo "VM State: $state"
-        echo "Starting VM"
+        echo "Starting VM..."
         sudo virsh start "$DOMAIN"
     else
         echo "VM State: $state"
-        echo "VM is running"
+        echo "VM is already running"
     fi
 
     if is_server_ready; then
@@ -62,7 +126,31 @@ start() {
     fi
 }
 
+show_config() {
+    echo "=== Current Configuration ==="
+    echo "Domain:   $DOMAIN"
+    echo "Server:   $SERVER"
+    echo "Username: $USERNAME"
+    echo "Password: ********"
+    echo "Config:   $CONFIG_FILE"
+}
+
+usage() {
+    echo "Usage: $(basename "$0") <command>"
+    echo ""
+    echo "Commands:"
+    echo "  start   - Start VM and connect via RDP"
+    echo "  stop    - Shutdown VM and disconnect"
+    echo "  config  - Show current configuration"
+    echo "  reset   - Delete configuration and reconfigure"
+}
+
+# ── Main ────────────────────────────────────────────────────────────────────
+
 case "$1" in
-    start) start;;
-    stop) stop;;
+    start)  start ;;
+    stop)   stop ;;
+    config) show_config ;;
+    reset)  rm -f "$CONFIG_FILE" && prompt_config ;;
+    *)      usage ;;
 esac

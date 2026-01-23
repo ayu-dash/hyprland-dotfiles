@@ -1,56 +1,92 @@
-import subprocess
+"""
+Utility functions for Hyprland scripts.
+Provides common helpers for notifications, file operations, and process management.
+"""
+
 import json
+import subprocess
+from pathlib import Path
+from typing import Any
 
-def notify(icon, msg, level = 'low'):
-    subprocess.run(
-    ['notify-send',
-        '-e',
-        '-a', 'volume-notify',
-        '-h', 'string:x-canonical-private-synchronous:sys_notif',
-        '-u', level,
-        '-i', icon,
+
+def notify(icon: str, msg: str, level: str = "low") -> None:
+    """Send a desktop notification using notify-send."""
+    subprocess.run([
+        "notify-send",
+        "-e",
+        "-a", "volume-notify",
+        "-h", "string:x-canonical-private-synchronous:sys_notif",
+        "-u", level,
+        "-i", icon,
         msg
     ])
 
-def notifyWithProgress(icon, msg, value, level = 'low'):
-    subprocess.run(
-    ['notify-send',
-        '-e',
-        '-h', f'int:value:{value}',
-        '-h', 'string:x-canonical-private-synchronous:sys_notif',
-        '-c', 'custom',
-        '-u', level,
-        '-i', icon,
+
+def notify_with_progress(icon: str, msg: str, value: int, level: str = "low") -> None:
+    """Send a desktop notification with a progress bar."""
+    subprocess.run([
+        "notify-send",
+        "-e",
+        "-h", f"int:value:{value}",
+        "-h", "string:x-canonical-private-synchronous:sys_notif",
+        "-c", "custom",
+        "-u", level,
+        "-i", icon,
         msg
     ])
 
-def readFile(path):
-    with open(path, 'r') as f:
+
+def read_file(path: str | Path) -> str:
+    """Read and return the contents of a file."""
+    with open(path, "r", encoding="utf-8") as f:
         return f.read()
-    
-def readConfig(path):
-    dict = {}
-    file = readFile(path)
 
-    for line in file.splitlines():
-        key = line.split('=')[0].strip()
-        value = line.split('=')[1].strip()
-        dict[key] = value
 
-    if dict is not None:
-        return dict
-    
-    return None
+def read_config(path: str | Path) -> dict[str, str] | None:
+    """
+    Parse a key=value configuration file into a dictionary.
+    Returns None if the file is empty or invalid.
+    """
+    try:
+        content = read_file(path)
+        config: dict[str, str] = {}
 
-def getPid(process):
-    return subprocess.run(['pidof', process], capture_output=True, text=True).stdout.strip()
+        for line in content.splitlines():
+            if "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            config[key.strip()] = value.strip()
 
-def killAll(process):
-    subprocess.run(["killall", process], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return config if config else None
+    except (FileNotFoundError, IOError):
+        return None
 
-def loadJson(data):
+
+def get_pid(process: str) -> str:
+    """Get the PID of a running process."""
+    result = subprocess.run(
+        ["pidof", process],
+        capture_output=True,
+        text=True
+    )
+    return result.stdout.strip()
+
+
+def kill_all(process: str) -> None:
+    """Terminate all instances of a process."""
+    subprocess.run(
+        ["killall", process],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+
+
+def load_json(data: str) -> Any:
+    """Parse a JSON string and return the resulting object."""
     return json.loads(data)
 
-def writeJson(data, path):
-    with open(path, 'w') as f:
+
+def write_json(data: Any, path: str | Path) -> None:
+    """Write data to a JSON file with indentation."""
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)

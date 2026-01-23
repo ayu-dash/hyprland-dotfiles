@@ -1,0 +1,69 @@
+/*
+ * =============================================================================
+ * Screenshot Menu
+ * =============================================================================
+ */
+
+@import "Base.rasi"
+
+configuration {
+    show-icons:                 false;
+}
+
+/* ── Window ─────────────────────────────────────────────────────────────── */
+
+window {
+    transparency:               "real";
+    location:                   west;
+    anchor:                     west;
+    width:                      60px;
+}
+
+/* ── Main Container ─────────────────────────────────────────────────────── */
+
+mainbox {
+    enabled:                    true;
+    padding:                    6px;
+    background-color:           @background;
+    children:                   [ "listview" ];
+    border:                     1px solid;
+    border-color:               @border-color;
+}
+
+/* ── List View ──────────────────────────────────────────────────────────── */
+
+listview {
+    enabled:                    true;
+    columns:                    1;
+    lines:                      3;
+    cycle:                      true;
+    scrollbar:                  false;
+    layout:                     vertical;
+    spacing:                    10px;
+    background-color:           transparent;
+    cursor:                     "default";
+}
+
+/* ── Elements ───────────────────────────────────────────────────────────── */
+
+element {
+    enabled:                    true;
+    padding:                    10px;
+    background-color:           @background-alt;
+    text-color:                 @foreground;
+    cursor:                     pointer;
+}
+
+element selected.normal {
+    background-color:           @selection-bg;
+    text-color:                 @selection-fg;
+}
+
+element-text {
+    font:                       "JetBrainsMono NF Bold 14";
+    background-color:           transparent;
+    text-color:                 inherit;
+    cursor:                     inherit;
+    vertical-align:             0.5;
+    horizontal-align:           0.5;
+}

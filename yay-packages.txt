@@ -1,0 +1,17 @@
+hyprshot
+noto-fonts
+ttf-ms-win10-auto
+noto-fonts-emoji
+ttf-material-design-icons-webfont
+ttf-font-awesome
+nerd-fonts
+onlyoffice-bin
+visual-studio-code-bin
+hyprpicker
+hyprshade
+create_ap
+antigravity
+brave-bin
+zen-browser-bin
+localsend
+heroic-games-launcher-bin

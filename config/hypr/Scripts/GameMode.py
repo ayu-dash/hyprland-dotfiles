@@ -1,50 +1,69 @@
+"""
+Game mode toggle module for Hyprland.
+Disables animations, blur, and gaps for optimal gaming performance.
+"""
+
 import os
+import subprocess
+from pathlib import Path
+
 import Wallpaper
 import Waybar
 from Utils import notify
-import subprocess
 
-TEMP_FILE = '/tmp/game-mode-on'
 
-def enableGameMode():
-    open(TEMP_FILE, "w").close()
+TEMP_FILE: Path = Path("/tmp/game-mode-on")
+
+
+def enable_game_mode() -> None:
+    """Enable game mode by disabling visual effects and killing unnecessary processes."""
+    TEMP_FILE.touch()
+
+    # Disable visual effects
     subprocess.run([
-        'hyprctl', '--batch',
-        'keyword animations:enabled 0;',
-        'keyword decoration:blur:passes 0;',
-        'keyword general:gaps_in 0;',
-        'keyword general:gaps_out 0;',
-        'keyword general:border_size 1;',
-        'keyword decoration:rounding 0;',
-        'keyword windowrule opacity 1 override 1 override 1 override, "^(.*)$"'
-    ]) 
-
-    subprocess.run([
-        'hyprctl', 
-        'keyword', 
-        'windowrule', 
-        'opacity 1 override 1 override 1 override, ^(.*)$'
+        "hyprctl", "--batch",
+        "keyword animations:enabled 0;"
+        "keyword decoration:blur:passes 0;"
+        "keyword general:gaps_in 0;"
+        "keyword general:gaps_out 0;"
+        "keyword general:border_size 1;"
+        "keyword decoration:rounding 0;"
     ])
 
-    Wallpaper.swwwKill()
-    Waybar.killWaybar()
+    # Force full opacity on all windows
+    subprocess.run([
+        "hyprctl",
+        "keyword",
+        "windowrule",
+        "opacity 1 override 1 override 1 override, ^(.*)$"
+    ])
 
-    notify('applications-games', 'Gamemode: Enabled')
+    # Kill background processes
+    Wallpaper.swww_kill()
+    Waybar.kill_waybar()
 
-def disableGameMode():
-    os.remove(TEMP_FILE)
-    subprocess.run(['hyprctl', 'reload'])
+    notify("applications-games", "Gamemode: Enabled")
 
-    Wallpaper.swwwRun()
-    Waybar.runWaybar()
 
-    notify('applications-games', 'Gamemode: Disabled')
+def disable_game_mode() -> None:
+    """Disable game mode and restore normal desktop settings."""
+    TEMP_FILE.unlink(missing_ok=True)
+    subprocess.run(["hyprctl", "reload"])
 
-def toggleGameMode():
-    if os.path.exists(TEMP_FILE):
-        disableGameMode()
+    # Restart background processes
+    Wallpaper.swww_run()
+    Waybar.run_waybar()
+
+    notify("applications-games", "Gamemode: Disabled")
+
+
+def toggle_game_mode() -> None:
+    """Toggle game mode on or off based on current state."""
+    if TEMP_FILE.exists():
+        disable_game_mode()
     else:
-        enableGameMode()
+        enable_game_mode()
+
 
 if __name__ == "__main__":
-    toggleGameMode()
+    toggle_game_mode()

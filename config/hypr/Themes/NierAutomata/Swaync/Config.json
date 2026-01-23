@@ -1,0 +1,60 @@
+{
+    "$schema": "/etc/xdg/swaync/configschema.json",
+    "positionX": "right",
+    "positionY": "top",
+    "cssPriority": "user",
+    "control-center-width": 450,
+    "fit-to-screen": true,
+    "notification-window-width": 400,
+    "notification-icon-size": 40,
+    "notification-body-image-height": 500,
+    "notification-body-image-width": 500,
+    "notification-inline-replies": true,
+    "notification-2fa-action": false,
+    "timeout": 4,
+    "timeout-low": 4,
+    "timeout-critical": 6,
+    "keyboard-shortcuts": true,
+    "image-visibility": "when-available",
+    "transition-time": 200,
+    "hide-on-clear": false,
+    "hide-on-action": false,
+    "script-fail-notify": true,
+    "widgets": [
+        "dnd",
+        "mpris",
+        "volume",
+        "backlight",
+        "notifications",
+        "label#sysinfo"
+    ],
+    "widget-config": {
+        "backlight": {
+            "device": "amdgpu_bl1",
+            "label": "\udb80\udce0",
+            "slider": true,
+            "min": 10
+        },
+        "volume": {
+            "device": "default",
+            "label": "\udb81\udd7e",
+            "slider": true,
+            "show-per-app": false
+        },
+        "dnd": {
+            "text": "SHUT THE FU*K UP!"
+        },
+        "mpris": {
+            "image-size": 110,
+            "image-radius": 0,
+            "autohide": false,
+            "blacklist": [
+                "org.mpris.MediaPlayer2.playerctld"
+            ]
+        },
+        "label#sysinfo": {
+            "max-lines": 5,
+            "text": "\uf017  Uptime: 0h 0m\n\uf2c9  Temp: 56\u00b0C\n\uf4bc  CPU\t\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 0%\n\uefc5  RAM\t\u2501\u2501\u2501\u2501\u2501\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 1.2G/7.0G\n\udb81\udce1  Swap\t\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 0M/16.0G\n\udb80\udeca  Disk\t\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 306G/460G"
+        }
+    }
+}

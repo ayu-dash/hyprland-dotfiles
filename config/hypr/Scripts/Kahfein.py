@@ -1,40 +1,55 @@
-import subprocess
-import json
+"""
+Kahfein (Caffeine) module for Hyprland.
+Prevents the system from going idle by toggling hypridle.
+"""
+
 import argparse
-from Utils import notify
-from Utils import getPid
+import json
+import subprocess
 
-PROCESS = 'hypridle'
+from Utils import notify, get_pid
 
-def status():
-    pid = getPid(PROCESS)
-    status = {
-         'text': 'OFF' if pid else 'ON',
-         'class': 'inactive' if pid else 'active'
+
+PROCESS: str = "hypridle"
+
+
+def status() -> None:
+    """Print the current Kahfein status in Waybar JSON format."""
+    pid = get_pid(PROCESS)
+    output = {
+        "text": "OFF" if pid else "ON",
+        "class": "inactive" if pid else "active"
     }
-    print(json.dumps(status))
+    print(json.dumps(output))
 
-def toggle():
-    if getPid(PROCESS):
-        subprocess.run(['killall', PROCESS])
-        notify('system-lock-screen', 'Kahfein enabled!')
+
+def toggle() -> None:
+    """Toggle hypridle on or off and send notification."""
+    if get_pid(PROCESS):
+        subprocess.run(["killall", PROCESS])
+        notify("system-lock-screen", "Kahfein enabled!")
     else:
         subprocess.Popen([PROCESS])
-        notify('system-lock-screen', 'Kahfein disabled!')
+        notify("system-lock-screen", "Kahfein disabled!")
 
-def main():
-    parser = argparse.ArgumentParser()
 
+def main() -> None:
+    """Parse arguments and execute the requested Kahfein action."""
+    parser = argparse.ArgumentParser(description="Kahfein - Caffeine for Hyprland")
     parser.add_argument(
-        'action',
-        choices=['toggle', 'status']
+        "action",
+        choices=["toggle", "status"],
+        help="Kahfein action to perform"
     )
 
     args = parser.parse_args()
 
-    match(args.action):
-        case 'toggle': toggle()
-        case 'status': status()
+    match args.action:
+        case "toggle":
+            toggle()
+        case "status":
+            status()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

@@ -1,0 +1,109 @@
+/*
+ * =============================================================================
+ * Emoji Picker - Grid Layout
+ * =============================================================================
+ */
+
+@import "Base.rasi"
+
+configuration {
+    show-icons:                 false;
+    font:                       "JetBrains Mono Semibold 11";
+}
+
+/* ── Window ─────────────────────────────────────────────────────────────── */
+
+window {
+    transparency:               "real";
+    location:                   center;
+    anchor:                     center;
+    fullscreen:                 false;
+    width:                      380px;
+    x-offset:                   0px;
+    y-offset:                   0px;
+    background-color:           transparent;
+    border:                     1px solid;
+    border-color:               @border;
+}
+
+/* ── Main Container ─────────────────────────────────────────────────────── */
+
+mainbox {
+    enabled:                    true;
+    background-color:           @color15;
+    orientation:                vertical;
+    children:                   [ "inputbar", "listbox" ];
+}
+
+listbox {
+    spacing:                    15px;
+    padding:                    6px;
+    background-color:           transparent;
+    children:                   [ "listview" ];
+}
+
+/* ── List View ──────────────────────────────────────────────────────────── */
+
+listview {
+    enabled:                    true;
+    columns:                    8;
+    lines:                      10;
+    cycle:                      true;
+    dynamic:                    true;
+    scrollbar:                  false;
+    layout:                     vertical;
+    reverse:                    false;
+    fixed-height:               false;
+    fixed-columns:              false;
+    spacing:                    10px;
+    background-color:           transparent;
+    cursor:                     "default";
+}
+
+/* ── Input Bar ──────────────────────────────────────────────────────────── */
+
+inputbar {
+    enabled:                    true;
+    spacing:                    10px;
+    margin:                     0;
+    padding:                    10px 15px;
+    background-color:           @background-alt;
+    text-color:                 @foreground;
+    orientation:                horizontal;
+    children:                   [ "prompt", "entry" ];
+}
+
+prompt {
+    enabled:                    false;
+}
+
+entry {
+    enabled:                    true;
+    background-color:           transparent;
+    text-color:                 @foreground;
+    cursor:                     text;
+    placeholder:                "Emoji Search...";
+    placeholder-color:          @foreground-alt;
+}
+
+/* ── Elements ───────────────────────────────────────────────────────────── */
+
+element {
+    padding:                    8px;
+    background-color:           @color7;
+    cursor:                     pointer;
+    orientation:                horizontal;
+    text-color:                 @highlight;
+}
+
+element selected.normal {
+    background-color:           @selection-bg;
+    text-color:                 @selection-fg;
+}
+
+element-text {
+    vertical-align:             0.5;
+    horizontal-align:           0.5;
+    background-color:           transparent;
+    cursor:                     inherit;
+}

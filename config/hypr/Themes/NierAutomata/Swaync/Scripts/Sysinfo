@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+
+import subprocess
+import os
+import argparse
+import json
+import time
+
+CONFIG_PATH = os.path.expanduser('~/.config/hypr/Themes/NierAutomata/Swaync/Config.json')
+
+def reload_swaync():
+    subprocess.run(['swaync-client', '-R'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+def update_label(label_id, text):
+    with open(CONFIG_PATH, 'r') as f:
+        config = json.load(f)
+    if label_id in config.get('widget-config', {}):
+        config['widget-config'][label_id]['text'] = text
+    with open(CONFIG_PATH, 'w') as f:
+        json.dump(config, f, indent=4)
+
+def progress_bar(percent, width=30):
+    filled = int(width * percent / 100)
+    empty = width - filled
+    return '━' * filled + '─' * empty
+
+def get_uptime():
+    with open('/proc/uptime', 'r') as f:
+        seconds = int(float(f.read().split()[0]))
+    hours, remainder = divmod(seconds, 3600)
+    minutes = remainder // 60
+    return f"  Uptime: {hours}h {minutes}m"
+
+def get_temp():
+    try:
+        temp = int(open('/sys/class/thermal/thermal_zone0/temp').read()) // 1000
+        return f"  Temp: {temp}°C"
+    except:
+        return "  Temp: N/A"
+
+def get_cpu():
+    with open('/proc/stat', 'r') as f:
+        line = f.readline()
+    values = list(map(int, line.split()[1:]))
+    idle = values[3]
+    total = sum(values)
+    try:
+        with open('/tmp/cpu_prev', 'r') as f:
+            prev = f.read().split()
+            prev_idle, prev_total = int(prev[0]), int(prev[1])
+            percent = int(100 * (1 - (idle - prev_idle) / (total - prev_total)))
+    except:
+        percent = 0
+    with open('/tmp/cpu_prev', 'w') as f:
+        f.write(f'{idle} {total}')
+    return f"  CPU\t{progress_bar(percent)} {percent}%"
+
+def get_ram():
+    with open('/proc/meminfo', 'r') as f:
+        lines = f.readlines()
+    total = int(lines[0].split()[1]) / 1024
+    available = int(lines[2].split()[1]) / 1024
+    used = total - available
+    percent = int((used / total) * 100)
+    used_h = f"{used/1024:.1f}G" if used >= 1024 else f"{used:.0f}M"
+    total_h = f"{total/1024:.1f}G" if total >= 1024 else f"{total:.0f}M"
+    return f"  RAM\t{progress_bar(percent)} {used_h}/{total_h}"
+
+def get_swap():
+    with open('/proc/meminfo', 'r') as f:
+        content = f.read()
+    total = free = 0
+    for line in content.splitlines():
+        if 'SwapTotal' in line:
+            total = int(line.split()[1]) / 1024
+        if 'SwapFree' in line:
+            free = int(line.split()[1]) / 1024
+    used = total - free
+    percent = int((used / total) * 100) if total > 0 else 0
+    used_h = f"{used/1024:.1f}G" if used >= 1024 else f"{used:.0f}M"
+    total_h = f"{total/1024:.1f}G" if total >= 1024 else f"{total:.0f}M"
+    return f"󰓡  Swap\t{progress_bar(percent)} {used_h}/{total_h}"
+
+def get_disk():
+    stat = os.statvfs('/')
+    total = stat.f_blocks * stat.f_frsize
+    free = stat.f_bavail * stat.f_frsize
+    used = total - free
+    percent = int((used / total) * 100)
+    return f"󰋊  Disk\t{progress_bar(percent)} {used/1024**3:.0f}G/{total/1024**3:.0f}G"
+
+def update_widget():
+    info = '\n'.join([
+        get_uptime(),
+        get_temp(),
+        get_cpu(),
+        get_ram(),
+        get_swap(),
+        get_disk()
+    ])
+    update_label('label#sysinfo', info)
+    reload_swaync()
+
+def daemon(args):
+    while True:
+        update_widget()
+        time.sleep(args.interval)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='System Monitor')
+    subparsers = parser.add_subparsers(dest='command', required=True)
+    subparsers.add_parser('update', help='Update once')
+    daemon_parser = subparsers.add_parser('daemon', help='Run loop')
+    daemon_parser.add_argument('-i', '--interval', type=int, default=10)
+    args = parser.parse_args()
+    
+    if args.command == 'update':
+        update_widget()
+    elif args.command == 'daemon':
+        daemon(args)

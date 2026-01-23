@@ -1,0 +1,32 @@
+/*
+ * =============================================================================
+ * Base Configuration - Shared Rofi Settings
+ * =============================================================================
+ * This file contains common configuration and keybindings for all Rofi themes.
+ */
+
+configuration {
+    modi:                       "drun";
+    sidebar-mode:               false;
+    show-icons:                 true;
+    application-fallback-icon:  "Adwaita";
+    disable-history:            true;
+
+    /* Mouse interaction */
+    hover-select:               true;
+    me-select-entry:            "";
+    me-accept-entry:            "MousePrimary";
+
+    /* Keyboard navigation */
+    kb-row-up:                  "Up";
+    kb-row-down:                "Down";
+    kb-row-left:                "Left";
+    kb-row-right:               "Right";
+    kb-move-char-back:          "Control+Left";
+    kb-move-char-forward:       "Control+Right";
+    kb-move-word-back:          "Alt+Left";
+    kb-move-word-forward:       "Alt+Right";
+}
+
+/* Import color scheme */
+@import "~/.config/hypr/Themes/NierAutomata/Colors/Rofi.css"

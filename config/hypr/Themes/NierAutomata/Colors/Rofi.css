@@ -1,0 +1,86 @@
+/*
+ * =============================================================================
+ * NierAutomata Color Palette for Rofi
+ * =============================================================================
+ */
+
+* {
+    /* ── Core Background & Text ────────────────────────────────────────── */
+    background: #1c1b19;
+    background-alt: #24221f;
+    foreground: #d8d4c9;
+    foreground-alt: #a8a396;
+
+    /* ── Surface Layers (Depth) ────────────────────────────────────────── */
+    surface-0: #1c1b19;
+    surface-1: #262421;
+    surface-2: #2f2d29;
+    surface-3: #3a3833;
+
+    /* ── Accent System ─────────────────────────────────────────────────── */
+    accent: #c9b458;
+    accent-alt: #e6d98c;
+    accent-dim: #8f8450;
+
+    /* ── Semantic Colors ───────────────────────────────────────────────── */
+    success: #7fa17a;
+    warning: #c4a24f;
+    info: #7a9ba1;
+    danger: #a45a52;
+
+    /* ── Border & Focus ────────────────────────────────────────────────── */
+    border-color: #3a3833;
+    border-focus: #c9b458;
+    border-urgent: #a45a52;
+
+    /* ── Selection & Cursor ────────────────────────────────────────────── */
+    selection-bg: #3f3c36;
+    selection-fg: #f0ede4;
+    cursor: #c9b458;
+
+    /* ── Overlay & State ───────────────────────────────────────────────── */
+    overlay: rgba(0, 0, 0, 0.53);
+    shadow: rgba(0, 0, 0, 0.67);
+    highlight: #4a463f;
+    disabled: #6f6b61;
+
+    /* ── Terminal ANSI Colors ──────────────────────────────────────────── */
+    color0: #1c1b19;
+    /* Black   */
+    color1: #a45a52;
+    /* Red     */
+    color2: #7fa17a;
+    /* Green   */
+    color3: #c4a24f;
+    /* Yellow  */
+    color4: #7a9ba1;
+    /* Blue    */
+    color5: #9a7f9a;
+    /* Magenta */
+    color6: #8fb5ad;
+    /* Cyan    */
+    color7: #d8d4c9;
+    /* White   */
+
+    color8: #3a3833;
+    /* Bright Black   */
+    color9: #c46a62;
+    /* Bright Red     */
+    color10: #9fc29a;
+    /* Bright Green   */
+    color11: #e6d98c;
+    /* Bright Yellow  */
+    color12: #9fc4ca;
+    /* Bright Blue    */
+    color13: #c0a0c0;
+    /* Bright Magenta */
+    color14: #b7dcd3;
+    /* Bright Cyan    */
+    color15: #f0ede4;
+    /* Bright White   */
+
+    /* ── Transparency Variants ─────────────────────────────────────────── */
+    background-trans: rgba(28, 27, 25, 0.95);
+    surface-1-trans: rgba(38, 36, 33, 0.95);
+    surface-2-trans: rgba(47, 45, 41, 0.95);
+}

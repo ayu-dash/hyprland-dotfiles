@@ -1,0 +1,158 @@
+@import "../Colors/Gtk.css";
+
+/* ================================
+   BASE STYLES
+   ================================ */
+* {
+  font-family: "JetBrainsMono Nerd Font", "JetBrainsMono NF";
+  min-width: 8px;
+  font-size: 16px;
+}
+
+window#waybar {
+  transition-property: background-color;
+  transition-duration: 0.5s;
+  background: @background;
+  color: @foreground;
+}
+
+/* ================================
+   MODULES - LEFT (TOP)
+   ================================ */
+.modules-left {
+  margin-top: 8px;
+}
+
+#custom-notification {
+  margin-bottom: 6px;
+}
+
+#workspaces {
+  background: @surface-2;
+  border-radius: 50px;
+  padding: 1px 2px;
+  margin: 4px;
+  margin-bottom: 6px;
+}
+
+#workspaces button {
+  background: transparent;
+  border-radius: 50%;
+  min-width: 20px;
+  min-height: 20px;
+  margin: 6px 0;
+  padding: 4px;
+  border: none;
+}
+
+#workspaces button.active {
+  background: @overlay;
+  color: @accent;
+}
+
+#workspaces button:hover {
+  background: @overlay;
+}
+
+/* ================================
+   POWER GROUP
+   ================================ */
+#power {
+  background: @surface-2;
+  border-radius: 50px;
+  padding: 10px 2px;
+  margin: 0 4px;
+}
+
+#custom-battery {
+  color: @accent;
+  margin-bottom: 6px;
+}
+
+#custom-battery-text {
+  color: @accent;
+  font-size: 10px;
+  padding: 2px 4px;
+}
+
+/* ================================
+   MODULES - RIGHT (BOTTOM)
+   ================================ */
+.modules-right {
+  margin-bottom: 8px;
+}
+
+#session,
+#network,
+#clock {
+  margin-top: 4px;
+}
+
+/* ================================
+   SESSION BUTTONS
+   ================================ */
+#custom-lock,
+#custom-logout,
+#custom-suspend,
+#custom-reboot,
+#custom-shutdown,
+#custom-notification {
+  margin: 0 4px;
+  padding: 4px;
+  border-radius: 20px;
+  background: transparent;
+}
+
+#custom-shutdown {
+  color: @color1;
+}
+
+#custom-lock {
+  color: @color4;
+}
+
+#custom-reboot {
+  color: @color3;
+}
+
+#custom-suspend {
+  color: @color5;
+}
+
+#custom-lock:hover,
+#custom-logout:hover,
+#custom-suspend:hover,
+#custom-reboot:hover,
+#custom-shutdown:hover,
+#custom-notification:hover {
+  background: @overlay;
+}
+
+/* ================================
+   NETWORK & BLUETOOTH
+   ================================ */
+#bluetooth {
+  margin: 0 4px;
+  margin-top: 2px;
+  padding: 4px;
+  border-radius: 20px;
+  background: transparent;
+}
+
+#custom-wifi {
+  margin: 0 4px;
+  padding: 4px;
+  padding-right: 8px;
+  border-radius: 20px;
+  background: transparent;
+}
+
+#custom-wifi:hover,
+#bluetooth:hover {
+  background: @overlay;
+}
+
+tooltip {
+  background: @background;
+  border-radius: 0;
+}

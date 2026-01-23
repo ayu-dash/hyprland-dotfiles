@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+
+import subprocess
+import os
+
+def get_disk_info(path='/'):
+    stat = os.statvfs(path)
+    
+    total = stat.f_blocks * stat.f_frsize
+    free = stat.f_available * stat.f_frsize
+    used = total - free
+    percent = int((used / total) * 100)
+    
+    # Human readable
+    def format_size(size):
+        for unit in ['B', 'K', 'M', 'G', 'T']:
+            if size < 1024:
+                return f"{size:.1f}{unit}"
+            size /= 1024
+        return f"{size:.1f}P"
+    
+    return format_size(used), format_size(total), percent
+
+def notify(used, total, percent):
+    subprocess.run([
+        'notify-send',
+        '-h', f'int:value:{percent}',
+        '-h', 'string:x-canonical-private-synchronous:sys_notif',
+        '-c', 'custom',
+        '-t', '5000',
+        ' Disk Usage',
+        f'{used} / {total} ({percent}%)'
+    ])
+
+if __name__ == '__main__':
+    used, total, percent = get_disk_info('/')
+    notify(used, total, percent)

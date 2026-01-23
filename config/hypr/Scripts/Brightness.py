@@ -1,54 +1,74 @@
-import subprocess
+"""
+Screen brightness control module.
+Provides functions for adjusting brightness and sending notifications.
+"""
+
 import argparse
-import os.path as path
-from Utils import notifyWithProgress
+import subprocess
+from pathlib import Path
 
-DEFAULT_STEP = 10
+from Utils import notify_with_progress
 
-icon_dir  = path.expanduser('~/.config/swaync/icons')
 
-def getBrightnessPercentage():
-    output = subprocess.run(['brightnessctl', '-m'], capture_output=True, text=True)
-    result = output.stdout.split(',')[3].rstrip('%')
-    
-    return int(result)
+DEFAULT_STEP: int = 10
 
-def getBrightnessIcon(value):
-    if value <= 60:
-        return path.join(icon_dir, 'brightness-60.png')
-    elif value <= 80:
-        return path.join(icon_dir, 'brightness-80.png')
-    else:
-        return path.join(icon_dir, 'brightness-100.png')
+ICON_DIR: Path = Path.home() / ".config/hypr/Themes/NierAutomata/Swaync/Icons"
 
-def adjustBrightness(step, action='up'):
-    val = f'{step}%+' if action == 'up' else f'{step}%-'
-    subprocess.run(['brightnessctl', 's', f'{val}'])
 
-    newVal = getBrightnessPercentage()
-    notifyWithProgress(getBrightnessIcon(newVal), f'Brightness Level: {newVal}%', newVal)
-
-def main():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument(
-        'action',
-        choices=['up', 'down']
+def get_brightness_percentage() -> int:
+    """Get current screen brightness as a percentage."""
+    result = subprocess.run(
+        ["brightnessctl", "-m"],
+        capture_output=True,
+        text=True
     )
+    # Output format: device,class,current,max,percentage%
+    percentage_str = result.stdout.split(",")[3].rstrip("%")
+    return int(percentage_str)
 
+
+def get_brightness_icon(value: int) -> str:
+    """Get the appropriate brightness icon based on level."""
+    if value <= 60:
+        return str(ICON_DIR / "brightness-low.png")
+    elif value <= 80:
+        return str(ICON_DIR / "brightness-medium.png")
+    return str(ICON_DIR / "brightness-high.png")
+
+
+def adjust_brightness(step: int, action: str = "up") -> None:
+    """Adjust screen brightness by the specified step amount."""
+    adjustment = f"{step}%+" if action == "up" else f"{step}%-"
+    subprocess.run(["brightnessctl", "s", adjustment])
+
+    new_value = get_brightness_percentage()
+    icon = get_brightness_icon(new_value)
+    notify_with_progress(icon, f"Brightness Level: {new_value}%", new_value, level="critical")
+
+
+def main() -> None:
+    """Parse arguments and execute the requested brightness action."""
+    parser = argparse.ArgumentParser(description="Brightness control utility")
     parser.add_argument(
-        '--step',
+        "action",
+        choices=["up", "down"],
+        help="Brightness action to perform"
+    )
+    parser.add_argument(
+        "--step",
         type=int,
-        default=DEFAULT_STEP
+        default=DEFAULT_STEP,
+        help="Brightness adjustment step (default: 10)"
     )
 
     args = parser.parse_args()
 
     match args.action:
-        case 'up':
-            adjustBrightness(args.step, 'up')
-        case 'down':
-            adjustBrightness(args.step, 'down')
+        case "up":
+            adjust_brightness(args.step, "up")
+        case "down":
+            adjust_brightness(args.step, "down")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

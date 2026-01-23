@@ -1,0 +1,83 @@
+/*
+ * =============================================================================
+ * Configuration Browser - File Selector
+ * =============================================================================
+ */
+
+@import "Base.rasi"
+
+configuration {
+    show-icons:                 false;
+}
+
+/* ── Window ─────────────────────────────────────────────────────────────── */
+
+window {
+    transparency:               "real";
+    location:                   center;
+    anchor:                     center;
+    fullscreen:                 false;
+    width:                      240px;
+    x-offset:                   0px;
+    y-offset:                   0px;
+    background-color:           transparent;
+    border:                     1px solid;
+    border-color:               @border-color;
+}
+
+/* ── Main Container ─────────────────────────────────────────────────────── */
+
+mainbox {
+    enabled:                    true;
+    background-color:           @background;
+    orientation:                vertical;
+    children:                   [ "listbox" ];
+}
+
+listbox {
+    spacing:                    15px;
+    padding:                    6px;
+    background-color:           transparent;
+    children:                   [ "listview" ];
+}
+
+/* ── List View ──────────────────────────────────────────────────────────── */
+
+listview {
+    enabled:                    true;
+    columns:                    1;
+    lines:                      10;
+    cycle:                      true;
+    dynamic:                    true;
+    scrollbar:                  false;
+    layout:                     vertical;
+    reverse:                    false;
+    fixed-height:               false;
+    fixed-columns:              false;
+    spacing:                    10px;
+    background-color:           transparent;
+    cursor:                     "default";
+}
+
+/* ── Elements ───────────────────────────────────────────────────────────── */
+
+element {
+    padding:                    8px;
+    background-color:           @background-alt;
+    cursor:                     pointer;
+    orientation:                horizontal;
+    text-color:                 @foreground;
+}
+
+element selected.normal {
+    background-color:           @selection-bg;
+    text-color:                 @selection-fg;
+}
+
+element-text {
+    vertical-align:             0.5;
+    background-color:           transparent;
+    cursor:                     inherit;
+    text-color:                 inherit;
+    font:                       "JetBrainsMono 11";
+}
