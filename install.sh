@@ -418,12 +418,36 @@ enable_services_task() {
     done
 }
 
+install_system_configs_task() {
+    print_header "🔧 Installing System Configurations"
+
+    # NetworkManager configuration (for iwd backend)
+    if [ -f "$DOTFILES_DIR/etc/NetworkManager.conf" ]; then
+        print_step "Installing NetworkManager configuration..."
+        echo -e "  ${GRAY}  Copying to /etc/NetworkManager/NetworkManager.conf${NC}"
+        if sudo cp "$DOTFILES_DIR/etc/NetworkManager.conf" /etc/NetworkManager/NetworkManager.conf; then
+            print_success "NetworkManager.conf installed"
+        else
+            print_error "Failed to install NetworkManager.conf"
+        fi
+    else
+        print_info "NetworkManager.conf not found in etc/"
+    fi
+
+    # Add more system configs here if needed
+    # Example:
+    # if [ -f "$DOTFILES_DIR/etc/another-config" ]; then
+    #     sudo cp "$DOTFILES_DIR/etc/another-config" /etc/destination/
+    # fi
+}
+
 full_install() {
     system_update
     install_packages_task
     install_dotfiles_task
     configure_shell_task
     install_themes_task
+    install_system_configs_task
     enable_services_task
     show_completion
 }
