@@ -28,6 +28,7 @@ DOTFILES_DIR="$HOME_DIR/hyprland-dotfiles"
 CONFIG_DIR="$HOME_DIR/.config"
 THEMES_DIR="$HOME_DIR/.themes"
 ICONS_DIR="$HOME_DIR/.icons"
+KVANTUM_DIR="$CONFIG_DIR/Kvantum"
 BIN_DIR="$HOME_DIR/.local/bin"
 TEMP_DIR="/tmp/installation"
 
@@ -203,6 +204,24 @@ update_repo() {
     fi
 }
 
+system_update() {
+    print_header "🔄 Updating System"
+    
+    print_step "Synchronizing package databases and upgrading system..."
+    echo ""
+    echo -e "  ${GRAY}Running: sudo pacman -Syyu${NC}"
+    echo ""
+    
+    if sudo pacman -Syyu --noconfirm; then
+        echo ""
+        print_success "System updated successfully"
+    else
+        echo ""
+        print_error "System update failed"
+        print_warning "Continuing with installation..."
+    fi
+}
+
 install_packages_task() {
     print_header "📦 Installing Packages"
 
@@ -317,29 +336,70 @@ configure_shell_task() {
 install_themes_task() {
     print_header "🎨 Installing Themes & Icons"
 
-    if [ -d "$DOTFILES_DIR/assets/icons" ]; then
-        print_step "Extracting icon packs..."
-        for archive in "$DOTFILES_DIR/assets/icons"/*.tar.xz; do
+    # ── GTK Icons ───────────────────────────────────────────────────────────
+    if [ -d "$DOTFILES_DIR/assets/gtk/icons" ]; then
+        print_step "Extracting GTK icon packs..."
+        for archive in "$DOTFILES_DIR/assets/gtk/icons"/*.tar.xz; do
             [ -f "$archive" ] || continue
             name=$(basename "$archive" .tar.xz)
+            echo -e "  ${GRAY}  Extracting: $name${NC}"
+            tar xf "$archive" -C "$ICONS_DIR" 2>/dev/null
+            print_success "$name"
+        done
+    else
+        print_info "No GTK icons found in assets/gtk/icons"
+    fi
+    echo ""
+
+    # ── GTK Themes ──────────────────────────────────────────────────────────
+    if [ -d "$DOTFILES_DIR/assets/gtk/themes" ]; then
+        print_step "Extracting GTK themes..."
+        for archive in "$DOTFILES_DIR/assets/gtk/themes"/*.tar.xz; do
+            [ -f "$archive" ] || continue
+            name=$(basename "$archive" .tar.xz)
+            echo -e "  ${GRAY}  Extracting: $name${NC}"
+            tar xf "$archive" -C "$THEMES_DIR" 2>/dev/null
+            print_success "$name"
+        done
+    else
+        print_info "No GTK themes found in assets/gtk/themes"
+    fi
+    echo ""
+
+    # ── Kvantum Themes ──────────────────────────────────────────────────────
+    if [ -d "$DOTFILES_DIR/assets/kvantum/themes" ]; then
+        print_step "Installing Kvantum themes..."
+        mkdir -p "$KVANTUM_DIR"
+        for archive in "$DOTFILES_DIR/assets/kvantum/themes"/*.tar.xz; do
+            [ -f "$archive" ] || continue
+            name=$(basename "$archive" .tar.xz)
+            echo -e "  ${GRAY}  Extracting: $name${NC}"
+            tar xf "$archive" -C "$KVANTUM_DIR" 2>/dev/null
+            print_success "$name → ~/.config/Kvantum/"
+        done
+    else
+        print_info "No Kvantum themes found in assets/kvantum/themes"
+    fi
+    echo ""
+
+    # ── Kvantum Icons (if any) ──────────────────────────────────────────────
+    if [ -d "$DOTFILES_DIR/assets/kvantum/icons" ]; then
+        print_step "Installing Kvantum icons..."
+        for archive in "$DOTFILES_DIR/assets/kvantum/icons"/*.tar.xz; do
+            [ -f "$archive" ] || continue
+            name=$(basename "$archive" .tar.xz)
+            echo -e "  ${GRAY}  Extracting: $name${NC}"
             tar xf "$archive" -C "$ICONS_DIR" 2>/dev/null
             print_success "$name"
         done
     fi
 
-    if [ -d "$DOTFILES_DIR/assets/themes" ]; then
-        print_step "Extracting GTK themes..."
-        for archive in "$DOTFILES_DIR/assets/themes"/*.tar.xz; do
-            [ -f "$archive" ] || continue
-            name=$(basename "$archive" .tar.xz)
-            tar xf "$archive" -C "$THEMES_DIR" 2>/dev/null
-            print_success "$name"
-        done
-    fi
-
+    # ── Font Cache ──────────────────────────────────────────────────────────
     print_step "Rebuilding font cache..."
-    fc-cache -rv >/dev/null 2>&1 &
-    spinner $! "Updating font cache..."
+    echo -e "  ${GRAY}  Running: fc-cache -rv${NC}"
+    fc-cache -rv 2>&1 | while read -r line; do
+        echo -e "  ${DIM}  $line${NC}"
+    done
     print_success "Font cache updated"
 }
 
@@ -359,6 +419,7 @@ enable_services_task() {
 }
 
 full_install() {
+    system_update
     install_packages_task
     install_dotfiles_task
     configure_shell_task

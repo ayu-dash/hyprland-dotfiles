@@ -5,16 +5,18 @@ rofi-wayland
 rofi-calc
 rofi-emoji
 xdg-desktop-portal-gtk
+xdg-desktop-portal-kde
 xdg-desktop-portal-hyprland
 xdg-user-dirs
-nautilus
+dolphin
+polkit-gnome
+ark
 kitty
 swww
 hyprlock
 hypridle
 bluetui
 simple-scan
-hyprpolkitagent
 cliphist
 bluez
 bluez-utils
@@ -27,6 +29,7 @@ mpv
 loupe
 qt5-wayland
 qt6-wayland
+kvantum
 udiskie
 udisks2
 nwg-look
@@ -50,3 +53,5 @@ upower
 mysql-workbench
 tailscale
 kwallet
+hyprland
+iwd
