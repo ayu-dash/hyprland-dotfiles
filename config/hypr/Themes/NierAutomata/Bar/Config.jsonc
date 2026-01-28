@@ -3,9 +3,20 @@
   "position": "right",
   "reload_style_on_change": true,
   // POSITION
-  "modules-left": ["custom/notification", "hyprland/workspaces", "group/power"],
-  "modules-center": ["hyprland/window"],
-  "modules-right": ["group/util", "clock", "group/network", "group/session"],
+  "modules-left": [
+    "custom/notification",
+    "hyprland/workspaces",
+    "group/power"
+  ],
+  "modules-center": [
+    "hyprland/window"
+  ],
+  "modules-right": [
+    "group/util",
+    "clock",
+    "group/network",
+    "group/session"
+  ],
   // GROUPS
   "group/session": {
     "orientation": "vertical",
@@ -23,11 +34,17 @@
   },
   "group/network": {
     "orientation": "vertical",
-    "modules": ["custom/wifi", "bluetooth"],
+    "modules": [
+      "custom/wifi",
+      "bluetooth"
+    ],
   },
   "group/power": {
     "orientation": "vertical",
-    "modules": ["group/battery", "power-profiles-daemon"],
+    "modules": [
+      "group/battery",
+      "power-profiles-daemon"
+    ],
   },
   "group/battery": {
     "orientation": "vertical",
@@ -35,7 +52,10 @@
       "transition-duration": 300,
       "transition-left-to-right": true,
     },
-    "modules": ["custom/battery", "custom/battery-text"],
+    "modules": [
+      "custom/battery",
+      "custom/battery-text"
+    ],
   },
   "group/util": {
     "orientation": "vertical",
@@ -52,7 +72,12 @@
   },
   "group/hwinfo": {
     "orientation": "vertical",
-    "modules": ["cpu", "memory", "temperature", "hyprland/window"],
+    "modules": [
+      "cpu",
+      "memory",
+      "temperature",
+      "hyprland/window"
+    ],
   },
   // MODULES
   "clock": {
@@ -91,8 +116,32 @@
     "format-warning": "<span color='#fab387'>󰂃</span>",
     "format-critical": "<span color='#f38ba8'>󱈑</span>",
     "format-icons": {
-      "default": ["󰂎", "󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
-      "charging": ["󰢟", "󰢜", "󰂆", "󰂇", "󰂈", "󰢝", "󰂉", "󰢞", "󰂊", "󰂋", "󰂅"],
+      "default": [
+        "󰂎",
+        "󰁺",
+        "󰁻",
+        "󰁼",
+        "󰁽",
+        "󰁾",
+        "󰁿",
+        "󰂀",
+        "󰂁",
+        "󰂂",
+        "󰁹"
+      ],
+      "charging": [
+        "󰢟",
+        "󰢜",
+        "󰂆",
+        "󰂇",
+        "󰂈",
+        "󰢝",
+        "󰂉",
+        "󰢞",
+        "󰂊",
+        "󰂋",
+        "󰂅"
+      ],
     },
   },
   "power-profiles-daemon": {
@@ -187,7 +236,7 @@
     "exec": "python $HOME/.config/hypr/Themes/NierAutomata/Bar/Scripts/WifiSignal.py",
     "return-type": "json",
     "interval": 1,
-    "on-click": "kitty nmtui",
+    "on-click": "kitty impala",
     "tooltip": true,
   },
   "custom/battery": {

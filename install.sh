@@ -489,8 +489,208 @@ install_system_configs_task() {
     # fi
 }
 
+install_gpu_drivers_task() {
+    print_header "🖥️  Installing GPU Drivers"
+
+    local gpu_info
+    gpu_info=$(lspci -nn 2>/dev/null | grep -iE "vga|3d|display")
+
+    local has_nvidia=false
+    local has_amd=false
+    local has_intel=false
+
+    # Detect GPU vendors
+    if echo "$gpu_info" | grep -qi "nvidia"; then
+        has_nvidia=true
+    fi
+    if echo "$gpu_info" | grep -qiE "amd|radeon|ati"; then
+        has_amd=true
+    fi
+    if echo "$gpu_info" | grep -qi "intel"; then
+        has_intel=true
+    fi
+
+    print_step "Detected GPU(s):"
+    echo -e "  ${GRAY}$gpu_info${NC}"
+    echo ""
+
+    # ── NVIDIA Driver Installation ──────────────────────────────────────────
+    if [ "$has_nvidia" = true ]; then
+        print_step "NVIDIA GPU detected"
+        echo ""
+        echo -e "  ${BOLD}Select NVIDIA driver:${NC}"
+        echo -e "  ${CYAN}1)${NC} nvidia-dkms       ${DIM}(Recommended - works with all kernels)${NC}"
+        echo -e "  ${CYAN}2)${NC} nvidia            ${DIM}(Standard - for linux kernel only)${NC}"
+        echo -e "  ${CYAN}3)${NC} nvidia-open-dkms  ${DIM}(Open source - for RTX 20+ series)${NC}"
+        echo -e "  ${CYAN}4)${NC} Skip NVIDIA driver"
+        echo ""
+        echo -ne "  ${YELLOW}?${NC}  Enter choice [1-4]: "
+        read nvidia_choice
+
+        local nvidia_packages=()
+
+        case $nvidia_choice in
+            1)
+                nvidia_packages=("nvidia-dkms" "nvidia-utils" "nvidia-settings" "lib32-nvidia-utils" "libva-nvidia-driver")
+                print_step "Installing nvidia-dkms driver..."
+                ;;
+            2)
+                nvidia_packages=("nvidia" "nvidia-utils" "nvidia-settings" "lib32-nvidia-utils" "libva-nvidia-driver")
+                print_step "Installing nvidia driver..."
+                ;;
+            3)
+                nvidia_packages=("nvidia-open-dkms" "nvidia-utils" "nvidia-settings" "lib32-nvidia-utils" "libva-nvidia-driver")
+                print_step "Installing nvidia-open-dkms driver..."
+                ;;
+            4)
+                print_info "Skipping NVIDIA driver installation"
+                ;;
+            *)
+                print_warning "Invalid choice, skipping NVIDIA driver"
+                ;;
+        esac
+
+        if [ ${#nvidia_packages[@]} -gt 0 ]; then
+            echo ""
+            for pkg in "${nvidia_packages[@]}"; do
+                echo -e "  ${GRAY}Installing: $pkg${NC}"
+                if sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
+                    print_success "$pkg"
+                else
+                    print_warning "$pkg (may not be available or already installed)"
+                fi
+            done
+
+            # Configure NVIDIA for Wayland/Hyprland
+            print_step "Configuring NVIDIA for Hyprland..."
+
+            # Add nvidia modules to mkinitcpio
+            if [ -f /etc/mkinitcpio.conf ]; then
+                if ! grep -q "nvidia" /etc/mkinitcpio.conf; then
+                    print_info "Adding NVIDIA modules to mkinitcpio.conf"
+                    sudo sed -i 's/^MODULES=(\(.*\))/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
+                    sudo mkinitcpio -P
+                    print_success "mkinitcpio updated"
+                else
+                    print_info "NVIDIA modules already in mkinitcpio.conf"
+                fi
+            fi
+
+            # Create modprobe config for nvidia_drm.modeset=1
+            print_info "Enabling nvidia_drm.modeset"
+            echo "options nvidia_drm modeset=1 fbdev=1" | sudo tee /etc/modprobe.d/nvidia.conf > /dev/null
+            print_success "NVIDIA modprobe config created"
+
+            # Add environment variables hint
+            echo ""
+            print_info "Add these to your Hyprland config for best experience:"
+            echo -e "  ${DIM}env = LIBVA_DRIVER_NAME,nvidia${NC}"
+            echo -e "  ${DIM}env = XDG_SESSION_TYPE,wayland${NC}"
+            echo -e "  ${DIM}env = GBM_BACKEND,nvidia-drm${NC}"
+            echo -e "  ${DIM}env = __GLX_VENDOR_LIBRARY_NAME,nvidia${NC}"
+            echo -e "  ${DIM}env = NVD_BACKEND,direct${NC}"
+        fi
+        echo ""
+    fi
+
+    # ── AMD Driver Installation ─────────────────────────────────────────────
+    if [ "$has_amd" = true ]; then
+        print_step "AMD GPU detected"
+        echo ""
+
+        local amd_packages=(
+            "mesa"
+            "lib32-mesa"
+            "vulkan-radeon"
+            "lib32-vulkan-radeon"
+            "libva-mesa-driver"
+            "lib32-libva-mesa-driver"
+            "mesa-vdpau"
+            "lib32-mesa-vdpau"
+        )
+
+        echo -e "  ${BOLD}AMD packages to install:${NC}"
+        for pkg in "${amd_packages[@]}"; do
+            echo -e "  ${DIM}  - $pkg${NC}"
+        done
+        echo ""
+
+        choice=$(confirm_prompt "Install AMD drivers? [Y/n]" "y")
+
+        if [[ "$choice" == "y" || "$choice" == "yes" ]]; then
+            for pkg in "${amd_packages[@]}"; do
+                echo -e "  ${GRAY}Installing: $pkg${NC}"
+                if sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
+                    print_success "$pkg"
+                else
+                    print_warning "$pkg (may not be available)"
+                fi
+            done
+
+            echo ""
+            print_info "AMD drivers use open-source AMDGPU, no extra config needed"
+            print_info "For hardware video acceleration, add to Hyprland:"
+            echo -e "  ${DIM}env = LIBVA_DRIVER_NAME,radeonsi${NC}"
+        else
+            print_info "Skipping AMD driver installation"
+        fi
+        echo ""
+    fi
+
+    # ── Intel Driver Installation ───────────────────────────────────────────
+    if [ "$has_intel" = true ]; then
+        print_step "Intel GPU detected"
+        echo ""
+
+        local intel_packages=(
+            "mesa"
+            "lib32-mesa"
+            "vulkan-intel"
+            "lib32-vulkan-intel"
+            "intel-media-driver"
+        )
+
+        echo -e "  ${BOLD}Intel packages to install:${NC}"
+        for pkg in "${intel_packages[@]}"; do
+            echo -e "  ${DIM}  - $pkg${NC}"
+        done
+        echo ""
+
+        choice=$(confirm_prompt "Install Intel drivers? [Y/n]" "y")
+
+        if [[ "$choice" == "y" || "$choice" == "yes" ]]; then
+            for pkg in "${intel_packages[@]}"; do
+                echo -e "  ${GRAY}Installing: $pkg${NC}"
+                if sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
+                    print_success "$pkg"
+                else
+                    print_warning "$pkg (may not be available)"
+                fi
+            done
+
+            echo ""
+            print_info "Intel drivers configured. For VA-API, add to Hyprland:"
+            echo -e "  ${DIM}env = LIBVA_DRIVER_NAME,iHD${NC}"
+        else
+            print_info "Skipping Intel driver installation"
+        fi
+        echo ""
+    fi
+
+    # ── No GPU Detected ─────────────────────────────────────────────────────
+    if [ "$has_nvidia" = false ] && [ "$has_amd" = false ] && [ "$has_intel" = false ]; then
+        print_warning "No supported GPU detected"
+        print_info "Installing generic mesa drivers..."
+        sudo pacman -S --noconfirm --needed mesa lib32-mesa 2>/dev/null
+        print_success "Generic drivers installed"
+    fi
+
+    print_success "GPU driver setup complete"
+}
+
 full_install() {
     system_update
+    install_gpu_drivers_task
     install_packages_task
     install_dotfiles_task
     configure_shell_task
@@ -538,24 +738,26 @@ main_menu() {
     echo ""
     echo -e "  ${BOLD}Select an option:${NC}"
     echo ""
-    echo -e "  ${CYAN}1)${NC} Full Installation        ${DIM}(Packages, Configs, Themes, Shell)${NC}"
-    echo -e "  ${CYAN}2)${NC} Install Packages Only    ${DIM}(Pacman, AUR, VSCode)${NC}"
-    echo -e "  ${CYAN}3)${NC} Install Dotfiles Only    ${DIM}(~/.config, ~/.local/bin)${NC}"
-    echo -e "  ${CYAN}4)${NC} Install Themes Only      ${DIM}(Icons, GTK Themes)${NC}"
-    echo -e "  ${CYAN}5)${NC} Configure Shell Only     ${DIM}(Zsh, Oh My Zsh)${NC}"
+    echo -e "  ${CYAN}1)${NC} Full Installation        ${DIM}(GPU, Packages, Configs, Themes, Shell)${NC}"
+    echo -e "  ${CYAN}2)${NC} Install GPU Drivers      ${DIM}(AMD, NVIDIA, Intel auto-detect)${NC}"
+    echo -e "  ${CYAN}3)${NC} Install Packages Only    ${DIM}(Pacman, AUR, VSCode)${NC}"
+    echo -e "  ${CYAN}4)${NC} Install Dotfiles Only    ${DIM}(~/.config, ~/.local/bin)${NC}"
+    echo -e "  ${CYAN}5)${NC} Install Themes Only      ${DIM}(Icons, GTK Themes)${NC}"
+    echo -e "  ${CYAN}6)${NC} Configure Shell Only     ${DIM}(Zsh, Oh My Zsh)${NC}"
     echo -e "  ${RED}0)${NC} Quit"
     echo ""
     
-    echo -ne "  ${YELLOW}?${NC}  Enter choice [1-5]: "
+    echo -ne "  ${YELLOW}?${NC}  Enter choice [1-6]: "
     read choice
     echo ""
 
     case $choice in
         1) full_install ;;
-        2) install_packages_task; show_completion ;;
-        3) install_dotfiles_task; show_completion ;;
-        4) install_themes_task; show_completion ;;
-        5) configure_shell_task; show_completion ;;
+        2) install_gpu_drivers_task; show_completion ;;
+        3) install_packages_task; show_completion ;;
+        4) install_dotfiles_task; show_completion ;;
+        5) install_themes_task; show_completion ;;
+        6) configure_shell_task; show_completion ;;
         0) echo -e "  ${DIM}Bye!${NC}"; exit 0 ;;
         *) echo -e "  ${RED}Invalid choice!${NC}"; sleep 1; clear; main_menu ;;
     esac
