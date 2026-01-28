@@ -511,9 +511,9 @@ install_gpu_drivers_task() {
     fi
 
     print_step "Detected GPU(s):"
-    while IFS= read -r line; do
-        [ -n "$line" ] && echo -e "     ${WHITE}$line${NC}"
-    done <<< "$gpu_info"
+    echo "$gpu_info" | while read -r line; do
+        echo -e "     ${WHITE}$line${NC}"
+    done
     echo ""
 
     # Ask for confirmation before proceeding
