@@ -148,15 +148,6 @@ install_packages_from_file() {
     local total=$(count_packages "$file")
     local current=0
     local failed_packages=()
-    local sudo_pid=""
-    
-    # Refresh sudo credential cache to prevent prompt interfering with UI
-    if [[ "$installer" == *"sudo"* ]]; then
-        sudo -v
-        # Keep-alive: update existing sudo time stamp if set, otherwise do nothing.
-        (while true; do sudo -n true; sleep 60; kill -0 "$$" 2>/dev/null || exit; done) &
-        sudo_pid=$!
-    fi
     
     while IFS= read -r package || [[ -n "$package" ]]; do
         [[ -z "$package" || "$package" =~ ^# ]] && continue
@@ -170,11 +161,6 @@ install_packages_from_file() {
             failed_packages+=("$package")
         fi
     done < "$file"
-    
-    # Cleanup sudo keep-alive process
-    if [[ -n "$sudo_pid" ]]; then
-        kill "$sudo_pid" 2>/dev/null
-    fi
     
     echo ""
     
@@ -937,6 +923,24 @@ if [[ $EUID -eq 0 ]]; then
     echo -e "${RED}Error: Do not run as root!${NC}"
     exit 1
 fi
+
+# Request sudo password once and keep it alive
+echo -e "${YELLOW}This installer requires sudo privileges.${NC}"
+echo ""
+sudo -v || { echo -e "${RED}Failed to obtain sudo privileges${NC}"; exit 1; }
+
+# Keep sudo alive in background
+SUDO_KEEPALIVE_PID=""
+(while true; do sudo -n true; sleep 50; kill -0 "$$" 2>/dev/null || exit; done) &
+SUDO_KEEPALIVE_PID=$!
+
+# Cleanup function
+cleanup() {
+    if [[ -n "$SUDO_KEEPALIVE_PID" ]]; then
+        kill "$SUDO_KEEPALIVE_PID" 2>/dev/null
+    fi
+}
+trap cleanup EXIT
 
 update_repo
 main_menu
