@@ -148,12 +148,14 @@ install_packages_from_file() {
     local total=$(count_packages "$file")
     local current=0
     local failed_packages=()
+    local sudo_pid=""
     
     # Refresh sudo credential cache to prevent prompt interfering with UI
     if [[ "$installer" == *"sudo"* ]]; then
         sudo -v
         # Keep-alive: update existing sudo time stamp if set, otherwise do nothing.
-        while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+        (while true; do sudo -n true; sleep 60; kill -0 "$$" 2>/dev/null || exit; done) &
+        sudo_pid=$!
     fi
     
     while IFS= read -r package || [[ -n "$package" ]]; do
@@ -168,6 +170,11 @@ install_packages_from_file() {
             failed_packages+=("$package")
         fi
     done < "$file"
+    
+    # Cleanup sudo keep-alive process
+    if [[ -n "$sudo_pid" ]]; then
+        kill "$sudo_pid" 2>/dev/null
+    fi
     
     echo ""
     
@@ -196,7 +203,7 @@ update_repo() {
         if [ "$LOCAL" != "$REMOTE" ]; then
             echo -e "  ${YELLOW}⚠${NC}  New version available!"
             echo -ne "  ${YELLOW}?${NC}  Update to latest version? [Y/n] "
-            read update_choice
+            read update_choice < /dev/tty
             update_choice=${update_choice:-y}
             
             if [[ "${update_choice,,}" == "y" ]]; then
@@ -454,10 +461,10 @@ install_themes_task() {
 enable_services_task() {
     print_header "⚙️  Enabling Services"
 
-    SERVICES=(ly bluetooth NetworkManager udisks2 tailscaled)
+    SERVICES=(greetd bluetooth NetworkManager udisks2 tailscaled)
 
     for service in "${SERVICES[@]}"; do
-        if systemctl list-unit-files | grep -q "^$service"; then
+        if systemctl list-unit-files "${service}.service" &>/dev/null; then
             sudo systemctl enable "$service" > /dev/null 2>&1
             print_success "$service"
         else
@@ -530,6 +537,19 @@ install_system_configs_task() {
         # No NetworkManager installed yet - will be installed from package list
         print_info "NetworkManager not installed yet"
         print_info "Will be configured during package installation"
+    fi
+    echo ""
+
+    # ── Greetd Configuration ────────────────────────────────────────────────
+    if [ -d "$DOTFILES_DIR/etc/greetd" ]; then
+        print_step "Installing greetd configuration..."
+        sudo mkdir -p /etc/greetd
+        if sudo cp "$DOTFILES_DIR/etc/greetd/config.toml" /etc/greetd/config.toml; then
+            print_success "greetd config installed"
+            print_info "tuigreet will launch Hyprland by default"
+        else
+            print_error "Failed to install greetd config"
+        fi
     fi
     echo ""
 
@@ -708,7 +728,12 @@ install_gpu_drivers_task() {
             if [ -f /etc/mkinitcpio.conf ]; then
                 if ! grep -q "nvidia" /etc/mkinitcpio.conf; then
                     print_info "Adding NVIDIA modules to mkinitcpio.conf"
-                    sudo sed -i 's/^MODULES=(\(.*\))/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
+                    # Handle both empty and non-empty MODULES arrays
+                    if grep -q "^MODULES=()" /etc/mkinitcpio.conf; then
+                        sudo sed -i 's/^MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
+                    else
+                        sudo sed -i 's/^MODULES=(\([^)]*\))/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
+                    fi
                     sudo mkinitcpio -P
                     print_success "mkinitcpio updated"
                 else
@@ -889,7 +914,7 @@ main_menu() {
     echo ""
     
     echo -ne "  ${YELLOW}?${NC}  Enter choice [1-6]: "
-    read choice
+    read choice < /dev/tty
     echo ""
 
     case $choice in

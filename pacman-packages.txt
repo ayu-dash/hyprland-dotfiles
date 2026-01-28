@@ -45,7 +45,7 @@ unzip
 dconf-editor
 xarchiver
 python
-ly
+greetd
 micro
 swappy
 zsh
