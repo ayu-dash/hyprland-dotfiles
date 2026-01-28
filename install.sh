@@ -511,7 +511,17 @@ install_gpu_drivers_task() {
     fi
 
     print_step "Detected GPU(s):"
-    echo -e "  ${GRAY}$gpu_info${NC}"
+    while IFS= read -r line; do
+        [ -n "$line" ] && echo -e "     ${WHITE}$line${NC}"
+    done <<< "$gpu_info"
+    echo ""
+
+    # Ask for confirmation before proceeding
+    choice=$(confirm_prompt "Proceed with GPU driver installation? [Y/n]" "y")
+    if [[ "$choice" != "y" && "$choice" != "yes" ]]; then
+        print_info "Skipping GPU driver installation"
+        return 0
+    fi
     echo ""
 
     # ── NVIDIA Driver Installation ──────────────────────────────────────────
