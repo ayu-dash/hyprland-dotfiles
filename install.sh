@@ -469,24 +469,120 @@ enable_services_task() {
 install_system_configs_task() {
     print_header "🔧 Installing System Configurations"
 
-    # NetworkManager configuration (for iwd backend)
-    if [ -f "$DOTFILES_DIR/etc/NetworkManager.conf" ]; then
-        print_step "Installing NetworkManager configuration..."
-        echo -e "  ${GRAY}  Copying to /etc/NetworkManager/NetworkManager.conf${NC}"
-        if sudo cp "$DOTFILES_DIR/etc/NetworkManager.conf" /etc/NetworkManager/NetworkManager.conf; then
-            print_success "NetworkManager.conf installed"
-        else
-            print_error "Failed to install NetworkManager.conf"
-        fi
-    else
-        print_info "NetworkManager.conf not found in etc/"
+    # ── WiFi Backend Configuration ──────────────────────────────────────────
+    print_step "Configuring WiFi backend..."
+    
+    local has_nm_iwd=false
+    local has_nm_regular=false
+    local has_wpa=false
+    
+    # Detect NetworkManager variant
+    if pacman -Qi networkmanager-iwd &>/dev/null; then
+        has_nm_iwd=true
+    elif pacman -Qi networkmanager &>/dev/null; then
+        has_nm_regular=true
+    fi
+    
+    # Detect wpa_supplicant
+    if pacman -Qi wpa_supplicant &>/dev/null; then
+        has_wpa=true
     fi
 
+    if [ "$has_nm_iwd" = true ]; then
+        # networkmanager-iwd from AUR - already uses iwd by default
+        print_success "networkmanager-iwd detected (iwd built-in)"
+        print_info "No additional WiFi config needed"
+        
+    elif [ "$has_nm_regular" = true ]; then
+        # Regular networkmanager - check if using wpa_supplicant
+        if [ "$has_wpa" = true ]; then
+            print_info "wpa_supplicant detected, switching to iwd..."
+            
+            # Install iwd
+            if sudo pacman -S --noconfirm --needed iwd; then
+                print_success "iwd installed"
+            else
+                print_error "Failed to install iwd"
+                return 1
+            fi
+            
+            # Copy config to tell NetworkManager to use iwd
+            if [ -f "$DOTFILES_DIR/etc/NetworkManager.conf" ]; then
+                echo -e "  ${GRAY}  Copying NetworkManager.conf (iwd backend)${NC}"
+                sudo cp "$DOTFILES_DIR/etc/NetworkManager.conf" /etc/NetworkManager/NetworkManager.conf
+                print_success "NetworkManager configured to use iwd"
+            fi
+            
+            sudo systemctl disable wpa_supplicant 2>/dev/null
+            print_info "You may remove wpa_supplicant: sudo pacman -Rs wpa_supplicant"
+            print_info "Note: NetworkManager will manage iwd automatically"
+            
+        else
+            # Regular networkmanager without wpa_supplicant - might already have iwd
+            if pacman -Qi iwd &>/dev/null; then
+                print_success "networkmanager with iwd detected"
+            else
+                print_info "networkmanager detected, iwd will be installed from package list"
+            fi
+        fi
+        
+    else
+        # No NetworkManager installed yet - will be installed from package list
+        print_info "NetworkManager not installed yet"
+        print_info "Will be configured during package installation"
+    fi
+    echo ""
+
     # Add more system configs here if needed
-    # Example:
-    # if [ -f "$DOTFILES_DIR/etc/another-config" ]; then
-    #     sudo cp "$DOTFILES_DIR/etc/another-config" /etc/destination/
-    # fi
+}
+
+configure_qemu_kvm_task() {
+    print_header "🖥️  Configuring QEMU/KVM"
+
+    # Check if libvirt is installed
+    if ! pacman -Qi libvirt &>/dev/null; then
+        print_info "libvirt not installed, skipping QEMU/KVM configuration"
+        return 0
+    fi
+
+    print_step "Enabling libvirtd service..."
+    if sudo systemctl enable libvirtd; then
+        print_success "libvirtd enabled"
+    else
+        print_error "Failed to enable libvirtd"
+    fi
+
+    print_step "Adding user to libvirt group..."
+    if sudo usermod -aG libvirt "$USER"; then
+        print_success "User $USER added to libvirt group"
+    else
+        print_error "Failed to add user to libvirt group"
+    fi
+
+    print_step "Starting libvirtd service..."
+    if sudo systemctl start libvirtd; then
+        print_success "libvirtd started"
+    else
+        print_warning "Failed to start libvirtd (may need reboot)"
+    fi
+
+    print_step "Configuring default network..."
+    if sudo virsh net-autostart default 2>/dev/null; then
+        print_success "Default network set to autostart"
+    else
+        print_warning "Default network not found or already configured"
+    fi
+
+    if sudo virsh net-start default 2>/dev/null; then
+        print_success "Default network started"
+    else
+        print_info "Default network already running or not available"
+    fi
+
+    echo ""
+    print_info "QEMU/KVM configured. Log out and back in for group changes."
+    print_info "Use 'virt-manager' to manage virtual machines."
+    echo ""
 }
 
 install_gpu_drivers_task() {
@@ -527,15 +623,49 @@ install_gpu_drivers_task() {
     # ── NVIDIA Driver Installation ──────────────────────────────────────────
     if [ "$has_nvidia" = true ]; then
         print_step "NVIDIA GPU detected"
+        
+        # Detect kernel type
+        local current_kernel
+        current_kernel=$(uname -r)
+        local is_standard_kernel=false
+        
+        if [[ "$current_kernel" == *"-arch"* ]] && [[ "$current_kernel" != *"-zen"* ]] && [[ "$current_kernel" != *"-lts"* ]] && [[ "$current_kernel" != *"-hardened"* ]]; then
+            is_standard_kernel=true
+        fi
+        
         echo ""
-        echo -e "  ${BOLD}Select NVIDIA driver:${NC}"
-        echo -e "  ${CYAN}1)${NC} nvidia-dkms       ${DIM}(Recommended - works with all kernels)${NC}"
-        echo -e "  ${CYAN}2)${NC} nvidia            ${DIM}(Standard - for linux kernel only)${NC}"
-        echo -e "  ${CYAN}3)${NC} nvidia-open-dkms  ${DIM}(Open source - for RTX 20+ series)${NC}"
-        echo -e "  ${CYAN}4)${NC} Skip NVIDIA driver"
+        echo -e "  ${DIM}Detected kernel: ${WHITE}$current_kernel${NC}"
         echo ""
-        echo -ne "  ${YELLOW}?${NC}  Enter choice [1-4]: "
-        read nvidia_choice
+        
+        if [ "$is_standard_kernel" = true ]; then
+            echo -e "  ${BOLD}Select NVIDIA driver:${NC}"
+            echo -e "  ${CYAN}1)${NC} nvidia-dkms       ${DIM}(Works with all kernels)${NC}"
+            echo -e "  ${CYAN}2)${NC} nvidia            ${DIM}(Standard - for linux kernel only)${NC}"
+            echo -e "  ${CYAN}3)${NC} nvidia-open-dkms  ${DIM}(Open source - for RTX 20+ series)${NC}"
+            echo -e "  ${CYAN}4)${NC} Skip NVIDIA driver"
+            echo ""
+            echo -ne "  ${YELLOW}?${NC}  Enter choice [1-4]: " > /dev/tty
+            read nvidia_choice < /dev/tty
+        else
+            # Non-standard kernel (zen, lts, hardened, etc.) - must use DKMS
+            print_info "Non-standard kernel detected, DKMS driver required"
+            echo ""
+            echo -e "  ${BOLD}Select NVIDIA driver:${NC}"
+            echo -e "  ${CYAN}1)${NC} nvidia-dkms       ${DIM}(Recommended for $current_kernel)${NC}"
+            echo -e "  ${CYAN}2)${NC} nvidia-open-dkms  ${DIM}(Open source - for RTX 20+ series)${NC}"
+            echo -e "  ${CYAN}3)${NC} Skip NVIDIA driver"
+            echo ""
+            echo -ne "  ${YELLOW}?${NC}  Enter choice [1-3]: " > /dev/tty
+            read nvidia_choice < /dev/tty
+            
+            # Remap choices for non-standard kernel
+            case $nvidia_choice in
+                1) nvidia_choice=1 ;;  # nvidia-dkms
+                2) nvidia_choice=3 ;;  # nvidia-open-dkms
+                3) nvidia_choice=4 ;;  # skip
+                *) nvidia_choice=0 ;;  # invalid
+            esac
+        fi
 
         local nvidia_packages=()
 
@@ -706,6 +836,7 @@ full_install() {
     configure_shell_task
     install_themes_task
     install_system_configs_task
+    configure_qemu_kvm_task
     enable_services_task
     show_completion
 }
