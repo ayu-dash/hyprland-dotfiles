@@ -115,21 +115,31 @@ count_packages() {
 draw_progress_bar() {
     local current=$1
     local total=$2
-    local width=30
+    local package=$3
+    local cols=$(tput cols 2>/dev/null || echo 80)
+    
+    # Calculate bar width dynamically (leave space for other elements)
+    # Format: (XXX/XXX) package_name [bar] XXX%
+    local prefix="($current/$total) $package "
+    local suffix=" 100%"
+    local bar_width=$((cols - ${#prefix} - ${#suffix} - 4))
+    
+    # Minimum bar width
+    [ $bar_width -lt 10 ] && bar_width=10
+    [ $bar_width -gt 40 ] && bar_width=40
+    
     local percentage=$((current * 100 / total))
-    local filled=$((current * width / total))
-    local empty=$((width - filled))
+    local filled=$((current * bar_width / total))
+    local empty=$((bar_width - filled))
     
-    # Build the bar string using standard ASCII
+    # Build progress bar
     local bar=""
-    if [ $filled -gt 0 ]; then
-        bar=$(printf "%0.s#" $(seq 1 $filled))
-    fi
-    if [ $empty -gt 0 ]; then
-        bar="${bar}$(printf "%0.s." $(seq 1 $empty))"
-    fi
+    [ $filled -gt 0 ] && bar=$(printf "%0.s#" $(seq 1 $filled))
+    [ $empty -gt 0 ] && bar="${bar}$(printf "%0.s-" $(seq 1 $empty))"
     
-    echo -ne "\r  ${WHITE}[${bar}]${NC} ${percentage}% "
+    # Print: (current/total) package [######-----] XX%
+    printf "\r${GRAY}(%3d/%3d)${NC} ${WHITE}%-30s${NC} ${CYAN}[${WHITE}%s${CYAN}]${NC} %3d%%" \
+        "$current" "$total" "${package:0:30}" "$bar" "$percentage"
 }
 
 install_packages_from_file() {
@@ -137,6 +147,7 @@ install_packages_from_file() {
     local installer="$2"
     local total=$(count_packages "$file")
     local current=0
+    local failed_packages=()
     
     # Refresh sudo credential cache to prevent prompt interfering with UI
     if [[ "$installer" == *"sudo"* ]]; then
@@ -145,30 +156,29 @@ install_packages_from_file() {
         while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
     fi
     
-    # Hide cursor
-    tput civis
-    
     while IFS= read -r package || [[ -n "$package" ]]; do
         [[ -z "$package" || "$package" =~ ^# ]] && continue
         ((current++))
         
-        # Show progress header
-        echo -ne "\r\033[K"
-        draw_progress_bar $current $total
-        echo -e "Installing ${CYAN}$package${NC}..."
+        # Show package counter header
+        echo -e "\n${GRAY}($current/$total)${NC} Installing ${CYAN}$package${NC}..."
         
-        # Show cursor for installer output
-        tput cnorm
-        
-        # Run installer WITHOUT hiding output
-        $installer -S --noconfirm "$package"
-        
-        # Hide cursor again for next bar update
-        tput civis
+        # Run installer with native progress output visible
+        if ! $installer -S --noconfirm --needed "$package"; then
+            failed_packages+=("$package")
+        fi
     done < "$file"
     
-    # Show full bar at end
-    tput cnorm
+    echo ""
+    
+    if [ ${#failed_packages[@]} -gt 0 ]; then
+        print_warning "Some packages failed to install:"
+        for pkg in "${failed_packages[@]}"; do
+            echo -e "    ${RED}✗${NC} $pkg"
+        done
+    fi
+    
+    print_success "Installed $((current - ${#failed_packages[@]}))/$total packages"
 }
 
 # ── Installation Modules ────────────────────────────────────────────────────
@@ -233,26 +243,64 @@ install_packages_task() {
     if ! command -v yay &> /dev/null; then
         mkdir -p "$TEMP_DIR"
         
-        # Clone with progress
-        echo -e "  ${GRAY}Cloning yay repository...${NC}"
-        if git clone --progress "$YAY_REPO" "$TEMP_DIR/yay"; then
-            print_success "Yay cloned"
+        local yay_installed=false
+        local max_attempts=2
+        local attempt=0
+        
+        while [ "$yay_installed" = false ] && [ $attempt -lt $max_attempts ]; do
+            ((attempt++))
             
-            # Build and install visible to user
-            echo -e "  ${GRAY}Building yay (this may take a while)...${NC}"
-            cd "$TEMP_DIR/yay" 
-            if makepkg -si --noconfirm; then
-                print_success "Yay installed"
+            # Check if yay folder already exists (from previous failed attempt)
+            if [ -d "$TEMP_DIR/yay" ]; then
+                print_info "Found existing yay folder from previous attempt"
+                echo -e "\n${GRAY}(1/2)${NC} Skipping clone, using existing folder..."
             else
-                print_error "Failed to install Yay"
-                echo -e "  ${YELLOW}⚠ Skipping AUR packages${NC}"
-                return 1
+                # Clone with progress
+                echo -e "\n${GRAY}(1/2)${NC} Cloning ${CYAN}yay-git${NC} from AUR..."
+                echo ""
+                if git clone --progress "$YAY_REPO" "$TEMP_DIR/yay"; then
+                    echo ""
+                    print_success "Yay repository cloned"
+                else
+                    print_error "Failed to clone Yay"
+                    return 1
+                fi
             fi
-            cd - > /dev/null
-        else
-            print_error "Failed to clone Yay"
-            return 1
-        fi
+            
+            # Build and install with visible output
+            echo -e "\n${GRAY}(2/2)${NC} Building ${CYAN}yay${NC} (this may take a while)..."
+            echo ""
+            cd "$TEMP_DIR/yay"
+            
+            if makepkg -si --noconfirm; then
+                echo ""
+                print_success "Yay installed successfully"
+                yay_installed=true
+            else
+                print_error "Failed to build/install Yay (attempt $attempt/$max_attempts)"
+                cd - > /dev/null
+                
+                # Clean up failed build
+                echo -e "  ${GRAY}Cleaning up failed build...${NC}"
+                rm -rf "$TEMP_DIR/yay"
+                
+                if [ $attempt -lt $max_attempts ]; then
+                    echo ""
+                    choice=$(confirm_prompt "Retry yay installation? [Y/n]" "y")
+                    if [[ "$choice" != "y" && "$choice" != "yes" ]]; then
+                        print_warning "Skipping AUR packages"
+                        return 1
+                    fi
+                    echo ""
+                else
+                    print_error "Max retry attempts reached"
+                    print_warning "Skipping AUR packages"
+                    return 1
+                fi
+            fi
+            
+            cd - > /dev/null 2>&1
+        done
     else
         print_info "Yay already installed, skipping"
     fi
