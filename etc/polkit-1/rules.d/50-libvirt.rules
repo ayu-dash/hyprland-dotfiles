@@ -1,0 +1,7 @@
+// Allow members of the libvirt group to manage VMs without password
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.libvirt.unix.manage" &&
+        subject.isInGroup("libvirt")) {
+        return polkit.Result.YES;
+    }
+});

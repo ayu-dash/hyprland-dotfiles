@@ -381,8 +381,9 @@ configure_shell_task() {
 
     print_step "Installing Oh My Zsh..."
     if [ ! -d "$HOME/.oh-my-zsh" ]; then
-        RUNZSH=no sh -c "$(curl -fsSL $OH_MY_ZSH_REPO)" > /dev/null 2>&1 &
-        spinner $! "Setting up Oh My Zsh..."
+        echo ""
+        RUNZSH=no CHSH=no sh -c "$(curl -fsSL $OH_MY_ZSH_REPO)"
+        echo ""
         print_success "Oh My Zsh installed"
     else
         print_info "Oh My Zsh already installed"
@@ -489,6 +490,14 @@ install_system_configs_task() {
         "greetd config"; then
         print_info "tuigreet will launch Hyprland by default"
     fi
+    echo ""
+
+    # ── Polkit (libvirt password-less) ──────────────────────────────────────
+    print_step "Installing polkit rules..."
+    copy_system_config \
+        "$DOTFILES_DIR/etc/polkit-1/rules.d/50-libvirt.rules" \
+        "/etc/polkit-1/rules.d/50-libvirt.rules" \
+        "libvirt polkit rule (no password for VM management)"
     echo ""
 }
 

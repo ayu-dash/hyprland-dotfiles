@@ -89,8 +89,8 @@ print_info() {
 confirm_prompt() {
     local message="$1"
     local default="$2"
-    echo -ne "  ${YELLOW}?${NC}  $message "
-    read choice
+    echo -ne "  ${YELLOW}?${NC}  $message " > /dev/tty
+    read choice < /dev/tty
     choice=${choice:-$default}
     echo "$choice" | tr '[:upper:]' '[:lower:]'
 }

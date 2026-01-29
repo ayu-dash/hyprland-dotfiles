@@ -57,7 +57,7 @@ Dependencies are listed in separate files:
 |------|--------|
 | `SUPER + Enter` | Terminal (Kitty) |
 | `SUPER + F` | Browser (Firefox) |
-| `SUPER + E` | File Manager (Dolphin) |
+| `SUPER + E` | File Manager (PCManFM) |
 | `SUPER + V` | Code Editor (VS Code) |
 | `SUPER + Space` | Application Launcher |
 | `SUPER + C` | Calculator |
@@ -150,19 +150,56 @@ Dependencies are listed in separate files:
 
 ## 🎨 Theme Structure
 
+Themes are located in `~/.config/hypr/Themes/`. Each theme is a self-contained directory:
+
 ```
-Themes/NierAutomata/
-├── Activate.sh          # Theme activation script
-├── Colors/              # Color definitions
-│   ├── Gtk.css
-│   ├── Hypr.conf
-│   └── Rofi.css
-├── Bar/                 # Waybar configuration
-├── Rofi/                # Rofi themes
-├── Swaync/              # Notification center
-├── Kitty/               # Terminal theme
-└── Wallpapers/          # Theme wallpapers
+Themes/
+├── ThemeLoader.conf         # Auto-loaded by Hyprland (exec-once)
+├── ThemeVariables.conf      # $theme_dir variable for sourcing
+│
+└── <ThemeName>/             # Theme directory (e.g. NierAutomata)
+    ├── Activate.sh          # Theme activation script
+    ├── Decoration.conf      # Hyprland decorations (borders, shadows, blur)
+    ├── Name.txt             # Theme display name
+    │
+    ├── Colors/              # Color definitions
+    │   ├── Gtk.css          # GTK color variables
+    │   ├── Hypr.conf        # Hyprland color variables
+    │   └── Rofi.css         # Rofi color variables
+    │
+    ├── Bar/                 # Waybar configuration
+    │   ├── Config.jsonc     # Modules configuration
+    │   ├── Config.css       # Styling
+    │   └── Scripts/         # Custom scripts (optional)
+    │
+    ├── Rofi/                # Rofi launcher themes
+    │   ├── Base.rasi        # Shared styles
+    │   ├── MenuLauncher.rasi
+    │   ├── Calculator.rasi
+    │   ├── Clipboard.rasi
+    │   ├── Session.rasi
+    │   └── ...
+    │
+    ├── Swaync/              # Notification center
+    │   ├── Config.json      # SwayNC configuration
+    │   ├── Style.css        # Styling
+    │   ├── Icons/           # Notification icons (optional)
+    │   └── Scripts/         # Widget scripts (optional)
+    │
+    ├── Kitty/               # Terminal configuration
+    │   └── kitty.conf
+    │
+    ├── Templates/           # Template files (optional)
+    └── Wallpapers/          # Theme wallpapers
 ```
+
+### Creating a New Theme
+
+1. Copy an existing theme: `cp -r Themes/NierAutomata Themes/MyTheme`
+2. Edit `Name.txt` with your theme name
+3. Modify colors in `Colors/`
+4. Update `THEME_NAME` in `Activate.sh`
+5. Select theme with `SUPER + T`
 
 ## 🔧 System Configurations
 
