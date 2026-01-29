@@ -112,6 +112,43 @@ count_packages() {
     grep -v '^#' "$file" | grep -v '^$' | wc -l
 }
 
+copy_system_config() {
+    local src="$1"
+    local dest="$2"
+    local name="$3"
+    
+    if [ -f "$src" ] || [ -d "$src" ]; then
+        sudo mkdir -p "$(dirname "$dest")"
+        if sudo cp -r "$src" "$dest"; then
+            print_success "$name"
+            return 0
+        else
+            print_error "Failed to install $name"
+            return 1
+        fi
+    fi
+    return 1
+}
+
+extract_archives() {
+    local src_dir="$1"
+    local dest_dir="$2"
+    local label="$3"
+    
+    [ -d "$src_dir" ] || return 1
+    
+    for archive in "$src_dir"/*.tar.xz; do
+        [ -f "$archive" ] || continue
+        local name=$(basename "$archive" .tar.xz)
+        echo -e "  ${GRAY}  Extracting: $name${NC}"
+        if tar xf "$archive" -C "$dest_dir" 2>/dev/null; then
+            print_success "$name"
+        else
+            print_error "$name"
+        fi
+    done
+}
+
 draw_progress_bar() {
     local current=$1
     local total=$2
@@ -378,69 +415,43 @@ install_themes_task() {
     print_header "🎨 Installing Themes & Icons"
 
     # ── GTK Icons ───────────────────────────────────────────────────────────
+    print_step "Extracting GTK icon packs..."
     if [ -d "$DOTFILES_DIR/assets/gtk/icons" ]; then
-        print_step "Extracting GTK icon packs..."
-        for archive in "$DOTFILES_DIR/assets/gtk/icons"/*.tar.xz; do
-            [ -f "$archive" ] || continue
-            name=$(basename "$archive" .tar.xz)
-            echo -e "  ${GRAY}  Extracting: $name${NC}"
-            tar xf "$archive" -C "$ICONS_DIR" 2>/dev/null
-            print_success "$name"
-        done
+        extract_archives "$DOTFILES_DIR/assets/gtk/icons" "$ICONS_DIR" "GTK icons"
     else
-        print_info "No GTK icons found in assets/gtk/icons"
+        print_info "No GTK icons found"
     fi
     echo ""
 
     # ── GTK Themes ──────────────────────────────────────────────────────────
+    print_step "Extracting GTK themes..."
     if [ -d "$DOTFILES_DIR/assets/gtk/themes" ]; then
-        print_step "Extracting GTK themes..."
-        for archive in "$DOTFILES_DIR/assets/gtk/themes"/*.tar.xz; do
-            [ -f "$archive" ] || continue
-            name=$(basename "$archive" .tar.xz)
-            echo -e "  ${GRAY}  Extracting: $name${NC}"
-            tar xf "$archive" -C "$THEMES_DIR" 2>/dev/null
-            print_success "$name"
-        done
+        extract_archives "$DOTFILES_DIR/assets/gtk/themes" "$THEMES_DIR" "GTK themes"
     else
-        print_info "No GTK themes found in assets/gtk/themes"
+        print_info "No GTK themes found"
     fi
     echo ""
 
     # ── Kvantum Themes ──────────────────────────────────────────────────────
+    print_step "Installing Kvantum themes..."
     if [ -d "$DOTFILES_DIR/assets/kvantum/themes" ]; then
-        print_step "Installing Kvantum themes..."
         mkdir -p "$KVANTUM_DIR"
-        for archive in "$DOTFILES_DIR/assets/kvantum/themes"/*.tar.xz; do
-            [ -f "$archive" ] || continue
-            name=$(basename "$archive" .tar.xz)
-            echo -e "  ${GRAY}  Extracting: $name${NC}"
-            tar xf "$archive" -C "$KVANTUM_DIR" 2>/dev/null
-            print_success "$name → ~/.config/Kvantum/"
-        done
+        extract_archives "$DOTFILES_DIR/assets/kvantum/themes" "$KVANTUM_DIR" "Kvantum themes"
     else
-        print_info "No Kvantum themes found in assets/kvantum/themes"
+        print_info "No Kvantum themes found"
     fi
     echo ""
 
-    # ── Kvantum Icons (if any) ──────────────────────────────────────────────
+    # ── Kvantum Icons ───────────────────────────────────────────────────────
     if [ -d "$DOTFILES_DIR/assets/kvantum/icons" ]; then
         print_step "Installing Kvantum icons..."
-        for archive in "$DOTFILES_DIR/assets/kvantum/icons"/*.tar.xz; do
-            [ -f "$archive" ] || continue
-            name=$(basename "$archive" .tar.xz)
-            echo -e "  ${GRAY}  Extracting: $name${NC}"
-            tar xf "$archive" -C "$ICONS_DIR" 2>/dev/null
-            print_success "$name"
-        done
+        extract_archives "$DOTFILES_DIR/assets/kvantum/icons" "$ICONS_DIR" "Kvantum icons"
+        echo ""
     fi
 
     # ── Font Cache ──────────────────────────────────────────────────────────
     print_step "Rebuilding font cache..."
-    echo -e "  ${GRAY}  Running: fc-cache -rv${NC}"
-    fc-cache -rv 2>&1 | while read -r line; do
-        echo -e "  ${DIM}  $line${NC}"
-    done
+    fc-cache -fv > /dev/null 2>&1
     print_success "Font cache updated"
 }
 
@@ -462,84 +473,23 @@ enable_services_task() {
 install_system_configs_task() {
     print_header "🔧 Installing System Configurations"
 
-    # ── WiFi Backend Configuration ──────────────────────────────────────────
-    print_step "Configuring WiFi backend..."
-    
-    local has_nm_iwd=false
-    local has_nm_regular=false
-    local has_wpa=false
-    
-    # Detect NetworkManager variant
-    if pacman -Qi networkmanager-iwd &>/dev/null; then
-        has_nm_iwd=true
-    elif pacman -Qi networkmanager &>/dev/null; then
-        has_nm_regular=true
-    fi
-    
-    # Detect wpa_supplicant
-    if pacman -Qi wpa_supplicant &>/dev/null; then
-        has_wpa=true
-    fi
-
-    if [ "$has_nm_iwd" = true ]; then
-        # networkmanager-iwd from AUR - already uses iwd by default
-        print_success "networkmanager-iwd detected (iwd built-in)"
-        print_info "No additional WiFi config needed"
-        
-    elif [ "$has_nm_regular" = true ]; then
-        # Regular networkmanager - check if using wpa_supplicant
-        if [ "$has_wpa" = true ]; then
-            print_info "wpa_supplicant detected, switching to iwd..."
-            
-            # Install iwd
-            if sudo pacman -S --noconfirm --needed iwd; then
-                print_success "iwd installed"
-            else
-                print_error "Failed to install iwd"
-                return 1
-            fi
-            
-            # Copy config to tell NetworkManager to use iwd
-            if [ -f "$DOTFILES_DIR/etc/NetworkManager.conf" ]; then
-                echo -e "  ${GRAY}  Copying NetworkManager.conf (iwd backend)${NC}"
-                sudo cp "$DOTFILES_DIR/etc/NetworkManager.conf" /etc/NetworkManager/NetworkManager.conf
-                print_success "NetworkManager configured to use iwd"
-            fi
-            
-            sudo systemctl disable wpa_supplicant 2>/dev/null
-            print_info "You may remove wpa_supplicant: sudo pacman -Rs wpa_supplicant"
-            print_info "Note: NetworkManager will manage iwd automatically"
-            
-        else
-            # Regular networkmanager without wpa_supplicant - might already have iwd
-            if pacman -Qi iwd &>/dev/null; then
-                print_success "networkmanager with iwd detected"
-            else
-                print_info "networkmanager detected, iwd will be installed from package list"
-            fi
-        fi
-        
-    else
-        # No NetworkManager installed yet - will be installed from package list
-        print_info "NetworkManager not installed yet"
-        print_info "Will be configured during package installation"
-    fi
+    # ── NetworkManager ──────────────────────────────────────────────────────
+    print_step "Configuring NetworkManager..."
+    copy_system_config \
+        "$DOTFILES_DIR/etc/NetworkManager.conf" \
+        "/etc/NetworkManager/NetworkManager.conf" \
+        "NetworkManager.conf (iwd backend)"
     echo ""
 
-    # ── Greetd Configuration ────────────────────────────────────────────────
-    if [ -d "$DOTFILES_DIR/etc/greetd" ]; then
-        print_step "Installing greetd configuration..."
-        sudo mkdir -p /etc/greetd
-        if sudo cp "$DOTFILES_DIR/etc/greetd/config.toml" /etc/greetd/config.toml; then
-            print_success "greetd config installed"
-            print_info "tuigreet will launch Hyprland by default"
-        else
-            print_error "Failed to install greetd config"
-        fi
+    # ── Greetd ──────────────────────────────────────────────────────────────
+    print_step "Installing greetd configuration..."
+    if copy_system_config \
+        "$DOTFILES_DIR/etc/greetd/config.toml" \
+        "/etc/greetd/config.toml" \
+        "greetd config"; then
+        print_info "tuigreet will launch Hyprland by default"
     fi
     echo ""
-
-    # Add more system configs here if needed
 }
 
 configure_qemu_kvm_task() {

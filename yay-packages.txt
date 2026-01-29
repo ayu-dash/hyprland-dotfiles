@@ -11,6 +11,6 @@ hyprpicker
 hyprshade
 create_ap
 antigravity
-localsend
+localsend-bin
 heroic-games-launcher-bin
 greetd-tuigreet

@@ -8,9 +8,7 @@ xdg-desktop-portal-gtk
 xdg-desktop-portal-kde
 xdg-desktop-portal-hyprland
 xdg-user-dirs
-dolphin
 polkit-gnome
-ark
 kitty
 swww
 hyprlock
@@ -59,3 +57,7 @@ libvirt
 virt-manager
 dnsmasq
 edk2-ovmf
+iwd
+networkmanager 
+pcmanfm
+engrampa
