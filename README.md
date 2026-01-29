@@ -189,7 +189,6 @@ Themes/
     ├── Kitty/               # Terminal configuration
     │   └── kitty.conf
     │
-    ├── Templates/           # Template files (optional)
     └── Wallpapers/          # Theme wallpapers
 ```
 
