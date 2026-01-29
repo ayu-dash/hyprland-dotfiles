@@ -21,9 +21,9 @@ hyprctl keyword env "KITTY_CONFIG_DIRECTORY,$THEME_DIR/Kitty/"
 # ── Restart Services ────────────────────────────────────────────────────────
 
 pkill swaync
-swaync -c "$THEME_DIR/Swaync/Config.json" -s "$THEME_DIR/Swaync/Style.css" &>/dev/null &
+swaync -c "$THEME_DIR/Swaync/Config.json" -s "$THEME_DIR/Swaync/Style.css" > /dev/null 2>&1 &
 
 pkill waybar
-waybar -c "$THEME_DIR/Bar/Config.jsonc" -s "$THEME_DIR/Bar/Config.css" &>/dev/null &
+waybar -c "$THEME_DIR/Bar/Config.jsonc" -s "$THEME_DIR/Bar/Config.css" > /dev/null 2>&1 &
 
 exit 0
