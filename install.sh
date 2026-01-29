@@ -225,16 +225,30 @@ update_repo() {
         
         if [ "$LOCAL" != "$REMOTE" ]; then
             echo -e "  ${YELLOW}⚠${NC}  New version available!"
-            echo -ne "  ${YELLOW}?${NC}  Update to latest version? [Y/n] "
+            echo -ne "  ${YELLOW}?${NC}  Update to latest version? [Y/n] " > /dev/tty
             read update_choice < /dev/tty
             update_choice=${update_choice:-y}
             
             if [[ "${update_choice,,}" == "y" ]]; then
-                git pull origin main > /dev/null 2>&1 || git pull origin master > /dev/null 2>&1
-                echo -e "  ${GREEN}✓${NC}  Updated to latest version"
-                echo -e "  ${GRAY}ℹ${NC}  Restarting installer..."
-                sleep 1
-                exec "$0" "$@"
+                # Stash local changes if any
+                if ! git diff --quiet || ! git diff --cached --quiet; then
+                    echo -e "  ${GRAY}ℹ${NC}  Stashing local changes..."
+                    git stash push -m "Auto-stash before update" > /dev/null 2>&1
+                fi
+                
+                # Pull with visible output
+                echo ""
+                if git pull origin main 2>&1 || git pull origin master 2>&1; then
+                    echo ""
+                    echo -e "  ${GREEN}✓${NC}  Updated to latest version"
+                    echo -e "  ${GRAY}ℹ${NC}  Restarting installer..."
+                    sleep 1
+                    exec "$0" "$@"
+                else
+                    echo ""
+                    echo -e "  ${RED}✗${NC}  Failed to update"
+                    echo -e "  ${GRAY}ℹ${NC}  Try: git pull origin main --rebase"
+                fi
             fi
         else
             echo -e "  ${GREEN}✓${NC}  Already on latest version"
