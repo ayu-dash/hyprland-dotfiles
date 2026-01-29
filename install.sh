@@ -464,6 +464,54 @@ install_themes_task() {
         echo ""
     fi
 
+    # ── Custom Fonts ────────────────────────────────────────────────────────
+    if [ -d "$DOTFILES_DIR/assets/fonts" ]; then
+        print_step "Installing custom fonts..."
+        FONTS_DIR="$HOME/.local/share/fonts"
+        mkdir -p "$FONTS_DIR"
+
+        # Function to install fonts from a specific directory
+        install_font_files_from_dir() {
+            local search_path="$1"
+            # Check for Variable fonts first
+            if find "$search_path" -type f \( -iname "*variable*" -o -iname "*vf.ttf" -o -iname "*vf.otf" \) | grep -q .; then
+                find "$search_path" -type f \( -iname "*variable*" -o -iname "*vf.ttf" -o -iname "*vf.otf" \) -exec cp -f {} "$FONTS_DIR/" \;
+            else
+                # Fallback: Install ALL font files found
+                find "$search_path" -type f \( -iname "*.ttf" -o -iname "*.otf" \) -exec cp -f {} "$FONTS_DIR/" \;
+            fi
+        }
+
+        # 1. Handle ZIP archives
+        for zipfile in "$DOTFILES_DIR/assets/fonts"/*.zip; do
+            [ -f "$zipfile" ] || continue
+            print_info "Extracting $(basename "$zipfile")..."
+            
+            # Create temp dir for extraction
+            TEMP_FONT_DIR=$(mktemp -d)
+            unzip -q "$zipfile" -d "$TEMP_FONT_DIR"
+            
+            # Install fonts from extraction dir
+            install_font_files_from_dir "$TEMP_FONT_DIR"
+            
+            # Cleanup
+            rm -rf "$TEMP_FONT_DIR"
+        done
+
+        # 2. Handle font subdirectories (uncompressed families)
+        find "$DOTFILES_DIR/assets/fonts" -mindepth 1 -maxdepth 1 -type d | while read -r font_dir; do
+            install_font_files_from_dir "$font_dir"
+        done
+
+        # 3. Handle loose files in root
+        if find "$DOTFILES_DIR/assets/fonts" -maxdepth 1 -type f \( -iname "*.ttf" -o -iname "*.otf" \) | grep -q .; then
+             find "$DOTFILES_DIR/assets/fonts" -maxdepth 1 -type f \( -iname "*.ttf" -o -iname "*.otf" \) -exec cp -f {} "$FONTS_DIR/" \;
+        fi
+
+        print_success "Fonts installed to ~/.local/share/fonts"
+        echo ""
+    fi
+
     # ── Font Cache ──────────────────────────────────────────────────────────
     print_step "Rebuilding font cache..."
     fc-cache -fv > /dev/null 2>&1

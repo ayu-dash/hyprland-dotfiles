@@ -1,6 +1,5 @@
 hyprshot
 noto-fonts
-ttf-ms-win10
 noto-fonts-emoji
 ttf-material-design-icons-webfont
 ttf-font-awesome
