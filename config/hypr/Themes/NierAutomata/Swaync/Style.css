@@ -3,7 +3,7 @@
 * {
     all: unset;
     font-size: 0.95rem;
-    font-family: "JetBrainsMono Nerd Font", "JetBrains Mono";
+    font-family: "Josefin Sans", "JetBrainsMono Nerd Font", "JetBrainsMono NF";
     transition: 150ms;
     font-weight: 600;
 }
@@ -11,7 +11,6 @@
 .notification {
     padding: 0 5px;
     border-radius: 0;
-    /* border: 2px solid @accent; */
     color: @foreground;
 }
 
@@ -201,7 +200,7 @@
 .widget-mpris-player .mpris-overlay>box:last-child {
     border-radius: 0;
     padding: 0 5px;
-    background: alpha(@foreground-alt, .5);
+    background: alpha(@foreground-alt, 0.5);
 }
 
 .widget-mpris-album-art {
@@ -403,7 +402,6 @@ box.widget-label {
     border-radius: 0;
     box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.15);
 }
-
 
 /* Label text di dalam */
 box.widget-label label {

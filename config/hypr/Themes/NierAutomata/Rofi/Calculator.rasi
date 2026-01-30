@@ -1,67 +1,56 @@
-/*
- * =============================================================================
- * Calculator - rofi-calc Theme
- * =============================================================================
- */
-
 @import "Base.rasi"
 
 configuration {
-    calc {
+   calc {
         hint-result:            "> ";
         hint-welcome:           "";
     }
 }
 
-/* ── Window ─────────────────────────────────────────────────────────────── */
-
 window {
-    transparency:               "real";
-    location:                   center;
-    anchor:                     center;
-    fullscreen:                 false;
-    width:                      480px;
-    border:                     1px solid;
-    border-color:               @border-color;
+    transparency:                "real";
+    location:                    center;
+    anchor:                      center;
+    fullscreen:                  false;
+    width:                       480px;
+    border:                      1px solid;
+    border-color:                @border-color;
 }
-
-/* ── Main Container ─────────────────────────────────────────────────────── */
 
 mainbox {
-    enabled:                    true;
-    background-color:           @background;
-    children:                   [ "inputbar", "message" ];
+    enabled:                     true;
+    background-color:            @background;
+    children:                    [ "inputbar", "message" ];
 }
 
-/* ── Input Bar ──────────────────────────────────────────────────────────── */
-
 inputbar {
-    padding:                    6px;
-    background-color:           @background;
-    text-color:                 @color1;
-    children:                   [ "prompt", "entry" ];
+    padding:                     6px;
+    background-color:            @background;
+    text-color:                  @color1;
+    children:                    [ "prompt", "entry" ];
 }
 
 prompt {
-    enabled:                    false;
+    enabled:                     false;
 }
 
 entry {
-    enabled:                    true;
-    background-color:           transparent;
-    text-color:                 @foreground;
-    cursor:                     text;
-    placeholder:                "calc";
+    enabled:                     true;
+    background-color:            transparent;
+    text-color:                  @foreground;
+    cursor:                      text;
+    placeholder:                 "calc";
+    font:                       "Josefin Sans 12";
 }
 
-/* ── Result ─────────────────────────────────────────────────────────────── */
-
 textbox {
-    padding:                    6px;
-    background-color:           @background;
-    text-color:                 @foreground;
-    vertical-align:             0.5;
-    horizontal-align:           0.0;
-    highlight:                  none;
-    placeholder:                ">";
+    padding:                     6px;
+    background-color:            @background;
+    text-color:                  @foreground;
+    vertical-align:              0.5;
+    horizontal-align:            0.0;
+    highlight:                   none;
+    placeholder: ">";
+
+    font:                       "Josefin Sans 12";
 }

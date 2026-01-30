@@ -1,127 +1,114 @@
-/*
- * =============================================================================
- * Wallpaper Selector - Image Grid
- * =============================================================================
- */
-
 @import "Base.rasi"
 
 configuration {
-    drun-display-format:        "{name}";
+    drun-display-format: "{name}";
 }
-
-/* ── Window ─────────────────────────────────────────────────────────────── */
 
 window {
-    transparency:               "real";
-    location:                   south;
-    anchor:                     south;
-    fullscreen:                 false;
-    width:                      70%;
-    x-offset:                   0px;
-    y-offset:                   0px;
-    enabled:                    true;
-    cursor:                     "default";
-    background-color:           transparent;
-    border:                     1px solid;
-    border-color:               @border;
+    transparency:                "real";
+    location:                    south;
+    anchor:                      south;
+    fullscreen:                  false;
+    width:                       70%;
+    x-offset:                    0px;
+    y-offset:                    0px;
+    enabled:                     true;
+    cursor:                      "default";
+    background-color:            transparent;
+    border:                      1px solid; 
+    border-color:                @border;
 }
 
-/* ── Main Container ─────────────────────────────────────────────────────── */
-
 mainbox {
-    enabled:                    true;
-    spacing:                    0px;
-    background-color:           @background;
-    orientation:                vertical;
-    children:                   [ "listbox", "inputbar" ];
+    enabled:                     true;
+    spacing:                     0px;
+    background-color:            @background;
+    orientation:                 vertical;
+    children:                    [ "listbox", "inputbar" ];
 }
 
 listbox {
-    spacing:                    15px;
-    padding:                    20px;
-    background-color:           transparent;
-    orientation:                horizontal;
-    children:                   [ "listview" ];
+    spacing:                     15px;
+    padding:                     20px;
+    background-color:            transparent;
+    orientation:                 horizontal;
+    children:                    [ "listview" ];
 }
-
-/* ── List View ──────────────────────────────────────────────────────────── */
 
 listview {
-    enabled:                    true;
-    columns:                    5;
-    lines:                      1;
-    cycle:                      true;
-    dynamic:                    true;
-    scrollbar:                  false;
-    layout:                     vertical;
-    reverse:                    false;
-    fixed-height:               false;
-    fixed-columns:              true;
-    spacing:                    10px;
-    background-color:           transparent;
-    text-color:                 @foreground;
-    cursor:                     "default";
+    enabled:                     true;
+    columns:                     5;
+    lines:                       1;
+    cycle:                       true;
+    dynamic:                     true;
+    scrollbar:                   false;
+    layout:                      vertical;
+    reverse:                     false;
+    fixed-height:                false;
+    fixed-columns:               true;
+    spacing:                     10px;
+    background-color:            transparent;
+    text-color:                  @foreground;
+    cursor:                      "default";
 }
 
-/* ── Input Bar ──────────────────────────────────────────────────────────── */
-
 inputbar {
-    enabled:                    true;
-    spacing:                    10px;
-    padding:                    10px 15px;
-    background-color:           @background-alt;
-    text-color:                 @foreground;
-    orientation:                horizontal;
-    children:                   [ "prompt", "entry" ];
+    enabled:                     true;
+    spacing:                     10px;
+    padding:                     10px 15px;
+    background-color:            @background-alt;
+    text-color:                  @foreground;
+    orientation:                 horizontal;
+    children:                    [ "prompt", "entry" ];
 }
 
 prompt {
-    enabled:                    true;
-    background-color:           transparent;
-    text-color:                 @accent;
-    font:                       "monospace bold 11";
+    enabled:                     true;
+    background-color:            transparent;
+    text-color:                  @accent;
+    font:                        "monospace bold 11";
 }
 
 entry {
-    enabled:                    true;
-    background-color:           transparent;
-    text-color:                 @foreground;
-    cursor:                     text;
-    placeholder:                "Wallpaper";
-    placeholder-color:          @foreground-alt;
+    enabled:                     true;
+    background-color:            transparent;
+    text-color:                  @foreground;
+    cursor:                      text;
+    placeholder:                 "Wallpaper";
+    placeholder-color:           @foreground-alt;
+    font:                       "Josefin Sans 12";
 }
 
-/* ── Elements ───────────────────────────────────────────────────────────── */
+/* ── Elements ─────────────────────────────────────────────────────── */
 
 element {
-    enabled:                    true;
-    background-color:           transparent;
-    text-color:                 @foreground;
-    cursor:                     pointer;
-    orientation:                vertical;
-    spacing:                    -95px;
+    enabled:                     true;
+    background-color:            transparent;
+    text-color:                  @foreground;
+    cursor:                      pointer;
+    orientation:                 vertical;
+    spacing:                     -95px;
 }
 
 element selected.normal {
-    background-color:           @selection-bg;
-    text-color:                 @selection-fg;
+    background-color:            @selection-bg;
+    text-color:                  @selection-fg;
 }
 
 element-icon {
-    expand:                     true;
-    background-color:           transparent;
-    text-color:                 inherit;
-    size:                       320px 250px;
-    cursor:                     inherit;
+    expand:                      true;
+    background-color:            transparent;
+    text-color:                  inherit;
+    size:                        320px 250px;
+    cursor:                      inherit;
 }
 
 element-text {
-    background-color:           transparent;
-    text-color:                 inherit;
-    cursor:                     inherit;
-    horizontal-align:           0.5;
-    vertical-align:             0.94;
-    highlight:                  underline;
-    font:                       "JetBrainsMono 11";
+    background-color:            transparent;
+    text-color:                  inherit;
+    cursor:                      inherit;
+    horizontal-align:            0.5;
+    vertical-align:              0.94;
+    highlight: underline;
+    font:                       "Josefin Sans 12";
 }

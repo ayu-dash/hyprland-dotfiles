@@ -1,16 +1,8 @@
-/*
- * =============================================================================
- * Configuration Browser - File Selector
- * =============================================================================
- */
-
 @import "Base.rasi"
 
 configuration {
     show-icons:                 false;
 }
-
-/* ── Window ─────────────────────────────────────────────────────────────── */
 
 window {
     transparency:               "real";
@@ -21,11 +13,9 @@ window {
     x-offset:                   0px;
     y-offset:                   0px;
     background-color:           transparent;
-    border:                     1px solid;
+    border:                     1px solid; 
     border-color:               @border-color;
 }
-
-/* ── Main Container ─────────────────────────────────────────────────────── */
 
 mainbox {
     enabled:                    true;
@@ -34,14 +24,13 @@ mainbox {
     children:                   [ "listbox" ];
 }
 
+
 listbox {
     spacing:                    15px;
     padding:                    6px;
     background-color:           transparent;
     children:                   [ "listview" ];
 }
-
-/* ── List View ──────────────────────────────────────────────────────────── */
 
 listview {
     enabled:                    true;
@@ -59,8 +48,6 @@ listview {
     cursor:                     "default";
 }
 
-/* ── Elements ───────────────────────────────────────────────────────────── */
-
 element {
     padding:                    8px;
     background-color:           @background-alt;
@@ -71,7 +58,7 @@ element {
 
 element selected.normal {
     background-color:           @selection-bg;
-    text-color:                 @selection-fg;
+    text-color:                 @selection-fg; 
 }
 
 element-text {
@@ -79,5 +66,6 @@ element-text {
     background-color:           transparent;
     cursor:                     inherit;
     text-color:                 inherit;
-    font:                       "JetBrainsMono 11";
+    font:                       "Josefin Sans 12";
 }
+

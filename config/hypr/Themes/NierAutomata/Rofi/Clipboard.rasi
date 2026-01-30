@@ -1,17 +1,9 @@
-/*
- * =============================================================================
- * Clipboard Manager - Text and Image Mode
- * =============================================================================
- */
-
 @import "Base.rasi"
 
 configuration {
-    display-drun:               " ";
+    display-drun:               " ";
     drun-display-format:        "󰝤  {name}";
 }
-
-/* ── Window ─────────────────────────────────────────────────────────────── */
 
 window {
     transparency:               "real";
@@ -19,15 +11,13 @@ window {
     anchor:                     north west;
     fullscreen:                 false;
     width:                      520px;
-    height:                     100%;
+    height: 100%;
     x-offset:                   0px;
     y-offset:                   0px;
     background-color:           transparent;
-    border:                     1px solid;
+    border:                     1px solid; 
     border-color:               @border-color;
 }
-
-/* ── Main Container ─────────────────────────────────────────────────────── */
 
 mainbox {
     enabled:                    true;
@@ -36,14 +26,14 @@ mainbox {
     children:                   [ "inputbar", "listbox" ];
 }
 
+
+
 listbox {
     spacing:                    15px;
     padding:                    6px;
     background-color:           transparent;
     children:                   [ "listview" ];
 }
-
-/* ── List View ──────────────────────────────────────────────────────────── */
 
 listview {
     enabled:                    true;
@@ -60,8 +50,6 @@ listview {
     background-color:           transparent;
     cursor:                     "default";
 }
-
-/* ── Input Bar ──────────────────────────────────────────────────────────── */
 
 inputbar {
     enabled:                    true;
@@ -85,9 +73,8 @@ entry {
     cursor:                     text;
     placeholder:                "Clipboard Search...";
     placeholder-color:          @foreground-alt;
+    font:                       "Josefin Sans 12";
 }
-
-/* ── Elements ───────────────────────────────────────────────────────────── */
 
 element {
     padding:                    8px;
@@ -100,14 +87,15 @@ element {
 
 element selected.normal {
     background-color:           @selection-bg;
-    text-color:                 @selection-fg;
+    text-color:                 @selection-fg; 
 }
 
 element-icon {
-    background-color:           transparent;
-    text-color:                 inherit;
-    size:                       4em;
-    cursor:                     inherit;
+    // expand:                      true;
+    background-color:            transparent;
+    text-color:                  inherit;
+    size:                        4em;
+    cursor:                      inherit;
 }
 
 element-text {
@@ -117,5 +105,5 @@ element-text {
     cursor:                     inherit;
     text-color:                 inherit;
     highlight:                  underline;
-    font:                       "JetBrainsMono 11";
+    font:                       "Josefin Sans 12";
 }

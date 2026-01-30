@@ -4,7 +4,7 @@
    BASE STYLES
    ================================ */
 * {
-  font-family: "JetBrainsMono Nerd Font", "JetBrainsMono NF";
+  font-family: "Josefin Sans", "JetBrainsMono Nerd Font", "JetBrainsMono NF";
   min-width: 8px;
   font-size: 16px;
 }
@@ -86,6 +86,10 @@ window#waybar {
 #network,
 #clock {
   margin-top: 4px;
+}
+
+#clock {
+  font-family: "JetBrainsMono Nerd Font";
 }
 
 /* ================================

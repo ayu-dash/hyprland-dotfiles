@@ -1,17 +1,9 @@
-/*
- * =============================================================================
- * Emoji Picker - Grid Layout
- * =============================================================================
- */
-
 @import "Base.rasi"
 
 configuration {
     show-icons:                 false;
-    font:                       "JetBrains Mono Semibold 11";
+	font:						"JetBrains Mono Semibold 11";
 }
-
-/* ── Window ─────────────────────────────────────────────────────────────── */
 
 window {
     transparency:               "real";
@@ -22,11 +14,9 @@ window {
     x-offset:                   0px;
     y-offset:                   0px;
     background-color:           transparent;
-    border:                     1px solid;
+    border:                     1px solid; 
     border-color:               @border;
 }
-
-/* ── Main Container ─────────────────────────────────────────────────────── */
 
 mainbox {
     enabled:                    true;
@@ -35,14 +25,13 @@ mainbox {
     children:                   [ "inputbar", "listbox" ];
 }
 
+
 listbox {
     spacing:                    15px;
     padding:                    6px;
     background-color:           transparent;
     children:                   [ "listview" ];
 }
-
-/* ── List View ──────────────────────────────────────────────────────────── */
 
 listview {
     enabled:                    true;
@@ -59,8 +48,6 @@ listview {
     background-color:           transparent;
     cursor:                     "default";
 }
-
-/* ── Input Bar ──────────────────────────────────────────────────────────── */
 
 inputbar {
     enabled:                    true;
@@ -84,9 +71,8 @@ entry {
     cursor:                     text;
     placeholder:                "Emoji Search...";
     placeholder-color:          @foreground-alt;
+    font:                       "Josefin Sans 12";
 }
-
-/* ── Elements ───────────────────────────────────────────────────────────── */
 
 element {
     padding:                    8px;
@@ -98,7 +84,7 @@ element {
 
 element selected.normal {
     background-color:           @selection-bg;
-    text-color:                 @selection-fg;
+    text-color:                 @selection-fg; 
 }
 
 element-text {
@@ -107,3 +93,4 @@ element-text {
     background-color:           transparent;
     cursor:                     inherit;
 }
+

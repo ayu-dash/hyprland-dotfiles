@@ -7,10 +7,21 @@ import json
 import subprocess
 from pathlib import Path
 from typing import Any
+import time
+
+
+def wait_for_lock(lock_path='/tmp/theme_loading.lock', timeout=10) -> None:
+    """Wait for a lock file to be released."""
+    start_time = time.time()
+    while Path(lock_path).exists():
+        if time.time() - start_time > timeout:
+            break
+        time.sleep(0.1)
 
 
 def notify(icon: str, msg: str, level: str = "low") -> None:
     """Send a desktop notification using notify-send."""
+    wait_for_lock()
     subprocess.run([
         "notify-send",
         "-e",
@@ -24,6 +35,7 @@ def notify(icon: str, msg: str, level: str = "low") -> None:
 
 def notify_with_progress(icon: str, msg: str, value: int, level: str = "low") -> None:
     """Send a desktop notification with a progress bar."""
+    wait_for_lock()
     subprocess.run([
         "notify-send",
         "-e",

@@ -65,9 +65,7 @@
     },
     "modules": [
       "custom/kahfein",
-      "custom/colorpicker",
-      "custom/hyprshade",
-      "custom/hotspot",
+      "custom/hotspot"
     ],
   },
   "group/hwinfo": {
@@ -98,7 +96,6 @@
     "format-on": "",
     "format-off": "󰂲",
     "format-disabled": "",
-    "format-no-controller": "",
     "format-connected": "<b></b>",
     "tooltip-format": "{controller_alias}\t{controller_address}\n\n{num_connections} connected",
     "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
@@ -209,27 +206,27 @@
     "interval": 3,
     "on-click": "python $HOME/.config/hypr/Themes/NierAutomata/Bar/Scripts/Kahfein.py toggle",
   },
-  "custom/hyprshade": {
-    "format": "{}",
-    "tooltip": true,
-    "signal": 11,
-    "exec": "$HOME/.config/waybar/bin/toggle-hyprshade status",
-    "on-click": "$HOME/.config/waybar/bin/toggle-hyprshade",
-    "return-type": "json",
-  },
-  "custom/colorpicker": {
-    "format": "{}",
-    "return-type": "json",
-    "interval": "once",
-    "exec": "$HOME/.config/waybar/bin/colorpicker -j",
-    "on-click": "sleep 1 && $HOME/.config/waybar/bin/colorpicker",
-    "signal": 1,
-  },
+  // "custom/hyprshade": {
+  //   "format": "{}",
+  //   "tooltip": true,
+  //   "signal": 11,
+  //   "exec": "$HOME/.config/waybar/bin/toggle-hyprshade status",
+  //   "on-click": "$HOME/.config/waybar/bin/toggle-hyprshade",
+  //   "return-type": "json",
+  // },
+  // "custom/colorpicker": {
+  //   "format": "{}",
+  //   "return-type": "json",
+  //   "interval": "once",
+  //   "exec": "$HOME/.config/waybar/bin/colorpicker -j",
+  //   "on-click": "sleep 1 && $HOME/.config/waybar/bin/colorpicker",
+  //   "signal": 1,
+  // },
   "custom/hotspot": {
     "format": "{} ",
-    "exec": "python $HOME/.config/hypr/Scripts/Hostpot.py status",
+    "exec": "/usr/bin/python /home/wtf/.config/hypr/Scripts/Hostpot.py status",
+    "on-click": "sudo /usr/bin/python /home/wtf/.config/hypr/Scripts/Hostpot.py toggle",
     "return-type": "json",
-    "on-click": "python $HOME/.config/hypr/Scripts/Hostpot.py toggle",
     "interval": "once",
   },
   "custom/wifi": {
@@ -237,7 +234,7 @@
     "exec": "python $HOME/.config/hypr/Themes/NierAutomata/Bar/Scripts/WifiSignal.py",
     "return-type": "json",
     "interval": 1,
-    "on-click": "kitty impala",
+    "on-click": "kitty nmtui",
     "tooltip": true,
   },
   "custom/battery": {

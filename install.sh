@@ -561,6 +561,20 @@ install_system_configs_task() {
         "/etc/polkit-1/rules.d/50-libvirt.rules" \
         "libvirt polkit rule (no password for VM management)"
     echo ""
+
+    # ── Hotspot Sudoers ──────────────────────────────────────────────────────
+    print_step "Configuring hotspot sudoers..."
+    local sudoers_file="/etc/sudoers.d/hyprland-hotspot"
+    local hotspot_script="$HOME/.config/hypr/Scripts/Hostpot.py"
+    local sudoers_entry="$USER ALL=(ALL) NOPASSWD: /usr/bin/python $hotspot_script toggle"
+    
+    if echo "$sudoers_entry" | sudo tee "$sudoers_file" > /dev/null && sudo chmod 440 "$sudoers_file"; then
+        print_success "Hotspot sudoers rule installed"
+        print_info "User $USER can toggle hotspot without password"
+    else
+        print_error "Failed to install hotspot sudoers rule"
+    fi
+    echo ""
 }
 
 configure_qemu_kvm_task() {
