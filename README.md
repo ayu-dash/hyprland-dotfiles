@@ -157,7 +157,7 @@ Themes/
 ├── ThemeVariables.conf      # $theme_dir variable for sourcing
 │
 └── <ThemeName>/             # Theme directory (e.g. NierAutomata)
-    ├── Activate.sh          # Theme activation script
+    ├── Activate.py          # Theme activation script
     ├── Decoration.conf      # Hyprland decorations (borders, shadows, blur)
     ├── Name.txt             # Theme display name
     │

@@ -4,29 +4,18 @@ Displays connection status and signal strength icons.
 """
 
 import json
-import subprocess
+import sys
+from pathlib import Path
 
-
-def run_command(cmd: str) -> str:
-    """Run shell command and return output."""
-    try:
-        result = subprocess.run(
-            cmd,
-            shell=True,
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
-        return result.stdout.strip()
-    except (subprocess.TimeoutExpired, OSError):
-        return ""
+sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
+from Utils import run_capture
 
 
 def get_wifi_info() -> tuple[int | None, str | None]:
     """Get current WiFi connection info (signal strength, SSID)."""
-    output = run_command("nmcli -t -f IN-USE,SIGNAL,SSID dev wifi list 2>/dev/null")
+    stdout, _, _ = run_capture(["nmcli", "-t", "-f", "IN-USE,SIGNAL,SSID", "dev", "wifi", "list"])
 
-    for line in output.split("\n"):
+    for line in stdout.split("\n"):
         if line.startswith("*"):
             parts = line.split(":")
             if len(parts) >= 3:
@@ -39,8 +28,8 @@ def get_wifi_info() -> tuple[int | None, str | None]:
 
 def check_ethernet() -> bool:
     """Check if ethernet is connected."""
-    output = run_command("nmcli -t -f TYPE con show --active")
-    return "ethernet" in output
+    stdout, _, _ = run_capture(["nmcli", "-t", "-f", "TYPE", "con", "show", "--active"])
+    return "ethernet" in stdout
 
 
 def get_signal_icon(signal: int) -> tuple[str, str]:

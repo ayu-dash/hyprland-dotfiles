@@ -7,7 +7,9 @@ import subprocess
 from collections.abc import Generator
 from pathlib import Path
 
-from Utils import notify, read_file
+from Utils import notify, read_file, get_logger
+
+log = get_logger("Battery")
 
 
 # Battery threshold levels
@@ -46,9 +48,10 @@ def watch_battery() -> Generator[tuple[str, int], None, None]:
             try:
                 status = read_file("/sys/class/power_supply/BAT0/status").strip()
                 capacity = int(read_file("/sys/class/power_supply/BAT0/capacity").strip())
+                log.debug(f"Battery: {status} at {capacity}%")
                 yield status, capacity
             except (FileNotFoundError, ValueError) as e:
-                print(f"Error reading battery info: {e}")
+                log.error(f"Error reading battery info: {e}")
                 continue
 
 
@@ -65,6 +68,7 @@ def send_notification(status: str, capacity: int) -> None:
 
     if status == "Discharging":
         if capacity <= BATTERY_THRESHOLDS["critical"] and "critical" not in notified:
+            log.warning(f"Battery critical: {capacity}%")
             notify(
                 get_battery_icon(capacity),
                 f"Battery Critical! {capacity}%. Plug in charger now!",
@@ -72,6 +76,7 @@ def send_notification(status: str, capacity: int) -> None:
             )
             notified.add("critical")
         elif capacity <= BATTERY_THRESHOLDS["low"] and "low" not in notified:
+            log.info(f"Battery low: {capacity}%")
             notify(
                 get_battery_icon(capacity),
                 f"Battery Low! {capacity}%. Consider plugging in the charger.",
@@ -80,11 +85,14 @@ def send_notification(status: str, capacity: int) -> None:
             notified.add("low")
 
     elif status == "Charging":
+        if notified:
+            log.info("Charger connected, clearing notifications")
         notified.clear()
 
 
 def main() -> None:
     """Main loop: watch battery and send notifications."""
+    log.info("Battery monitor started")
     for status, capacity in watch_battery():
         send_notification(status, capacity)
 

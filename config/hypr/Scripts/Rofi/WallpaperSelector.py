@@ -5,8 +5,10 @@ Displays available wallpapers and sets the selected one.
 
 import glob
 import subprocess
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
 import Wallpaper
 from .Shared import ROFI_THEMES, current_theme_dir
 

@@ -8,7 +8,9 @@ import subprocess
 from pathlib import Path
 from typing import TypedDict
 
-from Utils import notify, notify_with_progress
+from Utils import notify, notify_with_progress, get_logger
+
+log = get_logger("Audio")
 
 
 # Constants
@@ -77,8 +79,8 @@ def audio_mute_toggle() -> None:
     volume_info = get_volume()
     subprocess.run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
 
-    # Status is inverted because we check before toggle
     status = "Muted" if not volume_info["muted"] else "Unmuted"
+    log.info(f"Audio {status.lower()} (volume: {volume_info['value']}%)")
     icon = get_volume_icon(volume_info["value"], not volume_info["muted"])
     notify(icon, f"Volume is {status}", level="critical")
 
@@ -89,6 +91,7 @@ def mic_mute_toggle() -> None:
     subprocess.run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"])
 
     status = "Unmuted" if was_muted else "Muted"
+    log.info(f"Microphone {status.lower()}")
     icon = get_mic_icon(not was_muted)
     notify(icon, f"Microphone is {status}", level="critical")
 
@@ -104,6 +107,7 @@ def adjust_volume(step: int, action: str = "raise") -> None:
 
     audio_unmute()
     subprocess.run(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", f"{new_volume}%"])
+    log.debug(f"Volume {action}: {volume_info['value']}% -> {new_volume}%")
 
     icon = get_volume_icon(new_volume, False)
     notify_with_progress(icon, f"Volume Level: {new_volume}%", new_volume, level="critical")

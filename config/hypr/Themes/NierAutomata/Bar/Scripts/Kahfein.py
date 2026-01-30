@@ -5,48 +5,36 @@ Prevents the system from going idle by toggling hypridle.
 
 import argparse
 import json
-import subprocess
+import sys
+from pathlib import Path
 
+sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
+from Utils import is_running, run_bg, kill_all, get_logger
+
+log = get_logger("Kahfein")
 
 PROCESS: str = "hypridle"
 
 
-def get_pid(process: str) -> int | None:
-    """Get PID of running process."""
-    try:
-        result = subprocess.run(
-            ["pgrep", "-x", process],
-            capture_output=True,
-            text=True
-        )
-        if result.returncode == 0:
-            return int(result.stdout.strip().split("\n")[0])
-    except (ValueError, OSError):
-        pass
-    return None
-
-
 def status() -> None:
     """Print Kahfein status in Waybar JSON format."""
-    pid = get_pid(PROCESS)
+    running = is_running(PROCESS)
     output = {
-        "text": "󰛊" if pid else "󰅶",
-        "tooltip": "Kahfein: Inactive" if pid else "Kahfein: Active",
-        "class": "inactive" if pid else "active"
+        "text": "󰛊" if running else "󰅶",
+        "tooltip": "Kahfein: Inactive" if running else "Kahfein: Active",
+        "class": "inactive" if running else "active"
     }
     print(json.dumps(output))
 
 
 def toggle() -> None:
     """Toggle hypridle on or off."""
-    if get_pid(PROCESS):
-        subprocess.run(["killall", PROCESS], capture_output=True)
+    if is_running(PROCESS):
+        log.info("Enabling caffeine mode (killing hypridle)")
+        kill_all(PROCESS)
     else:
-        subprocess.Popen(
-            [PROCESS],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
+        log.info("Disabling caffeine mode (starting hypridle)")
+        run_bg([PROCESS])
 
 
 def main() -> None:

@@ -3,25 +3,15 @@ Waybar process management module.
 Provides functions to start and stop Waybar.
 """
 
-import subprocess
-
-from Utils import get_pid
+from Utils import is_running, run_bg, kill_all
 
 
 def kill_waybar() -> None:
     """Kill all running Waybar instances."""
-    subprocess.run(
-        ["killall", "waybar"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )
+    kill_all("waybar")
 
 
 def run_waybar() -> None:
     """Start Waybar if not already running."""
-    if not get_pid("waybar"):
-        subprocess.Popen(
-            ["waybar"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
+    if not is_running("waybar"):
+        run_bg(["waybar"])

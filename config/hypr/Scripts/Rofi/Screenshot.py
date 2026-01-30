@@ -3,10 +3,12 @@ Rofi screenshot module.
 Provides screen capture options and notification with edit action.
 """
 
-import os
 import subprocess
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
+from Utils import run_silent
 from .Shared import ROFI_THEMES
 
 
@@ -75,12 +77,12 @@ def exec() -> None:
         return
 
     # Take screenshot
-    subprocess.run([SHOOTER, "-m", mode, "-o", str(TEMP_PATH), "-f", TEMP_FILE])
+    run_silent([SHOOTER, "-m", mode, "-o", str(TEMP_PATH), "-f", TEMP_FILE])
 
     # Handle result
     if FULL_TEMP_PATH.exists():
         should_edit = send_notification()
 
         if should_edit:
-            subprocess.run([EDITOR, "-f", str(FULL_TEMP_PATH)])
+            run_silent([EDITOR, "-f", str(FULL_TEMP_PATH)])
             FULL_TEMP_PATH.unlink(missing_ok=True)

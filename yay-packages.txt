@@ -7,8 +7,6 @@ nerd-fonts
 onlyoffice-bin
 visual-studio-code-bin
 hyprpicker
-hyprshade
-create_ap
 antigravity
 localsend-bin
 heroic-games-launcher-bin

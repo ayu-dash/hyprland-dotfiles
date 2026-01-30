@@ -7,6 +7,8 @@ import json
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
+from Utils import read_file
 
 # Simulation settings (for testing)
 SIMULATE_CHARGING: bool = False
@@ -29,8 +31,8 @@ def get_battery_info() -> tuple[str, int]:
     else:
         try:
             bat_path = next(Path("/sys/class/power_supply").glob("BAT*"))
-            status = (bat_path / "status").read_text().strip()
-            level = int((bat_path / "capacity").read_text().strip())
+            status = read_file(bat_path / "status").strip()
+            level = int(read_file(bat_path / "capacity").strip())
         except (StopIteration, FileNotFoundError, ValueError):
             status = "Unknown"
             level = 0

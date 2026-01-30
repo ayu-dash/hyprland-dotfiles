@@ -5,8 +5,11 @@ Displays available themes and activates the selected one.
 
 import os
 import subprocess
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
+from Utils import run_silent, notify
 from .Shared import ROFI_THEMES
 
 
@@ -85,21 +88,27 @@ def run_rofi(items: list[tuple[str, str]]) -> tuple[str, str] | None:
 
 
 def apply_theme(folder_name: str) -> None:
-    """Activate the selected theme by running its Activate.sh script."""
+    """Activate the selected theme by running its Activate script."""
     theme_path = THEME_DIR / folder_name
-    script_path = theme_path / "Activate.sh"
-
-    if not script_path.exists():
-        subprocess.run(["notify-send", "Error", f"Activate.sh not found in {folder_name}"])
-        return
-
-    try:
-        os.chmod(script_path, 0o755)
-        subprocess.run([str(script_path)], check=True)
-        subprocess.run(["notify-send", "Theme Applied", f"Active: {folder_name}"])
-
-    except subprocess.CalledProcessError:
-        subprocess.run(["notify-send", "Error", "Failed to run Activate.sh"])
+    
+    # Try Python first, then shell
+    py_script = theme_path / "Activate.py"
+    sh_script = theme_path / "Activate.sh"
+    
+    if py_script.exists():
+        result = run_silent(["python", str(py_script)])
+        if result == 0:
+            notify("preferences-desktop-theme", f"Theme Applied: {folder_name}")
+            return
+    
+    if sh_script.exists():
+        os.chmod(sh_script, 0o755)
+        result = run_silent([str(sh_script)])
+        if result == 0:
+            notify("preferences-desktop-theme", f"Theme Applied: {folder_name}")
+            return
+    
+    notify("dialog-error", f"No activation script found in {folder_name}")
 
 
 def exec() -> None:
@@ -107,7 +116,7 @@ def exec() -> None:
     themes = get_themes_with_names()
 
     if not themes:
-        subprocess.run(["notify-send", "Error", "No themes found!"])
+        notify("dialog-error", "No themes found!")
         return
 
     selection = run_rofi(themes)

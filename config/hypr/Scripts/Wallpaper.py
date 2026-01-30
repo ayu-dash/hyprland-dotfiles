@@ -4,13 +4,15 @@ Handles wallpaper setting and swww daemon control.
 """
 
 import argparse
-import json
 import shutil
-import subprocess
 from pathlib import Path
 
-from Utils import get_pid
+from Utils import (
+    get_logger, is_running, run_bg, run_silent,
+    hyprctl, get_monitors as utils_get_monitors
+)
 
+log = get_logger("Wallpaper")
 
 # Cache directories
 CACHE_DIR: Path = Path.home() / ".cache"
@@ -27,34 +29,32 @@ SWWW_PARAMS: list[str] = [
 
 def get_monitors() -> list[str]:
     """Get list of connected monitor names."""
-    result = subprocess.run(
-        ["hyprctl", "monitors", "-j"],
-        capture_output=True,
-        text=True
-    )
-    monitors = json.loads(result.stdout)
+    monitors = utils_get_monitors()
     return [m["name"] for m in monitors]
 
 
 def start_daemon() -> None:
     """Start swww-daemon if not already running."""
-    if not get_pid("swww-daemon"):
-        subprocess.Popen(["swww-daemon"])
+    if not is_running("swww-daemon"):
+        log.debug("Starting swww-daemon")
+        run_bg(["swww-daemon"])
 
 
 def swww_kill() -> None:
     """Kill the swww daemon."""
-    subprocess.run(["swww", "kill"])
+    log.debug("Killing swww daemon")
+    run_silent(["swww", "kill"])
 
 
 def swww_run() -> None:
     """Start swww daemon and restore previous wallpaper."""
     start_daemon()
-    subprocess.run(["swww", "restore"])
+    run_silent(["swww", "restore"])
 
 
 def set_wallpaper(image_path: str) -> None:
     """Set wallpaper on all monitors and create banner image."""
+    log.info(f"Setting wallpaper: {image_path}")
     start_daemon()
 
     path = Path(image_path)
@@ -62,20 +62,19 @@ def set_wallpaper(image_path: str) -> None:
 
     # For GIFs, extract first frame as static image
     if ext == ".gif":
-        subprocess.run([
-            "magick",
-            f"{image_path}[0]",
-            str(WAL_DEST)
-        ])
+        log.debug("Extracting first frame from GIF")
+        run_silent(["magick", f"{image_path}[0]", str(WAL_DEST)])
     else:
         shutil.copyfile(image_path, WAL_DEST)
 
     # Apply wallpaper to all monitors
-    for monitor in get_monitors():
-        subprocess.run(["swww", "img", image_path, "--outputs", monitor] + SWWW_PARAMS)
+    monitors = get_monitors()
+    log.debug(f"Applying to monitors: {monitors}")
+    for monitor in monitors:
+        run_silent(["swww", "img", image_path, "--outputs", monitor] + SWWW_PARAMS)
 
     # Create blurred banner for lock screen
-    subprocess.run(["magick", str(WAL_DEST), "-resize", "10%", str(BAN_DEST)])
+    run_silent(["magick", str(WAL_DEST), "-resize", "10%", str(BAN_DEST)])
 
 
 def main() -> None:

@@ -3,11 +3,13 @@ Rofi clipboard manager module.
 Displays clipboard history with text and image mode switching.
 """
 
-import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import TypedDict
 
+sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
+from Utils import run_silent, run_capture
 from .Shared import ROFI_THEMES
 
 
@@ -58,12 +60,7 @@ def generate_thumbnail(clip_id: str, output_path: Path) -> None:
     """Generate a thumbnail from clipboard image data."""
     try:
         p1 = subprocess.Popen(["cliphist", "decode", clip_id], stdout=subprocess.PIPE)
-        subprocess.run(
-            ["magick", "-", "-resize", "256x256", str(output_path)],
-            stdin=p1.stdout,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
+        run_silent(["magick", "-", "-resize", "256x256", str(output_path)])
         if p1.stdout:
             p1.stdout.close()
     except (OSError, subprocess.SubprocessError):
@@ -72,10 +69,10 @@ def generate_thumbnail(clip_id: str, output_path: Path) -> None:
 
 def get_clipboard_history() -> list[str]:
     """Get the clipboard history from cliphist."""
-    result = subprocess.run(["cliphist", "list"], stdout=subprocess.PIPE, text=True)
-    if not result.stdout:
+    stdout, _, _ = run_capture(["cliphist", "list"])
+    if not stdout:
         return []
-    return result.stdout.strip().split("\n")
+    return stdout.strip().split("\n")
 
 
 def prepare_data(mode: str, raw_lines: list[str]) -> tuple[list[str], list[str]]:

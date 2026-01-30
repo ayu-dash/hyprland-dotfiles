@@ -5,31 +5,33 @@ Prevents the system from going idle by toggling hypridle.
 
 import argparse
 import json
-import subprocess
 
-from Utils import notify, get_pid
+from Utils import notify, is_running, run_bg, kill_all, get_logger
 
+log = get_logger("Kahfein")
 
 PROCESS: str = "hypridle"
 
 
 def status() -> None:
     """Print the current Kahfein status in Waybar JSON format."""
-    pid = get_pid(PROCESS)
+    running = is_running(PROCESS)
     output = {
-        "text": "OFF" if pid else "ON",
-        "class": "inactive" if pid else "active"
+        "text": "OFF" if running else "ON",
+        "class": "inactive" if running else "active"
     }
     print(json.dumps(output))
 
 
 def toggle() -> None:
     """Toggle hypridle on or off and send notification."""
-    if get_pid(PROCESS):
-        subprocess.run(["killall", PROCESS])
+    if is_running(PROCESS):
+        log.info("Enabling caffeine mode (killing hypridle)")
+        kill_all(PROCESS)
         notify("system-lock-screen", "Kahfein enabled!")
     else:
-        subprocess.Popen([PROCESS])
+        log.info("Disabling caffeine mode (starting hypridle)")
+        run_bg([PROCESS])
         notify("system-lock-screen", "Kahfein disabled!")
 
 

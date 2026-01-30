@@ -16,7 +16,9 @@ from Rofi import (
     Session,
     ThemeSelector
 )
-from Utils import get_pid, kill_all
+from Utils import get_pid, kill_all, get_logger
+
+log = get_logger("RofiLauncher")
 
 
 PROCESS: str = "rofi"

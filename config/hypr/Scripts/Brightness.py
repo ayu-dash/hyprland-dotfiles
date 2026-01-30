@@ -7,7 +7,9 @@ import argparse
 import subprocess
 from pathlib import Path
 
-from Utils import notify_with_progress
+from Utils import notify_with_progress, get_logger
+
+log = get_logger("Brightness")
 
 
 DEFAULT_STEP: int = 10
@@ -22,9 +24,13 @@ def get_brightness_percentage() -> int:
         capture_output=True,
         text=True
     )
-    # Output format: device,class,current,max,percentage%
-    percentage_str = result.stdout.split(",")[3].rstrip("%")
-    return int(percentage_str)
+    try:
+        # Output format: device,class,current,max,percentage%
+        parts = result.stdout.strip().split(",")
+        percentage_str = parts[4].rstrip("%")
+        return int(percentage_str)
+    except (IndexError, ValueError):
+        return 50  # Default fallback
 
 
 def get_brightness_icon(value: int) -> str:
@@ -38,10 +44,12 @@ def get_brightness_icon(value: int) -> str:
 
 def adjust_brightness(step: int, action: str = "up") -> None:
     """Adjust screen brightness by the specified step amount."""
+    old_value = get_brightness_percentage()
     adjustment = f"{step}%+" if action == "up" else f"{step}%-"
     subprocess.run(["brightnessctl", "s", adjustment])
 
     new_value = get_brightness_percentage()
+    log.debug(f"Brightness {action}: {old_value}% -> {new_value}%")
     icon = get_brightness_icon(new_value)
     notify_with_progress(icon, f"Brightness Level: {new_value}%", new_value, level="critical")
 

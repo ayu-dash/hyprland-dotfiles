@@ -4,8 +4,11 @@ Displays config files and opens them in the editor.
 """
 
 import subprocess
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
+from Utils import run_bg, run_capture
 from .Shared import ROFI_THEMES
 
 
@@ -89,7 +92,7 @@ def exec() -> None:
         target_path = CONFIG_DIR / selected_file
 
         if target_path.exists():
-            subprocess.Popen([EDITOR, str(target_path)], start_new_session=True)
+            run_bg([EDITOR, str(target_path)], start_new_session=True)
 
     except (ValueError, IndexError):
         pass

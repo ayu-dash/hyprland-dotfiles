@@ -4,8 +4,11 @@ Provides power options: lock, suspend, logout, reboot, shutdown.
 """
 
 import subprocess
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
+from Utils import run_bg
 from .Shared import ROFI_THEMES
 
 
@@ -41,7 +44,7 @@ def run_rofi() -> str:
 def exec_command(cmd: str) -> None:
     """Execute a shell command in a new session."""
     try:
-        subprocess.Popen(cmd, shell=True, start_new_session=True)
+        run_bg(["sh", "-c", cmd], start_new_session=True)
     except OSError:
         pass
 
