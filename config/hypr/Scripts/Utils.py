@@ -161,9 +161,9 @@ def get_pid(process: str) -> str:
 
 
 def kill_all(process: str) -> None:
-    """Terminate all instances of a process."""
+    """Terminate all instances of a process quietly and wait for completion."""
     subprocess.run(
-        ["killall", process],
+        ["killall", "-qw", process],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
     )
