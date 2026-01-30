@@ -62,3 +62,8 @@ edk2-ovmf
 iwd
 pcmanfm
 engrampa
+papirus-icon-theme 
+uv
+nvm
+pnpm
+composer

@@ -11,3 +11,4 @@ antigravity
 localsend-bin
 heroic-games-launcher-bin
 greetd-tuigreet
+xampp
