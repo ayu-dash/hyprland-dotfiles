@@ -91,15 +91,7 @@ def apply_theme(folder_name: str) -> None:
     """Activate the selected theme by running its Activate script."""
     theme_path = THEME_DIR / folder_name
     
-    # Try Python first, then shell
-    py_script = theme_path / "Activate.py"
     sh_script = theme_path / "Activate.sh"
-    
-    if py_script.exists():
-        result = run_silent(["python", str(py_script)])
-        if result == 0:
-            notify("preferences-desktop-theme", f"Theme Applied: {folder_name}")
-            return
     
     if sh_script.exists():
         os.chmod(sh_script, 0o755)
