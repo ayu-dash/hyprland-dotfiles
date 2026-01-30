@@ -12,7 +12,6 @@ flexible theming system for daily use.
 
 - 🚀 **Auto Installer** - One-command setup with interactive menu
 - 🖥️ **GPU Auto-detect** - NVIDIA, AMD, Intel driver installation
-- 🌐 **WiFi Backend** - Automatic iwd/wpa_supplicant configuration
 - 🎮 **QEMU/KVM Ready** - Virtualization pre-configured
 - 🐚 **Zsh + Oh My Zsh** - Modern shell with plugins
 
