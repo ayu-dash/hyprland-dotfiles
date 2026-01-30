@@ -157,7 +157,7 @@ Themes/
 ├── ThemeVariables.conf      # $theme_dir variable for sourcing
 │
 └── <ThemeName>/             # Theme directory (e.g. NierAutomata)
-    ├── Activate.py          # Theme activation script
+    ├── Activate.sh          # Theme activation script
     ├── Decoration.conf      # Hyprland decorations (borders, shadows, blur)
     ├── Name.txt             # Theme display name
     │
@@ -207,7 +207,6 @@ The installer automatically configures:
 |-----------|---------------|
 | **GPU Drivers** | NVIDIA (dkms/open), AMD, Intel auto-detect |
 | **Display Manager** | greetd + tuigreet |
-| **WiFi Backend** | iwd (auto-switch from wpa_supplicant) |
 | **Virtualization** | QEMU/KVM + libvirt + virt-manager |
 | **Shell** | Zsh + Oh My Zsh + plugins |
 
