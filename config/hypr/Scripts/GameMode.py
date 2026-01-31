@@ -6,8 +6,7 @@ Disables animations, blur, and gaps for optimal gaming performance.
 from pathlib import Path
 
 import Wallpaper
-import Waybar
-from Utils import notify, get_logger, hyprctl_batch, hyprctl_keyword, hyprctl_reload
+from Utils import notify, get_logger, hyprctl_batch, hyprctl_keyword, hyprctl_reload, run_bg, kill_all
 
 log = get_logger("GameMode")
 
@@ -33,9 +32,10 @@ def enable_game_mode() -> None:
     hyprctl_keyword("windowrule", "opacity 1 override 1 override 1 override, ^(.*)$")
 
     # Kill background processes
-    log.debug("Killing swww and waybar")
+    log.debug("Killing swww, waybar, and swaync")
     Wallpaper.swww_kill()
-    Waybar.kill_waybar()
+    kill_all("waybar")
+    kill_all("swaync")
 
     notify("applications-games", "Gamemode: Enabled")
 
@@ -46,10 +46,25 @@ def disable_game_mode() -> None:
     TEMP_FILE.unlink(missing_ok=True)
     hyprctl_reload()
 
-    # Restart background processes
-    log.debug("Restarting swww and waybar")
+    # Restart wallpaper daemon
+    log.debug("Restarting swww")
     Wallpaper.swww_run()
-    Waybar.run_waybar()
+
+    # Reload active theme (this will restart waybar and swaync with correct config)
+    log.debug("Reloading active theme")
+    theme_loader = Path.home() / ".config/hypr/Themes/ThemeLoader.conf"
+    if theme_loader.exists():
+        # Parse ThemeLoader.conf to get the activate script path
+        content = theme_loader.read_text()
+        # Extract theme name from: exec-once = $HOME/.config/hypr/Themes/ThemeName/Activate.sh
+        import re
+        match = re.search(r'Themes/([^/]+)/Activate\.sh', content)
+        if match:
+            theme_name = match.group(1)
+            activate_script = Path.home() / f".config/hypr/Themes/{theme_name}/Activate.sh"
+            if activate_script.exists():
+                log.debug(f"Running {activate_script}")
+                run_bg(["bash", str(activate_script)])
 
     notify("applications-games", "Gamemode: Disabled")
 
