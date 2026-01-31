@@ -626,109 +626,6 @@ configure_qemu_kvm_task() {
     echo ""
 }
 
-install_xampp_task() {
-    print_header "🐘 Installing XAMPP"
-
-    local HTDOCS_SYMLINK="$HOME/htdocs"
-
-    # Fetch latest version from SourceForge RSS
-    print_step "Fetching latest XAMPP version..."
-    local XAMPP_VER
-    XAMPP_VER=$(curl -s "https://sourceforge.net/projects/xampp/rss?path=/XAMPP%20Linux" | grep -oP 'xampp-linux-x64-\K[0-9]+\.[0-9]+\.[0-9]+-[0-9]+' | head -1)
-
-    if [[ -z "$XAMPP_VER" ]]; then
-        print_error "Failed to fetch XAMPP version!"
-        return 1
-    fi
-
-    local MAJOR_VER="${XAMPP_VER%-*}"
-    local INSTALLER="xampp-linux-x64-${XAMPP_VER}-installer.run"
-    local DOWNLOAD_URL="https://sourceforge.net/projects/xampp/files/XAMPP%20Linux/${MAJOR_VER}/${INSTALLER}"
-
-    print_success "Latest version: $XAMPP_VER"
-
-    # Check if XAMPP is already installed
-    if [[ -d "/opt/lampp" ]]; then
-        print_warning "XAMPP is already installed at /opt/lampp"
-        local choice
-        choice=$(confirm_prompt "Reinstall XAMPP? [y/N]" "n")
-        if [[ "$choice" != "y" && "$choice" != "yes" ]]; then
-            print_info "Skipping XAMPP installation..."
-            # Still fix permissions and symlink
-        else
-            # Download and install
-            print_step "Downloading XAMPP ${XAMPP_VER}..."
-            local TEMP_DIR
-            TEMP_DIR=$(mktemp -d)
-            cd "$TEMP_DIR"
-
-            if wget -q --show-progress "$DOWNLOAD_URL"; then
-                chmod +x "$INSTALLER"
-                print_step "Installing XAMPP..."
-                sudo "./$INSTALLER" --mode unattended
-                print_success "XAMPP installed successfully"
-            else
-                print_error "Failed to download XAMPP"
-                cd - > /dev/null
-                rm -rf "$TEMP_DIR"
-                return 1
-            fi
-
-            cd - > /dev/null
-            rm -rf "$TEMP_DIR"
-        fi
-    else
-        # Fresh install
-        print_step "Downloading XAMPP ${XAMPP_VER}..."
-        local TEMP_DIR
-        TEMP_DIR=$(mktemp -d)
-        cd "$TEMP_DIR"
-
-        if wget -q --show-progress "$DOWNLOAD_URL"; then
-            chmod +x "$INSTALLER"
-            print_step "Installing XAMPP..."
-            sudo "./$INSTALLER" --mode unattended
-            print_success "XAMPP installed successfully"
-        else
-            print_error "Failed to download XAMPP"
-            cd - > /dev/null
-            rm -rf "$TEMP_DIR"
-            return 1
-        fi
-
-        cd - > /dev/null
-        rm -rf "$TEMP_DIR"
-    fi
-
-    # Change htdocs ownership to current user
-    print_step "Changing htdocs ownership to $USER..."
-    if sudo chown -R "$USER:$USER" /opt/lampp/htdocs; then
-        print_success "Ownership changed successfully"
-    else
-        print_error "Failed to change ownership"
-    fi
-
-    # Create symlink to htdocs in home directory
-    print_step "Creating symlink $HTDOCS_SYMLINK -> /opt/lampp/htdocs..."
-    if [[ -L "$HTDOCS_SYMLINK" ]]; then
-        rm "$HTDOCS_SYMLINK"
-    elif [[ -e "$HTDOCS_SYMLINK" ]]; then
-        print_warning "$HTDOCS_SYMLINK exists and is not a symlink, skipping..."
-    fi
-
-    if [[ ! -e "$HTDOCS_SYMLINK" ]]; then
-        ln -s /opt/lampp/htdocs "$HTDOCS_SYMLINK"
-        print_success "Symlink created: ~/htdocs -> /opt/lampp/htdocs"
-    fi
-
-    echo ""
-    print_info "XAMPP installed at: /opt/lampp"
-    print_info "htdocs symlink: ~/htdocs"
-    print_info "Start: sudo /opt/lampp/lampp start"
-    print_info "Stop:  sudo /opt/lampp/lampp stop"
-    echo ""
-}
-
 install_gpu_drivers_task() {
     print_header "🖥️  Installing GPU Drivers"
 
@@ -986,7 +883,6 @@ full_install() {
     install_themes_task
     install_system_configs_task
     configure_qemu_kvm_task
-    install_xampp_task
     enable_services_task
     show_completion
 }
@@ -1035,11 +931,10 @@ main_menu() {
     echo -e "  ${CYAN}4)${NC} Install Dotfiles Only    ${DIM}(~/.config, ~/.local/bin)${NC}"
     echo -e "  ${CYAN}5)${NC} Install Themes Only      ${DIM}(Icons, GTK Themes)${NC}"
     echo -e "  ${CYAN}6)${NC} Configure Shell Only     ${DIM}(Zsh, Oh My Zsh)${NC}"
-    echo -e "  ${CYAN}7)${NC} Install XAMPP            ${DIM}(Latest PHP, Apache, MySQL)${NC}"
     echo -e "  ${RED}0)${NC} Quit"
     echo ""
     
-    echo -ne "  ${YELLOW}?${NC}  Enter choice [0-7]: "
+    echo -ne "  ${YELLOW}?${NC}  Enter choice [0-6]: "
     read choice < /dev/tty
     echo ""
 
@@ -1050,7 +945,6 @@ main_menu() {
         4) install_dotfiles_task; show_completion ;;
         5) install_themes_task; show_completion ;;
         6) configure_shell_task; show_completion ;;
-        7) install_xampp_task; show_completion ;;
         0) echo -e "  ${DIM}Bye!${NC}"; exit 0 ;;
         *) echo -e "  ${RED}Invalid choice!${NC}"; sleep 1; clear; main_menu ;;
     esac

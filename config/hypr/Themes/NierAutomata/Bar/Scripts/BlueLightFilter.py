@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
-from Utils import getPid, killAll, notify
+from Utils import get_pid, kill_all, notify
 
 # Temperature presets (in Kelvin)
 TEMP_OFF = 6500       # Neutral daylight (no filter)
@@ -48,7 +48,7 @@ def load_state() -> int | None:
 
 def get_current_status() -> tuple[bool, int]:
     """Check if hyprsunset is running and get current temperature."""
-    pid = getPid("hyprsunset")
+    pid = get_pid("hyprsunset")
     if not pid:
         return False, TEMP_OFF
 
@@ -78,7 +78,7 @@ def get_current_status() -> tuple[bool, int]:
 
 def set_temperature(temp: int) -> None:
     """Set the color temperature using hyprsunset."""
-    killAll("hyprsunset")
+    kill_all("hyprsunset")
 
     if temp >= TEMP_OFF:
         # Remove state file when turning off

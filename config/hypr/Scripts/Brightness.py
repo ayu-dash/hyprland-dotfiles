@@ -25,9 +25,10 @@ def get_brightness_percentage() -> int:
         text=True
     )
     try:
-        # Output format: device,class,current,max,percentage%
+        # Output format: device,class,current,max%,current
+        # The percentage is at index 3 (e.g., "100%")
         parts = result.stdout.strip().split(",")
-        percentage_str = parts[4].rstrip("%")
+        percentage_str = parts[3].rstrip("%")
         return int(percentage_str)
     except (IndexError, ValueError):
         return 50  # Default fallback

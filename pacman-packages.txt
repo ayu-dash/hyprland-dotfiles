@@ -22,6 +22,8 @@ network-manager-applet
 impala
 mpv
 loupe
+qt6ct
+qt5ct
 qt5-wayland
 qt6-wayland
 kvantum
@@ -62,3 +64,4 @@ uv
 nvm
 pnpm
 composer
+man
