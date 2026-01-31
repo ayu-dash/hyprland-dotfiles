@@ -9,7 +9,6 @@ visual-studio-code-bin
 hyprpicker
 hyprsunset
 antigravity
-localsend-bin
+localsend
 heroic-games-launcher-bin
 greetd-tuigreet
-xampp
