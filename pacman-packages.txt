@@ -65,3 +65,4 @@ nvm
 pnpm
 composer
 man
+gvfs
