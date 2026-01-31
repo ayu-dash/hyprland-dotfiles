@@ -65,7 +65,9 @@
     },
     "modules": [
       "custom/kahfein",
-      "custom/hotspot"
+      "custom/hotspot",
+      "custom/bluelight",
+      "custom/colorpicker",
     ],
   },
   "group/hwinfo": {
@@ -207,22 +209,20 @@
     "interval": 3,
     "on-click": "python $HOME/.config/hypr/Themes/NierAutomata/Bar/Scripts/Kahfein.py toggle",
   },
-  // "custom/hyprshade": {
-  //   "format": "{}",
-  //   "tooltip": true,
-  //   "signal": 11,
-  //   "exec": "$HOME/.config/waybar/bin/toggle-hyprshade status",
-  //   "on-click": "$HOME/.config/waybar/bin/toggle-hyprshade",
-  //   "return-type": "json",
-  // },
-  // "custom/colorpicker": {
-  //   "format": "{}",
-  //   "return-type": "json",
-  //   "interval": "once",
-  //   "exec": "$HOME/.config/waybar/bin/colorpicker -j",
-  //   "on-click": "sleep 1 && $HOME/.config/waybar/bin/colorpicker",
-  //   "signal": 1,
-  // },
+  "custom/bluelight": {
+    "exec": "python ~/.config/hypr/Themes/NierAutomata/Bar/Scripts/BlueLightFilter.py status",
+    "return-type": "json",
+    "interval": 5,
+    "on-click": "python ~/.config/hypr/Themes/NierAutomata/Bar/Scripts/BlueLightFilter.py cycle",
+    "on-click-right": "python ~/.config/hypr/Themes/NierAutomata/Bar/Scripts/BlueLightFilter.py toggle",
+  },
+  "custom/colorpicker": {
+    "exec": "python ~/.config/hypr/Themes/NierAutomata/Bar/Scripts/ColorPicker.py status",
+    "return-type": "json",
+    "interval": "once",
+    "on-click": "python ~/.config/hypr/Themes/NierAutomata/Bar/Scripts/ColorPicker.py",
+    "on-click-right": "python ~/.config/hypr/Themes/NierAutomata/Bar/Scripts/ColorPicker.py rgb",
+  },
   "custom/hotspot": {
     "format": "{} ",
     "exec": "/usr/bin/python /home/wtf/.config/hypr/Scripts/Hostpot.py status",
