@@ -50,18 +50,18 @@ def get_uptime() -> str:
             seconds = int(float(f.read().split()[0]))
         hours, remainder = divmod(seconds, 3600)
         minutes = remainder // 60
-        return f"  Uptime: {hours}h {minutes}m"
+        return f"  Uptime: {hours}h {minutes}m"
     except (FileNotFoundError, ValueError):
-        return "  Uptime: N/A"
+        return "  Uptime: N/A"
 
 
 def get_temp() -> str:
     """Get CPU temperature."""
     try:
         temp = int(open('/sys/class/thermal/thermal_zone0/temp').read()) // 1000
-        return f"  Temp: {temp}°C"
+        return f"󰔄  Temp: {temp}°C"
     except (FileNotFoundError, ValueError):
-        return "  Temp: N/A"
+        return "󰔄  Temp: N/A"
 
 
 def get_cpu() -> str:
@@ -85,9 +85,9 @@ def get_cpu() -> str:
         with open(prev_file, 'w') as f:
             f.write(f'{idle} {total}')
         
-        return f"  CPU\t{progress_bar(percent)} {percent}%"
+        return f"  CPU\t{progress_bar(percent)} {percent}%"
     except (FileNotFoundError, ValueError):
-        return "  CPU\t N/A"
+        return "  CPU\t N/A"
 
 
 def get_ram() -> str:
@@ -101,9 +101,9 @@ def get_ram() -> str:
         percent = int((used / total) * 100)
         used_h = f"{used/1024:.1f}G" if used >= 1024 else f"{used:.0f}M"
         total_h = f"{total/1024:.1f}G" if total >= 1024 else f"{total:.0f}M"
-        return f"  RAM\t{progress_bar(percent)} {used_h}/{total_h}"
+        return f"  RAM\t{progress_bar(percent)} {used_h}/{total_h}"
     except (FileNotFoundError, ValueError, ZeroDivisionError):
-        return "  RAM\t N/A"
+        return "  RAM\t N/A"
 
 
 def get_swap() -> str:
