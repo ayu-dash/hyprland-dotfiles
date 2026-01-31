@@ -12,3 +12,5 @@ antigravity
 localsend
 heroic-games-launcher-bin
 greetd-tuigreet
+google-chrome
+zen-browser-bin
