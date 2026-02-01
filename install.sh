@@ -554,14 +554,6 @@ install_system_configs_task() {
     fi
     echo ""
 
-    # ── Polkit (libvirt password-less) ──────────────────────────────────────
-    print_step "Installing polkit rules..."
-    copy_system_config \
-        "$DOTFILES_DIR/etc/polkit-1/rules.d/50-libvirt.rules" \
-        "/etc/polkit-1/rules.d/50-libvirt.rules" \
-        "libvirt polkit rule (no password for VM management)"
-    echo ""
-
     # ── Hotspot Sudoers ──────────────────────────────────────────────────────
     print_step "Configuring hotspot sudoers..."
     local sudoers_file="/etc/sudoers.d/hyprland-hotspot"
@@ -573,6 +565,26 @@ install_system_configs_task() {
         print_info "User $USER can toggle hotspot without password"
     else
         print_error "Failed to install hotspot sudoers rule"
+    fi
+    echo ""
+
+    # ── Libvirt Sudoers ──────────────────────────────────────────────────────
+    print_step "Configuring libvirt sudoers..."
+    local sudoers_file="/etc/sudoers.d/hyprland-remote-win10"
+    
+    if sudo tee "$sudoers_file" > /dev/null << 'EOF'
+%libvirt ALL=(ALL) NOPASSWD: /usr/bin/virsh
+%libvirt ALL=(ALL) NOPASSWD: /usr/bin/virsh start remotewin10
+%libvirt ALL=(ALL) NOPASSWD: /usr/bin/virsh shutdown remotewin10
+%libvirt ALL=(ALL) NOPASSWD: /usr/bin/virsh reboot remotewin10
+%libvirt ALL=(ALL) NOPASSWD: /usr/bin/virt-manager
+%libvirt ALL=(ALL) NOPASSWD: /usr/bin/qemu-system-x86_64
+EOF
+    then
+        sudo chmod 440 "$sudoers_file"
+        print_success "Libvirt sudoers rules installed"
+    else
+        print_error "Failed to install libvirt sudoers rules"
     fi
     echo ""
 }

@@ -81,24 +81,27 @@ start_rdp() {
 
     if [[ $? -eq 0 ]]; then
         echo "✓ RDP started successfully."
+        notify-send -i computer "Remote Win10" "RDP connected to $SERVER"
     else
         echo "✗ Failed to start RDP."
+        notify-send -u critical -i dialog-error "Remote Win10" "Failed to start RDP"
         return 1
     fi
 }
 
 is_server_ready() {
     echo "Waiting for server..."
-    for i in {1..10}; do
+    for i in {1..20}; do
         if ping -c 1 -W 1 "$SERVER" > /dev/null 2>&1; then
             echo "✓ Server is ready"
             return 0
         fi
-        echo "  Attempt $i/10..."
+        echo "  Attempt $i/20..."
         sleep 1
     done
 
     echo "✗ Server is not reachable after several attempts."
+    notify-send -u critical -i dialog-error "Remote Win10" "Server $SERVER not reachable"
     return 1
 }
 
@@ -107,6 +110,7 @@ stop() {
     sudo virsh shutdown "$DOMAIN"
     pkill xfreerdp3
     echo "✓ Stopped"
+    notify-send -i computer "Remote Win10" "VM shutdown and RDP disconnected"
 }
 
 start() {
@@ -116,6 +120,7 @@ start() {
         echo "VM State: $state"
         echo "Starting VM..."
         sudo virsh start "$DOMAIN"
+        notify-send -i computer "Remote Win10" "Starting VM $DOMAIN..."
     else
         echo "VM State: $state"
         echo "VM is already running"
