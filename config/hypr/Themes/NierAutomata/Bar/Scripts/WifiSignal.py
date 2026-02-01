@@ -12,24 +12,52 @@ from Utils import run_capture
 
 
 def get_wifi_info() -> tuple[int | None, str | None]:
-    """Get current WiFi connection info (signal strength, SSID)."""
-    stdout, _, _ = run_capture(["nmcli", "-t", "-f", "IN-USE,SIGNAL,SSID", "dev", "wifi", "list"])
+    """Get current WiFi connection info (signal strength, SSID) using iwd."""
+    stdout, _, returncode = run_capture(["iwctl", "station", "wlan0", "show"])
+
+    if returncode != 0 or not stdout:
+        return None, None
+
+    ssid = None
+    signal = None
 
     for line in stdout.split("\n"):
-        if line.startswith("*"):
-            parts = line.split(":")
+        line = line.strip()
+        if "Connected network" in line:
+            # Format: "Connected network              SSID_NAME"
+            parts = line.split()
             if len(parts) >= 3:
-                signal = int(parts[1]) if parts[1].isdigit() else 0
-                ssid = parts[2] if parts[2] else "Unknown"
-                return signal, ssid
+                ssid = " ".join(parts[2:])
+        elif "RSSI" in line:
+            # Format: "RSSI                          -XX dBm"
+            parts = line.split()
+            for i, part in enumerate(parts):
+                if part.startswith("-") and part[1:].isdigit():
+                    rssi = int(part)
+                    # Convert RSSI (dBm) to percentage (rough approximation)
+                    # -30 dBm = 100%, -90 dBm = 0%
+                    signal = max(0, min(100, 2 * (rssi + 100)))
+                    break
+
+    if ssid and signal is not None:
+        return signal, ssid
 
     return None, None
 
 
 def check_ethernet() -> bool:
-    """Check if ethernet is connected."""
-    stdout, _, _ = run_capture(["nmcli", "-t", "-f", "TYPE", "con", "show", "--active"])
-    return "ethernet" in stdout
+    """Check if ethernet is connected via /sys/class/net."""
+    eth_interfaces = ["eth0", "enp0s31f6", "eno1"]
+    for iface in eth_interfaces:
+        operstate_path = Path(f"/sys/class/net/{iface}/operstate")
+        if operstate_path.exists():
+            try:
+                state = operstate_path.read_text().strip()
+                if state == "up":
+                    return True
+            except (OSError, IOError):
+                continue
+    return False
 
 
 def get_signal_icon(signal: int) -> tuple[str, str]:

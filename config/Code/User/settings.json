@@ -5,5 +5,7 @@
     "window.menuBarVisibility": "toggle",
     "explorer.confirmDelete": false,
     "php.validate.executablePath": "/opt/lampp/bin/php",
-    "terminal.integrated.sendKeybindingsToShell": true
+    "terminal.integrated.sendKeybindingsToShell": true,
+    "window.customTitleBarVisibility": "never",
+    "window.titleBarStyle": "native"
 }

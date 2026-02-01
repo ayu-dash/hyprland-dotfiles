@@ -356,11 +356,64 @@ install_packages_task() {
 
     print_step "Installing VS Code extensions..."
     if command -v code &> /dev/null && [ -f "$DOTFILES_DIR/etc/CodeExtensions.txt" ]; then
-        xargs -n 1 code --install-extension < "$DOTFILES_DIR/etc/CodeExtensions.txt" > /dev/null 2>&1 &
-        spinner $! "Installing extensions..."
-        print_success "VS Code extensions installed"
+        local total_ext=$(grep -v '^#' "$DOTFILES_DIR/etc/CodeExtensions.txt" | grep -v '^$' | wc -l)
+        local current_ext=0
+        local failed_ext=()
+        
+        while IFS= read -r ext || [[ -n "$ext" ]]; do
+            [[ -z "$ext" || "$ext" =~ ^# ]] && continue
+            ((current_ext++))
+            echo -e "\n${GRAY}($current_ext/$total_ext)${NC} Installing ${CYAN}$ext${NC}..."
+            if ! code --install-extension "$ext" --force 2>&1; then
+                failed_ext+=("$ext")
+            fi
+        done < "$DOTFILES_DIR/etc/CodeExtensions.txt"
+        
+        echo ""
+        if [ ${#failed_ext[@]} -gt 0 ]; then
+            print_warning "Some extensions failed to install:"
+            for ext in "${failed_ext[@]}"; do
+                echo -e "    ${RED}✗${NC} $ext"
+            done
+        fi
+        print_success "Installed $((current_ext - ${#failed_ext[@]}))/$total_ext extensions"
     else
         print_info "VS Code not found, skipping"
+    fi
+}
+
+install_vscode_extensions_task() {
+    print_header "📦 Installing VS Code Extensions"
+
+    if command -v code &> /dev/null && [ -f "$DOTFILES_DIR/etc/CodeExtensions.txt" ]; then
+        local total_ext=$(grep -v '^#' "$DOTFILES_DIR/etc/CodeExtensions.txt" | grep -v '^$' | wc -l)
+        local current_ext=0
+        local failed_ext=()
+        
+        while IFS= read -r ext || [[ -n "$ext" ]]; do
+            [[ -z "$ext" || "$ext" =~ ^# ]] && continue
+            ((current_ext++))
+            echo -e "\n${GRAY}($current_ext/$total_ext)${NC} Installing ${CYAN}$ext${NC}..."
+            if ! code --install-extension "$ext" --force 2>&1; then
+                failed_ext+=("$ext")
+            fi
+        done < "$DOTFILES_DIR/etc/CodeExtensions.txt"
+        
+        echo ""
+        if [ ${#failed_ext[@]} -gt 0 ]; then
+            print_warning "Some extensions failed to install:"
+            for ext in "${failed_ext[@]}"; do
+                echo -e "    ${RED}✗${NC} $ext"
+            done
+        fi
+        print_success "Installed $((current_ext - ${#failed_ext[@]}))/$total_ext extensions"
+    else
+        if ! command -v code &> /dev/null; then
+            print_error "VS Code (code) command not found"
+            print_info "Install VS Code first: yay -S visual-studio-code-bin"
+        else
+            print_error "CodeExtensions.txt not found at $DOTFILES_DIR/etc/CodeExtensions.txt"
+        fi
     fi
 }
 
@@ -536,12 +589,20 @@ enable_services_task() {
 install_system_configs_task() {
     print_header "🔧 Installing System Configurations"
 
-    # ── NetworkManager ──────────────────────────────────────────────────────
-    print_step "Configuring NetworkManager..."
+    # ── IWD Configuration ────────────────────────────────────────────────────
+    print_step "Configuring IWD..."
     copy_system_config \
-        "$DOTFILES_DIR/etc/NetworkManager.conf" \
-        "/etc/NetworkManager/NetworkManager.conf" \
-        "NetworkManager.conf (iwd backend)"
+        "$DOTFILES_DIR/etc/iwd/main.conf" \
+        "/etc/iwd/main.conf" \
+        "iwd main.conf"
+    echo ""
+
+    # ── DNS Resolver ─────────────────────────────────────────────────────────
+    print_step "Configuring DNS resolver..."
+    copy_system_config \
+        "$DOTFILES_DIR/etc/resolv.conf " \
+        "/etc/resolv.conf" \
+        "resolv.conf"
     echo ""
 
     # ── Greetd ──────────────────────────────────────────────────────────────
@@ -943,10 +1004,11 @@ main_menu() {
     echo -e "  ${CYAN}4)${NC} Install Dotfiles Only    ${DIM}(~/.config, ~/.local/bin)${NC}"
     echo -e "  ${CYAN}5)${NC} Install Themes Only      ${DIM}(Icons, GTK Themes)${NC}"
     echo -e "  ${CYAN}6)${NC} Configure Shell Only     ${DIM}(Zsh, Oh My Zsh)${NC}"
+    echo -e "  ${CYAN}7)${NC} Install VS Code Extensions ${DIM}(From CodeExtensions.txt)${NC}"
     echo -e "  ${RED}0)${NC} Quit"
     echo ""
     
-    echo -ne "  ${YELLOW}?${NC}  Enter choice [0-6]: "
+    echo -ne "  ${YELLOW}?${NC}  Enter choice [0-7]: "
     read choice < /dev/tty
     echo ""
 
@@ -957,6 +1019,7 @@ main_menu() {
         4) install_dotfiles_task; show_completion ;;
         5) install_themes_task; show_completion ;;
         6) configure_shell_task; show_completion ;;
+        7) install_vscode_extensions_task; show_completion ;;
         0) echo -e "  ${DIM}Bye!${NC}"; exit 0 ;;
         *) echo -e "  ${RED}Invalid choice!${NC}"; sleep 1; clear; main_menu ;;
     esac
