@@ -66,3 +66,4 @@ pnpm
 composer
 man
 gvfs
+freerdp
