@@ -60,9 +60,15 @@ def generate_thumbnail(clip_id: str, output_path: Path) -> None:
     """Generate a thumbnail from clipboard image data."""
     try:
         p1 = subprocess.Popen(["cliphist", "decode", clip_id], stdout=subprocess.PIPE)
-        run_silent(["magick", "-", "-resize", "256x256", str(output_path)])
+        p2 = subprocess.Popen(
+            ["magick", "-", "-resize", "256x256", str(output_path)],
+            stdin=p1.stdout,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
         if p1.stdout:
             p1.stdout.close()
+        p2.wait()
     except (OSError, subprocess.SubprocessError):
         pass
 
