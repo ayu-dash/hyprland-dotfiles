@@ -18,7 +18,6 @@ simple-scan
 cliphist
 bluez-utils
 blueman
-network-manager-applet
 impala
 mpv
 loupe
@@ -35,7 +34,6 @@ base-devel
 imagemagick
 fastfetch
 brightnessctl
-networkmanager
 unrar
 unzip
 dconf-editor

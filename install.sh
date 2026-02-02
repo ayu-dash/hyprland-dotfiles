@@ -571,10 +571,24 @@ install_themes_task() {
     print_success "Font cache updated"
 }
 
+disable_services_task() {
+    print_header "🛑  Disabling Services"
+    
+    SERVICES=(NetworkManager wpa_supplicant systemd-resolved systemd-networkd)
+    for service in "${SERVICES[@]}"; do
+        if systemctl list-unit-files "${service}.service" &>/dev/null; then
+            sudo systemctl disable --now "$service" > /dev/null 2>&1
+            print_success "$service"
+        else
+            print_warning "$service not found"
+        fi
+    done
+}
+
 enable_services_task() {
     print_header "⚙️  Enabling Services"
 
-    SERVICES=(greetd bluetooth NetworkManager udisks2 tailscaled)
+    SERVICES=(greetd bluetooth iwd udisks2 tailscaled)
 
     for service in "${SERVICES[@]}"; do
         if systemctl list-unit-files "${service}.service" &>/dev/null; then
