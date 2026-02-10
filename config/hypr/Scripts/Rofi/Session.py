@@ -3,12 +3,11 @@ Rofi session management module.
 Provides power options: lock, suspend, logout, reboot, shutdown.
 """
 
-import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
-from Utils import run_bg
+from Utils import run_bg, run_with_input
 from .Shared import ROFI_THEMES
 
 
@@ -28,17 +27,15 @@ def run_rofi() -> str:
     """Display the session menu and return the selected index."""
     display_lines = [label for label, _ in MENU_ITEMS]
 
-    result = subprocess.run(
+    output, _ = run_with_input(
         [
             "rofi", "-dmenu", "-i",
             "-format", "i",
             "-theme", str(THEME)
         ],
-        input="\n".join(display_lines),
-        stdout=subprocess.PIPE,
-        text=True
+        "\n".join(display_lines)
     )
-    return result.stdout.strip()
+    return output
 
 
 def exec_command(cmd: str) -> None:

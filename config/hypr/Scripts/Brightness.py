@@ -4,30 +4,25 @@ Provides functions for adjusting brightness and sending notifications.
 """
 
 import argparse
-import subprocess
 from pathlib import Path
 
-from Utils import notify_with_progress, get_logger
+from Utils import notify_with_progress, get_logger, run_capture, run_silent, get_theme_dir
 
 log = get_logger("Brightness")
 
 
 DEFAULT_STEP: int = 10
 
-ICON_DIR: Path = Path.home() / ".config/hypr/Themes/NierAutomata/Swaync/Icons"
+ICON_DIR: Path = get_theme_dir() / "Swaync/Icons"
 
 
 def get_brightness_percentage() -> int:
     """Get current screen brightness as a percentage."""
-    result = subprocess.run(
-        ["brightnessctl", "-m"],
-        capture_output=True,
-        text=True
-    )
+    stdout, _, _ = run_capture(["brightnessctl", "-m"])
     try:
         # Output format: device,class,current,max%,current
         # The percentage is at index 3 (e.g., "100%")
-        parts = result.stdout.strip().split(",")
+        parts = stdout.split(",")
         percentage_str = parts[3].rstrip("%")
         return int(percentage_str)
     except (IndexError, ValueError):
@@ -47,7 +42,7 @@ def adjust_brightness(step: int, action: str = "up") -> None:
     """Adjust screen brightness by the specified step amount."""
     old_value = get_brightness_percentage()
     adjustment = f"{step}%+" if action == "up" else f"{step}%-"
-    subprocess.run(["brightnessctl", "s", adjustment])
+    run_silent(["brightnessctl", "s", adjustment])
 
     new_value = get_brightness_percentage()
     log.debug(f"Brightness {action}: {old_value}% -> {new_value}%")

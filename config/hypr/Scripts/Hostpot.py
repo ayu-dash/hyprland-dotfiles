@@ -9,7 +9,6 @@ Dependencies: hostapd, dnsmasq, iw, nmcli, iptables
 Requires: Root privileges for network operations
 """
 
-import subprocess
 import json
 import time
 import re
@@ -24,7 +23,7 @@ USER_HOME = Path(f"/home/{SUDO_USER}") if SUDO_USER else Path.home()
 SCRIPTS_DIR = USER_HOME / ".config/hypr/Scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-from Utils import get_logger
+from Utils import get_logger, run_silent, run_capture, run_bg, kill_all
 
 log = get_logger("Hotspot")
 
@@ -55,10 +54,7 @@ def send_notification(message: str, urgency: str = "low") -> None:
     """Send desktop notification with proper D-Bus session handling."""
     user = os.getenv('SUDO_USER')
     if not user:
-        subprocess.run(
-            ["notify-send", "-a", "Hotspot", "-u", urgency, message],
-            stderr=subprocess.DEVNULL
-        )
+        run_silent(["notify-send", "-a", "Hotspot", "-u", urgency, message])
         return
 
     uid = os.getenv('SUDO_UID')
@@ -67,7 +63,7 @@ def send_notification(message: str, urgency: str = "low") -> None:
         f"export XDG_RUNTIME_DIR=/run/user/{uid} && "
         f"notify-send -a 'Hotspot' -u '{urgency}' '{message}'"
     )
-    subprocess.run(["sudo", "-u", user, "sh", "-c", command], stderr=subprocess.DEVNULL)
+    run_silent(["sudo", "-u", user, "sh", "-c", command])
 
 
 def generate_virtual_mac(parent_interface: str) -> str:
@@ -87,11 +83,8 @@ def generate_virtual_mac(parent_interface: str) -> str:
 
 def get_active_channel(parent_interface: str) -> str:
     """Retrieve the current WiFi channel of the parent interface."""
-    result = subprocess.run(
-        ["iw", "dev", parent_interface, "info"],
-        capture_output=True, text=True
-    )
-    match = re.search(r"channel\s+(\d+)", result.stdout)
+    stdout, _, _ = run_capture(["iw", "dev", parent_interface, "info"])
+    match = re.search(r"channel\s+(\d+)", stdout)
     channel = match.group(1) if match else "1"
     log.debug(f"Active channel on {parent_interface}: {channel}")
     return channel
@@ -101,33 +94,33 @@ def create_virtual_interface(parent_interface: str) -> bool:
     """Create and configure a virtual AP interface."""
     log.info(f"Creating virtual interface on {parent_interface}")
     try:
-        subprocess.run(["nmcli", "device", "set", parent_interface, "managed", "no"])
+        run_silent(["nmcli", "device", "set", parent_interface, "managed", "no"])
         
         log.debug("Resetting WiFi radio")
-        subprocess.run(["rfkill", "block", "wifi"])
+        run_silent(["rfkill", "block", "wifi"])
         time.sleep(0.5)
-        subprocess.run(["rfkill", "unblock", "wifi"])
+        run_silent(["rfkill", "unblock", "wifi"])
         time.sleep(1.5)
 
-        subprocess.run(["iw", "dev", VIRTUAL_INTERFACE, "del"], stderr=subprocess.DEVNULL)
+        run_silent(["iw", "dev", VIRTUAL_INTERFACE, "del"])
         
-        result = subprocess.run([
+        result = run_silent([
             "iw", "dev", parent_interface, "interface", "add",
             VIRTUAL_INTERFACE, "type", "__ap"
         ])
-        if result.returncode != 0:
+        if result != 0:
             log.error("Failed to create virtual AP interface")
             return False
 
-        subprocess.run([
+        run_silent([
             "ip", "link", "set", "dev", VIRTUAL_INTERFACE,
             "address", generate_virtual_mac(parent_interface)
         ])
-        subprocess.run(["ip", "link", "set", parent_interface, "up"])
-        subprocess.run(["nmcli", "device", "set", parent_interface, "managed", "yes"])
+        run_silent(["ip", "link", "set", parent_interface, "up"])
+        run_silent(["nmcli", "device", "set", parent_interface, "managed", "yes"])
         time.sleep(0.5)
-        subprocess.run(["ip", "link", "set", VIRTUAL_INTERFACE, "up"])
-        subprocess.run(["nmcli", "device", "set", VIRTUAL_INTERFACE, "managed", "no"])
+        run_silent(["ip", "link", "set", VIRTUAL_INTERFACE, "up"])
+        run_silent(["nmcli", "device", "set", VIRTUAL_INTERFACE, "managed", "no"])
         
         log.info(f"Virtual interface {VIRTUAL_INTERFACE} created successfully")
         return True
@@ -139,7 +132,7 @@ def create_virtual_interface(parent_interface: str) -> bool:
 def add_nat_rule(parent_interface: str) -> None:
     """Add NAT masquerade rule for hotspot traffic."""
     log.debug(f"Adding NAT rule for {parent_interface}")
-    subprocess.run([
+    run_silent([
         "iptables", "-t", "nat", "-A", "POSTROUTING",
         "-o", parent_interface, "-s", "192.168.12.0/24", "-j", "MASQUERADE",
         "-m", "comment", "--comment", "hypr_hotspot"
@@ -150,13 +143,12 @@ def remove_nat_rule() -> None:
     """Remove only the NAT rules created by this hotspot script."""
     log.debug("Removing NAT rules")
     while True:
-        result = subprocess.run(
-            ["iptables", "-t", "nat", "-L", "POSTROUTING", "--line-numbers", "-n"],
-            capture_output=True, text=True
+        stdout, _, _ = run_capture(
+            ["iptables", "-t", "nat", "-L", "POSTROUTING", "--line-numbers", "-n"]
         )
         
         line_num = None
-        for line in result.stdout.splitlines():
+        for line in stdout.splitlines():
             if "hypr_hotspot" in line:
                 parts = line.split()
                 if parts and parts[0].isdigit():
@@ -164,9 +156,9 @@ def remove_nat_rule() -> None:
                     break
         
         if line_num:
-            subprocess.run([
+            run_silent([
                 "iptables", "-t", "nat", "-D", "POSTROUTING", line_num
-            ], stderr=subprocess.DEVNULL)
+            ])
         else:
             break
 
@@ -179,7 +171,7 @@ def kill_dnsmasq() -> None:
                 pid = f.read().strip()
             if pid:
                 log.debug(f"Killing dnsmasq PID {pid}")
-                subprocess.run(["kill", pid], stderr=subprocess.DEVNULL)
+                run_silent(["kill", pid])
             os.remove(DNSMASQ_PID)
         except (FileNotFoundError, PermissionError, ProcessLookupError) as e:
             log.warning(f"Error killing dnsmasq: {e}")
@@ -220,32 +212,28 @@ def start_hotspot() -> None:
         file.write(hostapd_config)
     log.debug(f"hostapd config written to {HOSTAPD_CONF}")
 
-    subprocess.Popen(
-        ["hostapd", HOSTAPD_CONF],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )
+    run_bg(["hostapd", HOSTAPD_CONF])
     time.sleep(1.5)
     
     if not is_hotspot_active():
         log.error("hostapd failed to start")
         send_notification("Error: hostapd failed to start", "critical")
-        subprocess.run(["iw", "dev", VIRTUAL_INTERFACE, "del"], stderr=subprocess.DEVNULL)
+        run_silent(["iw", "dev", VIRTUAL_INTERFACE, "del"])
         return
     
-    subprocess.run(["ip", "addr", "flush", "dev", VIRTUAL_INTERFACE])
-    subprocess.run(["ip", "addr", "add", "192.168.12.1/24", "dev", VIRTUAL_INTERFACE])
+    run_silent(["ip", "addr", "flush", "dev", VIRTUAL_INTERFACE])
+    run_silent(["ip", "addr", "add", "192.168.12.1/24", "dev", VIRTUAL_INTERFACE])
     
-    subprocess.Popen([
+    run_bg([
         "dnsmasq",
         f"--interface={VIRTUAL_INTERFACE}",
         "--bind-interfaces",
         "--dhcp-range=192.168.12.10,192.168.12.100,12h",
         "--conf-file=/dev/null",
         f"--pid-file={DNSMASQ_PID}"
-    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    ])
     
-    subprocess.run(["sysctl", "-w", "net.ipv4.ip_forward=1"], capture_output=True)
+    run_capture(["sysctl", "-w", "net.ipv4.ip_forward=1"])
     add_nat_rule(parent_interface)
 
     log.info("Hotspot started successfully")
@@ -259,9 +247,9 @@ def stop_hotspot() -> None:
     if os.geteuid() == 0:
         send_notification("Terminating hotspot...")
     
-    subprocess.run(["killall", "-qw", "hostapd"], stderr=subprocess.DEVNULL)
+    kill_all("hostapd")
     kill_dnsmasq()
-    subprocess.run(["iw", "dev", VIRTUAL_INTERFACE, "del"], stderr=subprocess.DEVNULL)
+    run_silent(["iw", "dev", VIRTUAL_INTERFACE, "del"])
     remove_nat_rule()
     
     log.info("Hotspot stopped")
@@ -271,8 +259,8 @@ def stop_hotspot() -> None:
 
 def is_hotspot_active() -> bool:
     """Check if the hotspot is currently running."""
-    result = subprocess.run(["pgrep", "-x", "hostapd"], capture_output=True)
-    return result.returncode == 0
+    _, _, returncode = run_capture(["pgrep", "-x", "hostapd"])
+    return returncode == 0
 
 
 def output_status() -> None:

@@ -4,11 +4,10 @@ Provides functions for adjusting volume, muting, and sending notifications.
 """
 
 import argparse
-import subprocess
 from pathlib import Path
 from typing import TypedDict
 
-from Utils import notify, notify_with_progress, get_logger
+from Utils import notify, notify_with_progress, get_logger, run_capture, run_silent, get_theme_dir
 
 log = get_logger("Audio")
 
@@ -18,7 +17,7 @@ MIN_VOLUME: int = 0
 MAX_VOLUME: int = 100
 DEFAULT_STEP: int = 5
 
-ICON_DIR: Path = Path.home() / ".config/hypr/Themes/NierAutomata/Swaync/Icons"
+ICON_DIR: Path = get_theme_dir() / "Swaync/Icons"
 
 
 class VolumeInfo(TypedDict):
@@ -29,12 +28,9 @@ class VolumeInfo(TypedDict):
 
 def get_volume() -> VolumeInfo:
     """Get current volume level and mute status."""
-    result = subprocess.run(
-        ["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"],
-        capture_output=True,
-        text=True
-    )
-    parts = result.stdout.strip().split()
+    stdout, stderr, returncode = run_capture(
+        ["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"])
+    parts = stdout.strip().split()
 
     is_muted = "[MUTED]" in parts
     current_volume = int(float(parts[1]) * 100)
@@ -44,12 +40,10 @@ def get_volume() -> VolumeInfo:
 
 def is_mic_muted() -> bool:
     """Check if the microphone is muted."""
-    result = subprocess.run(
-        ["wpctl", "get-volume", "@DEFAULT_AUDIO_SOURCE@"],
-        capture_output=True,
-        text=True
+    stdout, stderr, returncode = run_capture(
+        ["wpctl", "get-volume", "@DEFAULT_AUDIO_SOURCE@"]
     )
-    return "[MUTED]" in result.stdout
+    return "[MUTED]" in stdout
 
 
 def get_volume_icon(value: int, is_muted: bool) -> str:
@@ -71,28 +65,35 @@ def get_mic_icon(is_muted: bool) -> str:
 
 def audio_unmute() -> None:
     """Unmute the audio sink."""
-    subprocess.run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "0"])
+    run_silent(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "0"])
 
 
 def audio_mute_toggle() -> None:
     """Toggle audio mute and send notification."""
+    run_silent(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
     volume_info = get_volume()
-    subprocess.run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
 
-    status = "Muted" if not volume_info["muted"] else "Unmuted"
+    status = "Muted" if volume_info["muted"] else "Unmuted"
     log.info(f"Audio {status.lower()} (volume: {volume_info['value']}%)")
-    icon = get_volume_icon(volume_info["value"], not volume_info["muted"])
+    icon = get_volume_icon(volume_info["value"], volume_info["muted"])
     notify(icon, f"Volume is {status}", level="critical")
 
 
 def mic_mute_toggle() -> None:
     """Toggle microphone mute and send notification."""
-    was_muted = is_mic_muted()
-    subprocess.run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"])
+    run_silent(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"])
+    now_muted = is_mic_muted()
 
-    status = "Unmuted" if was_muted else "Muted"
+    # Control mic mute LED via HDA codec GPIO
+    hda_device = "/dev/snd/hwC1D0"
+    run_silent(["sudo", "hda-verb", hda_device, "0x01", "SET_GPIO_MASK", "0x01"])
+    run_silent(["sudo", "hda-verb", hda_device, "0x01", "SET_GPIO_DIRECTION", "0x01"])
+    gpio_data = "0x00" if now_muted else "0x01"
+    run_silent(["sudo", "hda-verb", hda_device, "0x01", "SET_GPIO_DATA", gpio_data])
+
+    status = "Muted" if now_muted else "Unmuted"
     log.info(f"Microphone {status.lower()}")
-    icon = get_mic_icon(not was_muted)
+    icon = get_mic_icon(now_muted)
     notify(icon, f"Microphone is {status}", level="critical")
 
 
@@ -106,7 +107,7 @@ def adjust_volume(step: int, action: str = "raise") -> None:
         new_volume = max(volume_info["value"] - step, MIN_VOLUME)
 
     audio_unmute()
-    subprocess.run(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", f"{new_volume}%"])
+    run_silent(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", f"{new_volume}%"])
     log.debug(f"Volume {action}: {volume_info['value']}% -> {new_volume}%")
 
     icon = get_volume_icon(new_volume, False)

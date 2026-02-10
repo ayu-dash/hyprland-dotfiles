@@ -585,6 +585,11 @@ disable_services_task() {
     done
 }
 
+mask_service_task() {
+    print_header "🛑  Masking Services"
+    systemctl --user mask swaync.service    
+}
+
 enable_services_task() {
     print_header "⚙️  Enabling Services"
 
@@ -660,6 +665,18 @@ EOF
         print_success "Libvirt sudoers rules installed"
     else
         print_error "Failed to install libvirt sudoers rules"
+    fi
+    echo ""
+
+    # ── Hda Verb ──────────────────────────────────────────────────────────
+    print_step "Configuring HDA Verb..."
+    local sudoers_file="/etc/sudoers.d/hyprland-hda-verb"
+    local sudoers_entry="$USER ALL=(ALL) NOPASSWD: /usr/bin/hda-verb"
+
+    if echo "$sudoers_entry" | sudo tee "$sudoers_file" > /dev/null && sudo chmod 440 "$sudoers_file"; then
+        print_success "HDA Verb sudoers rules installed"
+    else
+        print_error "Failed to install HDA Verb sudoers rules"
     fi
     echo ""
 }
@@ -970,7 +987,9 @@ full_install() {
     install_themes_task
     install_system_configs_task
     configure_qemu_kvm_task
+    disable_services_task
     enable_services_task
+    mask_service_task
     show_completion
 }
 

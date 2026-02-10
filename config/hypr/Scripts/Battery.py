@@ -3,11 +3,10 @@ Battery monitoring and notification module.
 Watches battery status via D-Bus and sends low/critical battery alerts.
 """
 
-import subprocess
 from collections.abc import Generator
 from pathlib import Path
 
-from Utils import notify, read_file, get_logger
+from Utils import notify, read_file, get_logger, run_bg, PIPE, get_theme_dir
 
 log = get_logger("Battery")
 
@@ -18,7 +17,8 @@ BATTERY_THRESHOLDS: dict[str, int] = {
     "critical": 10
 }
 
-ICON_DIR: Path = Path.home() / ".config/hypr/Themes/NierAutomata/Swaync/Icons"
+ICON_DIR: Path = get_theme_dir() / "Swaync/Icons"
+
 
 # Track which notifications have been sent
 notified: set[str] = set()
@@ -29,13 +29,13 @@ def watch_battery() -> Generator[tuple[str, int], None, None]:
     Monitor battery changes via D-Bus.
     Yields (status, capacity) tuples when battery state changes.
     """
-    process = subprocess.Popen(
+    process = run_bg(
         [
             "dbus-monitor", "--system",
             "type='signal',interface='org.freedesktop.DBus.Properties',"
             "path='/org/freedesktop/UPower/devices/battery_BAT0'"
         ],
-        stdout=subprocess.PIPE,
+        stdout=PIPE,
         text=True,
         bufsize=1
     )

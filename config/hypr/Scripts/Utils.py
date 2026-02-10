@@ -10,7 +10,6 @@ from datetime import datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any
-import time
 
 
 # Logging configuration
@@ -85,20 +84,9 @@ def clean_old_logs(days: int = 7) -> None:
         if log_file.stat().st_mtime < cutoff:
             log_file.unlink()
 
-
-def wait_for_lock(lock_path='/tmp/theme_loading.lock', timeout=10) -> None:
-    """Wait for a lock file to be released."""
-    start_time = time.time()
-    while Path(lock_path).exists():
-        if time.time() - start_time > timeout:
-            break
-        time.sleep(0.1)
-
-
 def notify(icon: str, msg: str, level: str = "low") -> None:
     """Send a desktop notification using notify-send."""
-    wait_for_lock()
-    subprocess.run([
+    run_silent([
         "notify-send",
         "-e",
         "-a", "volume-notify",
@@ -111,8 +99,7 @@ def notify(icon: str, msg: str, level: str = "low") -> None:
 
 def notify_with_progress(icon: str, msg: str, value: int, level: str = "low") -> None:
     """Send a desktop notification with a progress bar."""
-    wait_for_lock()
-    subprocess.run([
+    run_silent([
         "notify-send",
         "-e",
         "-h", f"int:value:{value}",
@@ -152,21 +139,13 @@ def read_config(path: str | Path) -> dict[str, str] | None:
 
 def get_pid(process: str) -> str:
     """Get the PID of a running process."""
-    result = subprocess.run(
-        ["pidof", process],
-        capture_output=True,
-        text=True
-    )
-    return result.stdout.strip()
+    stdout, _, _ = run_capture(["pidof", process])
+    return stdout
 
 
 def kill_all(process: str) -> None:
     """Terminate all instances of a process quietly and wait for completion."""
-    subprocess.run(
-        ["killall", "-qw", process],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL
-    )
+    run_silent(["killall", "-qw", process])
 
 
 def load_json(data: str) -> Any:
@@ -199,27 +178,27 @@ def hyprctl(*args: str, json_output: bool = False) -> str | dict | list:
     if json_output:
         cmd.append("-j")
     
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    stdout, _, _ = run_capture(cmd)
     
     if json_output:
-        return json.loads(result.stdout) if result.stdout else {}
-    return result.stdout.strip()
+        return json.loads(stdout) if stdout else {}
+    return stdout
 
 
 def hyprctl_keyword(keyword: str, value: str) -> None:
     """Set a Hyprland keyword value."""
-    subprocess.run(["hyprctl", "keyword", keyword, value])
+    run_silent(["hyprctl", "keyword", keyword, value])
 
 
 def hyprctl_batch(*commands: str) -> None:
     """Execute multiple hyprctl commands in batch."""
     batch_cmd = ";".join(commands)
-    subprocess.run(["hyprctl", "--batch", batch_cmd])
+    run_silent(["hyprctl", "--batch", batch_cmd])
 
 
 def hyprctl_reload() -> None:
     """Reload Hyprland configuration."""
-    subprocess.run(["hyprctl", "reload"])
+    run_silent(["hyprctl", "reload"])
 
 
 def get_monitors() -> list[dict]:
@@ -292,3 +271,51 @@ def run_capture(cmd: list[str]) -> tuple[str, str, int]:
     """
     result = subprocess.run(cmd, capture_output=True, text=True)
     return result.stdout.strip(), result.stderr.strip(), result.returncode
+
+
+def run_with_input(cmd: list[str], input_data: str | bytes, text: bool = True) -> tuple[str | bytes, int]:
+    """
+    Run a command with input data piped to stdin and capture stdout.
+    Useful for rofi -dmenu and similar interactive commands.
+    
+    Args:
+        cmd: Command and arguments as list
+        input_data: Data to send to stdin
+        text: If True, handle as text; if False, handle as bytes
+        
+    Returns:
+        Tuple of (stdout, returncode)
+    """
+    result = subprocess.run(cmd, input=input_data, capture_output=True, text=text)
+    output = result.stdout.strip() if text and isinstance(result.stdout, str) else result.stdout
+    return output, result.returncode
+
+
+def run_pipeline(cmd1: list[str], cmd2: list[str], **kwargs) -> int:
+    """
+    Run two commands in a pipeline (cmd1 | cmd2).
+    
+    Args:
+        cmd1: First command (stdout piped to cmd2)
+        cmd2: Second command (receives stdin from cmd1)
+        **kwargs: Additional arguments for the second Popen
+        
+    Returns:
+        Return code of the second process
+    """
+    defaults = {
+        "stdout": subprocess.DEVNULL,
+        "stderr": subprocess.DEVNULL,
+    }
+    defaults.update(kwargs)
+    p1 = subprocess.Popen(cmd1, stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(cmd2, stdin=p1.stdout, **defaults)
+    if p1.stdout:
+        p1.stdout.close()
+    p2.wait()
+    return p2.returncode
+
+
+# Re-export subprocess constants for convenience
+PIPE = subprocess.PIPE
+DEVNULL = subprocess.DEVNULL

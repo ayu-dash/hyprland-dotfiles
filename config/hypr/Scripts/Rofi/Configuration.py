@@ -3,12 +3,11 @@ Rofi configuration file browser module.
 Displays config files and opens them in the editor.
 """
 
-import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
-from Utils import run_bg, run_capture
+from Utils import run_bg, run_capture, run_with_input
 from .Shared import ROFI_THEMES
 
 
@@ -62,17 +61,15 @@ def run_rofi(items: list[tuple[str, str]]) -> str:
     """Run rofi with the prepared items."""
     display_lines = [x[0] for x in items]
 
-    result = subprocess.run(
+    output, _ = run_with_input(
         [
             "rofi", "-dmenu", "-i",
             "-format", "i",
             "-theme", str(THEME)
         ],
-        input="\n".join(display_lines),
-        stdout=subprocess.PIPE,
-        text=True
+        "\n".join(display_lines)
     )
-    return result.stdout.strip()
+    return output
 
 
 def exec() -> None:

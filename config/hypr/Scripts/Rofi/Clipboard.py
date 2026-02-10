@@ -3,13 +3,12 @@ Rofi clipboard manager module.
 Displays clipboard history with text and image mode switching.
 """
 
-import subprocess
 import sys
 from pathlib import Path
 from typing import TypedDict
 
 sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
-from Utils import run_silent, run_capture
+from Utils import run_silent, run_capture, run_with_input, run_pipeline
 from .Shared import ROFI_THEMES
 
 
@@ -59,17 +58,11 @@ def is_image_content(content: str) -> bool:
 def generate_thumbnail(clip_id: str, output_path: Path) -> None:
     """Generate a thumbnail from clipboard image data."""
     try:
-        p1 = subprocess.Popen(["cliphist", "decode", clip_id], stdout=subprocess.PIPE)
-        p2 = subprocess.Popen(
-            ["magick", "-", "-resize", "256x256", str(output_path)],
-            stdin=p1.stdout,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+        run_pipeline(
+            ["cliphist", "decode", clip_id],
+            ["magick", "-", "-resize", "256x256", str(output_path)]
         )
-        if p1.stdout:
-            p1.stdout.close()
-        p2.wait()
-    except (OSError, subprocess.SubprocessError):
+    except OSError:
         pass
 
 
@@ -125,22 +118,19 @@ def run_rofi(mode: str, display_lines: list[str]) -> str:
     ]
     cmd.extend(MODES[mode]["css"])
 
-    result = subprocess.run(
-        cmd,
-        input="\n".join(display_lines),
-        stdout=subprocess.PIPE,
-        text=True
-    )
-    return result.stdout.strip()
+    output, _ = run_with_input(cmd, "\n".join(display_lines))
+    return output
 
 
 def decode_and_copy(line: str) -> None:
     """Decode clipboard entry and copy to clipboard."""
     try:
         clip_id = line.split("\t", 1)[0]
-        decoded = subprocess.run(["cliphist", "decode", clip_id], stdout=subprocess.PIPE)
-        subprocess.run(["wl-copy"], input=decoded.stdout)
-    except (OSError, subprocess.SubprocessError):
+        run_pipeline(
+            ["cliphist", "decode", clip_id],
+            ["wl-copy"]
+        )
+    except OSError:
         pass
 
 

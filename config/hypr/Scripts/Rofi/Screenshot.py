@@ -3,12 +3,11 @@ Rofi screenshot module.
 Provides screen capture options and notification with edit action.
 """
 
-import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
-from Utils import run_silent
+from Utils import run_silent, run_with_input
 from .Shared import ROFI_THEMES
 
 
@@ -30,12 +29,11 @@ OPTIONS: dict[str, str] = {
 def show_menu() -> str:
     """Display the screenshot mode selection menu."""
     choices = "\n".join(OPTIONS.values())
-    result = subprocess.run(
+    output, _ = run_with_input(
         ["rofi", "-dmenu", "-theme", str(THEME)],
-        input=choices.encode(),
-        stdout=subprocess.PIPE
+        choices
     )
-    return result.stdout.decode().strip()
+    return output
 
 
 def send_notification() -> bool:
@@ -44,7 +42,7 @@ def send_notification() -> bool:
     Returns True if the user clicked 'Edit'.
     """
     try:
-        result = subprocess.run(
+        output, _ = run_with_input(
             [
                 "notify-send",
                 "-i", str(FULL_TEMP_PATH),
@@ -53,9 +51,9 @@ def send_notification() -> bool:
                 "--action=edit=Edit",
                 "--wait"
             ],
-            stdout=subprocess.PIPE
+            ""
         )
-        return result.stdout.decode().strip() == "edit"
+        return output == "edit"
 
     except FileNotFoundError:
         return False

@@ -4,12 +4,11 @@ Displays available themes and activates the selected one.
 """
 
 import os
-import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
-from Utils import run_silent, notify
+from Utils import run_silent, notify, run_with_input
 from .Shared import ROFI_THEMES
 
 
@@ -60,7 +59,7 @@ def run_rofi(items: list[tuple[str, str]]) -> tuple[str, str] | None:
     display_lines = [x[0] for x in items]
     line_count = min(len(items), 15)
 
-    result = subprocess.run(
+    output, returncode = run_with_input(
         [
             "rofi", "-dmenu", "-i",
             "-p", "Select Theme",
@@ -68,16 +67,12 @@ def run_rofi(items: list[tuple[str, str]]) -> tuple[str, str] | None:
             "-lines", str(line_count),
             "-theme", str(THEME)
         ],
-        input="\n".join(display_lines),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        text=True
+        "\n".join(display_lines)
     )
 
-    if result.returncode != 0:
+    if returncode != 0:
         return None
 
-    output = result.stdout.strip()
     if not output:
         return None
 

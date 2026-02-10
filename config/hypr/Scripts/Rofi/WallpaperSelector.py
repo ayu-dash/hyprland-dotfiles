@@ -4,12 +4,12 @@ Displays available wallpapers and sets the selected one.
 """
 
 import glob
-import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
 import Wallpaper
+from Utils import run_with_input
 from .Shared import ROFI_THEMES, current_theme_dir
 
 
@@ -38,15 +38,12 @@ def show_menu() -> str | None:
     items = get_menu_items()
     menu_items = "\n".join(f"{k}\0icon\x1f{v}" for k, v in items.items())
 
-    result = subprocess.run(
+    output, _ = run_with_input(
         ["rofi", "-dmenu", "-theme", str(THEME), "-markup-rows", "-i", "-p", " "],
-        input=menu_items,
-        text=True,
-        capture_output=True
+        menu_items
     )
 
-    selection = result.stdout.strip()
-    return items.get(selection) if selection else None
+    return items.get(output) if output else None
 
 
 def exec() -> None:
