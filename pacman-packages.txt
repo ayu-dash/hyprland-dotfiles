@@ -65,3 +65,4 @@ composer
 man
 gvfs
 freerdp
+alsa-tools
