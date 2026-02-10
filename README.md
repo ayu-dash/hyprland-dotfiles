@@ -1,25 +1,26 @@
-# Hyprland Dotfiles
+# Hyprland Dotfiles (Fedora Edition)
 
-An automated Hyprland dotfiles setup for Arch Linux–based distributions,
-focused on modular configuration, hardware-aware installation, and a
-flexible theming system for daily use.
+An automated Hyprland dotfiles setup optimized for Fedora Linux, featuring modular configuration, Copr repository integration regarding Hyprland ecosystem, and a flexible theming system.
 
 ![Hyprland](https://img.shields.io/badge/Hyprland-58E1FF?style=for-the-badge&logo=hyprland&logoColor=white)
-![Arch Linux](https://img.shields.io/badge/Arch_Linux-1793D1?style=for-the-badge&logo=arch-linux&logoColor=white)
+![Fedora Linux](https://img.shields.io/badge/Fedora_Linux-51A2DA?style=for-the-badge&logo=fedora&logoColor=white)
 ![Wayland](https://img.shields.io/badge/Wayland-FFBC00?style=for-the-badge&logo=wayland&logoColor=black)
 
 ## ✨ Features
 
-- 🚀 **Auto Installer** - One-command setup with interactive menu
-- 🖥️ **GPU Auto-detect** - NVIDIA, AMD, Intel driver installation
-- 🎮 **QEMU/KVM Ready** - Virtualization pre-configured
+- 🚀 **Auto Installer** - One-command setup with interactive menu for Fedora
+- 📦 **Copr Integration** - Automated setup for `solopasha/hyprland` & `erikreider/SwayNotificationCenter`
+- 🖥️ **GDM Integration** - Seamless login via GNOME Display Manager
+- 🎮 **QEMU/KVM Ready** - Virtualization pre-configured with libvirt
 - 🐚 **Zsh + Oh My Zsh** - Modern shell with plugins
+- 🌐 **NetworkManager** - Full integration with `nmcli` and `nm-connection-editor`
 
 ## 📦 Installation
 
 ```bash
 git clone https://github.com/ayu-dash/hyprland-dotfiles.git ~/hyprland-dotfiles
 cd ~/hyprland-dotfiles
+chmod +x install.sh
 ./install.sh
 ```
 
@@ -27,24 +28,25 @@ cd ~/hyprland-dotfiles
 
 | Option | Description |
 |--------|-------------|
-| **1) Full Installation** | Complete setup (GPU, Packages, Configs, Themes, Shell) |
-| **2) Install GPU Drivers** | AMD, NVIDIA, Intel auto-detect |
-| **3) Install Packages Only** | Pacman, AUR, VSCode extensions |
-| **4) Install Dotfiles Only** | ~/.config, ~/.local/bin |
-| **5) Install Themes Only** | Icons, GTK Themes, Kvantum |
+| **1) Full Installation** | Complete setup (Repos, Packages, Configs, Themes, Shell) |
+| **2) Setup Repos Only** | Enable Copr, VS Code, Chrome, RPM Fusion repos |
+| **3) Install Packages Only** | DNF packages, Third-party apps, VSCode extensions |
+| **4) Install Dotfiles Only** | `~/.config`, `~/.local/bin` |
+| **5) Install Themes Only** | Icons, GTK Themes, Fonts |
 | **6) Configure Shell Only** | Zsh, Oh My Zsh, plugins |
+| **7) Install VS Code Extensions** | From `etc/CodeExtensions.txt` |
+| **8) Build GitHub Packages** | Compile `rofi-emoji`, `rofi-calc` from source |
 
 ## 📋 Requirements
 
-- **OS**: Arch Linux (or Arch-based distros)
+- **OS**: Fedora Linux (Workstation recommended)
 - **Display Server**: Wayland
-- **AUR Helper**: yay (auto-installed)
+- **Package Manager**: dnf 
 
 ## 📁 Dependencies
 
-Dependencies are listed in separate files:
-- `pacman-packages.txt` - Official Arch packages
-- `yay-packages.txt` - AUR packages
+Dependencies are listed in:
+- `dnf-packages.txt` - Official Fedora & Copr packages
 
 ## ⌨️ Keybindings
 
@@ -56,7 +58,7 @@ Dependencies are listed in separate files:
 |------|--------|
 | `SUPER + Enter` | Terminal (Kitty) |
 | `SUPER + F` | Browser (Firefox) |
-| `SUPER + E` | File Manager (PCManFM) |
+| `SUPER + E` | File Manager (Nautilus) |
 | `SUPER + V` | Code Editor (VS Code) |
 | `SUPER + Space` | Application Launcher |
 | `SUPER + C` | Calculator |
@@ -205,9 +207,9 @@ The installer automatically configures:
 
 | Component | Configuration |
 |-----------|---------------|
-| **GPU Drivers** | NVIDIA (dkms/open), AMD, Intel auto-detect |
-| **Display Manager** | greetd + tuigreet |
+| **Display Manager** | GDM (GNOME Display Manager) |
 | **Virtualization** | QEMU/KVM + libvirt + virt-manager |
+| **Network** | NetworkManager + nm-applet |
 | **Shell** | Zsh + Oh My Zsh + plugins |
 
 ## 📜 Scripts
@@ -222,6 +224,8 @@ Python scripts located in `~/.config/hypr/Scripts/`:
 | `Wallpaper.py` | Wallpaper management |
 | `GameMode.py` | Toggle performance mode |
 | `RofiLauncher.py` | Rofi menu dispatcher |
+| `Hostpot.py` | WiFi Hotspot Management (requires `hostapd`) |
+| `Waybar.py` | Waybar control |
 
 ## 🙏 Credits
 
@@ -229,4 +233,3 @@ Python scripts located in `~/.config/hypr/Scripts/`:
 - [Waybar](https://github.com/Alexays/Waybar)
 - [Rofi](https://github.com/davatorium/rofi)
 - [SwayNC](https://github.com/ErikReider/SwayNotificationCenter)
-- [tuigreet](https://github.com/apognu/tuigreet)

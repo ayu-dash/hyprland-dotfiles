@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =============================================================================
-# Hyprland Dotfiles Installer v2.0
+# Hyprland Dotfiles Installer v3.0 (Fedora Edition)
 # =============================================================================
 
 # ── Colors ──────────────────────────────────────────────────────────────────
@@ -20,7 +20,6 @@ NC='\033[0m'
 
 # ── Configuration ───────────────────────────────────────────────────────────
 
-YAY_REPO="https://aur.archlinux.org/yay-git.git"
 OH_MY_ZSH_REPO="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
 
 HOME_DIR="$HOME"
@@ -30,10 +29,10 @@ THEMES_DIR="$HOME_DIR/.themes"
 ICONS_DIR="$HOME_DIR/.icons"
 KVANTUM_DIR="$CONFIG_DIR/Kvantum"
 BIN_DIR="$HOME_DIR/.local/bin"
+BUILD_DIR="$HOME_DIR/build"
 TEMP_DIR="/tmp/installation"
 
-PACMAN_PACKAGES="$DOTFILES_DIR/pacman-packages.txt"
-YAY_PACKAGES="$DOTFILES_DIR/yay-packages.txt"
+DNF_PACKAGES="$DOTFILES_DIR/dnf-packages.txt"
 
 # ── Helper Functions ────────────────────────────────────────────────────────
 
@@ -51,7 +50,8 @@ print_logo() {
 EOF
     echo -e "${NC}"
     echo -e "${WHITE}                    ╭───────────────────────────────╮${NC}"
-    echo -e "${WHITE}                    │    ${MAGENTA}D O T F I L E S  v2.0${WHITE}     │${NC}"
+    echo -e "${WHITE}                    │    ${MAGENTA}D O T F I L E S  v3.0${WHITE}     │${NC}"
+    echo -e "${WHITE}                    │     ${GRAY}Fedora Edition${WHITE}            │${NC}"
     echo -e "${WHITE}                    │         ${GRAY}by ${CYAN}ayudash${WHITE}           │${NC}"
     echo -e "${WHITE}                    ╰───────────────────────────────╯${NC}"
     echo ""
@@ -149,39 +149,8 @@ extract_archives() {
     done
 }
 
-draw_progress_bar() {
-    local current=$1
-    local total=$2
-    local package=$3
-    local cols=$(tput cols 2>/dev/null || echo 80)
-    
-    # Calculate bar width dynamically (leave space for other elements)
-    # Format: (XXX/XXX) package_name [bar] XXX%
-    local prefix="($current/$total) $package "
-    local suffix=" 100%"
-    local bar_width=$((cols - ${#prefix} - ${#suffix} - 4))
-    
-    # Minimum bar width
-    [ $bar_width -lt 10 ] && bar_width=10
-    [ $bar_width -gt 40 ] && bar_width=40
-    
-    local percentage=$((current * 100 / total))
-    local filled=$((current * bar_width / total))
-    local empty=$((bar_width - filled))
-    
-    # Build progress bar
-    local bar=""
-    [ $filled -gt 0 ] && bar=$(printf "%0.s#" $(seq 1 $filled))
-    [ $empty -gt 0 ] && bar="${bar}$(printf "%0.s-" $(seq 1 $empty))"
-    
-    # Print: (current/total) package [######-----] XX%
-    printf "\r${GRAY}(%3d/%3d)${NC} ${WHITE}%-30s${NC} ${CYAN}[${WHITE}%s${CYAN}]${NC} %3d%%" \
-        "$current" "$total" "${package:0:30}" "$bar" "$percentage"
-}
-
 install_packages_from_file() {
     local file="$1"
-    local installer="$2"
     local total=$(count_packages "$file")
     local current=0
     local failed_packages=()
@@ -190,11 +159,9 @@ install_packages_from_file() {
         [[ -z "$package" || "$package" =~ ^# ]] && continue
         ((current++))
         
-        # Show package counter header
         echo -e "\n${GRAY}($current/$total)${NC} Installing ${CYAN}$package${NC}..."
         
-        # Run installer with native progress output visible
-        if ! $installer -S --noconfirm --needed "$package"; then
+        if ! sudo dnf install -y "$package"; then
             failed_packages+=("$package")
         fi
     done < "$file"
@@ -230,13 +197,11 @@ update_repo() {
             update_choice=${update_choice:-y}
             
             if [[ "${update_choice,,}" == "y" ]]; then
-                # Stash local changes if any
                 if ! git diff --quiet || ! git diff --cached --quiet; then
                     echo -e "  ${GRAY}ℹ${NC}  Stashing local changes..."
                     git stash push -m "Auto-stash before update" > /dev/null 2>&1
                 fi
                 
-                # Pull with visible output
                 echo ""
                 if git pull origin main 2>&1 || git pull origin master 2>&1; then
                     echo ""
@@ -261,12 +226,12 @@ update_repo() {
 system_update() {
     print_header "🔄 Updating System"
     
-    print_step "Synchronizing package databases and upgrading system..."
+    print_step "Upgrading system packages..."
     echo ""
-    echo -e "  ${GRAY}Running: sudo pacman -Syyu${NC}"
+    echo -e "  ${GRAY}Running: sudo dnf upgrade -y${NC}"
     echo ""
     
-    if sudo pacman -Syyu --noconfirm; then
+    if sudo dnf upgrade -y; then
         echo ""
         print_success "System updated successfully"
     else
@@ -276,84 +241,128 @@ system_update() {
     fi
 }
 
-install_packages_task() {
-    print_header "📦 Installing Packages"
+setup_repos_task() {
+    print_header "📦 Setting Up Repositories"
 
-    print_step "Installing official packages..."
-    install_packages_from_file "$PACMAN_PACKAGES" "sudo pacman"
-    echo ""
-
-    print_step "Setting up Yay (AUR helper)..."
-    if ! command -v yay &> /dev/null; then
-        mkdir -p "$TEMP_DIR"
-        
-        local yay_installed=false
-        local max_attempts=2
-        local attempt=0
-        
-        while [ "$yay_installed" = false ] && [ $attempt -lt $max_attempts ]; do
-            ((attempt++))
-            
-            # Check if yay folder already exists (from previous failed attempt)
-            if [ -d "$TEMP_DIR/yay" ]; then
-                print_info "Found existing yay folder from previous attempt"
-                echo -e "\n${GRAY}(1/2)${NC} Skipping clone, using existing folder..."
-            else
-                # Clone with progress
-                echo -e "\n${GRAY}(1/2)${NC} Cloning ${CYAN}yay-git${NC} from AUR..."
-                echo ""
-                if git clone --progress "$YAY_REPO" "$TEMP_DIR/yay"; then
-                    echo ""
-                    print_success "Yay repository cloned"
-                else
-                    print_error "Failed to clone Yay"
-                    return 1
-                fi
-            fi
-            
-            # Build and install with visible output
-            echo -e "\n${GRAY}(2/2)${NC} Building ${CYAN}yay${NC} (this may take a while)..."
-            echo ""
-            cd "$TEMP_DIR/yay"
-            
-            if makepkg -si --noconfirm; then
-                echo ""
-                print_success "Yay installed successfully"
-                yay_installed=true
-            else
-                print_error "Failed to build/install Yay (attempt $attempt/$max_attempts)"
-                cd - > /dev/null
-                
-                # Clean up failed build
-                echo -e "  ${GRAY}Cleaning up failed build...${NC}"
-                rm -rf "$TEMP_DIR/yay"
-                
-                if [ $attempt -lt $max_attempts ]; then
-                    echo ""
-                    choice=$(confirm_prompt "Retry yay installation? [Y/n]" "y")
-                    if [[ "$choice" != "y" && "$choice" != "yes" ]]; then
-                        print_warning "Skipping AUR packages"
-                        return 1
-                    fi
-                    echo ""
-                else
-                    print_error "Max retry attempts reached"
-                    print_warning "Skipping AUR packages"
-                    return 1
-                fi
-            fi
-            
-            cd - > /dev/null 2>&1
-        done
+    # ── Copr: solopasha/hyprland ────────────────────────────────────────────
+    print_step "Enabling Copr: solopasha/hyprland..."
+    if sudo dnf copr enable -y solopasha/hyprland; then
+        print_success "solopasha/hyprland enabled"
     else
-        print_info "Yay already installed, skipping"
+        print_error "Failed to enable solopasha/hyprland"
     fi
     echo ""
 
-    print_step "Installing AUR packages..."
-    install_packages_from_file "$YAY_PACKAGES" "yay"
+    # ── Copr: erikreider/SwayNotificationCenter ─────────────────────────────
+    print_step "Enabling Copr: erikreider/SwayNotificationCenter..."
+    if sudo dnf copr enable -y erikreider/SwayNotificationCenter; then
+        print_success "erikreider/SwayNotificationCenter enabled"
+    else
+        print_error "Failed to enable erikreider/SwayNotificationCenter"
+    fi
     echo ""
 
+    # ── VS Code (Microsoft RPM Repo) ───────────────────────────────────────
+    print_step "Adding Visual Studio Code repository..."
+    if [ ! -f /etc/yum.repos.d/vscode.repo ]; then
+        sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+        sudo tee /etc/yum.repos.d/vscode.repo > /dev/null << 'VSCODE_REPO'
+[code]
+name=Visual Studio Code
+baseurl=https://packages.microsoft.com/yumrepos/vscode
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+VSCODE_REPO
+        print_success "VS Code repository added"
+    else
+        print_info "VS Code repository already configured"
+    fi
+    echo ""
+
+    # ── Google Chrome ──────────────────────────────────────────────────────
+    print_step "Adding Google Chrome repository..."
+    if [ ! -f /etc/yum.repos.d/google-chrome.repo ]; then
+        sudo tee /etc/yum.repos.d/google-chrome.repo > /dev/null << 'CHROME_REPO'
+[google-chrome]
+name=google-chrome
+baseurl=https://dl.google.com/linux/chrome/rpm/stable/x86_64
+enabled=1
+gpgcheck=1
+gpgkey=https://dl.google.com/linux/linux_signing_key.pub
+CHROME_REPO
+        print_success "Google Chrome repository added"
+    else
+        print_info "Google Chrome repository already configured"
+    fi
+    echo ""
+
+    # ── RPM Fusion (for extra codecs/packages) ─────────────────────────────
+    print_step "Enabling RPM Fusion repositories..."
+    if ! rpm -q rpmfusion-free-release &>/dev/null; then
+        if sudo dnf install -y \
+            "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
+            "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"; then
+            print_success "RPM Fusion enabled"
+        else
+            print_warning "Failed to enable RPM Fusion"
+        fi
+    else
+        print_info "RPM Fusion already enabled"
+    fi
+    echo ""
+}
+
+install_packages_task() {
+    print_header "📦 Installing Packages"
+
+    # ── Development Tools Group ─────────────────────────────────────────────
+    print_step "Installing Development Tools group..."
+    if sudo dnf group install -y "Development Tools"; then
+        print_success "Development Tools installed"
+    else
+        print_warning "Development Tools group may already be installed"
+    fi
+    echo ""
+
+    # ── DNF Packages ────────────────────────────────────────────────────────
+    print_step "Installing packages from dnf-packages.txt..."
+    install_packages_from_file "$DNF_PACKAGES"
+    echo ""
+
+    # ── Third-Party Packages ───────────────────────────────────────────────
+    print_step "Installing third-party packages..."
+    
+    # VS Code
+    echo -e "\n${GRAY}Installing ${CYAN}code${NC} (Visual Studio Code)..."
+    sudo dnf install -y code 2>&1 || print_warning "VS Code installation failed"
+
+    # Google Chrome
+    echo -e "\n${GRAY}Installing ${CYAN}google-chrome-stable${NC}..."
+    sudo dnf install -y google-chrome-stable 2>&1 || print_warning "Google Chrome installation failed"
+    echo ""
+
+    # ── NVM (Node Version Manager) ──────────────────────────────────────────
+    print_step "Installing NVM..."
+    if [ ! -d "$HOME/.nvm" ]; then
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+        print_success "NVM installed"
+    else
+        print_info "NVM already installed"
+    fi
+    echo ""
+
+    # ── PNPM ────────────────────────────────────────────────────────────────
+    print_step "Installing PNPM..."
+    if ! command -v pnpm &>/dev/null; then
+        curl -fsSL https://get.pnpm.io/install.sh | sh -
+        print_success "PNPM installed"
+    else
+        print_info "PNPM already installed"
+    fi
+    echo ""
+
+    # ── VS Code Extensions ──────────────────────────────────────────────────
     print_step "Installing VS Code extensions..."
     if command -v code &> /dev/null && [ -f "$DOTFILES_DIR/etc/CodeExtensions.txt" ]; then
         local total_ext=$(grep -v '^#' "$DOTFILES_DIR/etc/CodeExtensions.txt" | grep -v '^$' | wc -l)
@@ -378,7 +387,7 @@ install_packages_task() {
         fi
         print_success "Installed $((current_ext - ${#failed_ext[@]}))/$total_ext extensions"
     else
-        print_info "VS Code not found, skipping"
+        print_info "VS Code not found or CodeExtensions.txt missing, skipping"
     fi
 }
 
@@ -410,11 +419,128 @@ install_vscode_extensions_task() {
     else
         if ! command -v code &> /dev/null; then
             print_error "VS Code (code) command not found"
-            print_info "Install VS Code first: yay -S visual-studio-code-bin"
+            print_info "Install VS Code first: sudo dnf install code"
         else
             print_error "CodeExtensions.txt not found at $DOTFILES_DIR/etc/CodeExtensions.txt"
         fi
     fi
+}
+
+install_github_packages_task() {
+    print_header "🔧 Building Packages from GitHub"
+
+    mkdir -p "$BUILD_DIR"
+
+    # ── Build Dependencies ──────────────────────────────────────────────────
+    print_step "Installing build dependencies for rofi plugins..."
+    sudo dnf install -y \
+        autoconf automake libtool \
+        rofi-wayland-devel \
+        cairo-devel \
+        glib2-devel \
+        libqalculate-devel \
+        json-glib-devel \
+        xdotool \
+        xsel \
+        wl-clipboard \
+        wtype \
+        2>&1
+    echo ""
+
+    # ── rofi-emoji ──────────────────────────────────────────────────────────
+    print_step "Building rofi-emoji..."
+    if [ -d "$BUILD_DIR/rofi-emoji" ]; then
+        print_info "rofi-emoji directory already exists, pulling updates..."
+        cd "$BUILD_DIR/rofi-emoji"
+        git pull 2>&1
+    else
+        git clone https://github.com/Mange/rofi-emoji.git "$BUILD_DIR/rofi-emoji"
+        cd "$BUILD_DIR/rofi-emoji"
+    fi
+
+    if autoreconf -i && ./configure && make && sudo make install; then
+        print_success "rofi-emoji installed"
+    else
+        print_error "rofi-emoji build failed"
+    fi
+    cd - > /dev/null 2>&1
+    echo ""
+
+    # ── rofi-calc ───────────────────────────────────────────────────────────
+    print_step "Building rofi-calc..."
+    if [ -d "$BUILD_DIR/rofi-calc" ]; then
+        print_info "rofi-calc directory already exists, pulling updates..."
+        cd "$BUILD_DIR/rofi-calc"
+        git pull 2>&1
+    else
+        git clone https://github.com/svenstaro/rofi-calc.git "$BUILD_DIR/rofi-calc"
+        cd "$BUILD_DIR/rofi-calc"
+    fi
+
+    if autoreconf -i && ./configure && make && sudo make install; then
+        print_success "rofi-calc installed"
+    else
+        print_error "rofi-calc build failed"
+    fi
+    cd - > /dev/null 2>&1
+    echo ""
+
+    print_info "GitHub packages built in ~/build"
+}
+
+install_thirdparty_apps_task() {
+    print_header "📦 Installing Third-Party Applications"
+
+    # ── Zen Browser ─────────────────────────────────────────────────────────
+    print_step "Zen Browser..."
+    print_info "Zen Browser is not available in Fedora repos."
+    print_info "Install manually from: https://zen-browser.app/download"
+    print_info "Or use Flatpak: flatpak install flathub app.zen_browser.zen"
+    echo ""
+
+    # ── OnlyOffice ──────────────────────────────────────────────────────────
+    print_step "OnlyOffice Desktop Editors..."
+    print_info "Install from: https://www.onlyoffice.com/download-desktop.aspx"
+    print_info "Or use Flatpak: flatpak install flathub org.onlyoffice.desktopeditors"
+    echo ""
+
+    # ── LocalSend ───────────────────────────────────────────────────────────
+    print_step "LocalSend..."
+    print_info "Install via Flatpak: flatpak install flathub org.localsend.localsend_app"
+    echo ""
+
+    # ── Heroic Games Launcher ───────────────────────────────────────────────
+    print_step "Heroic Games Launcher..."
+    print_info "Install via Flatpak: flatpak install flathub com.heroicgameslauncher.hgl"
+    print_info "Or download AppImage from: https://heroicgameslauncher.com/downloads"
+    echo ""
+
+    # ── MySQL Workbench ─────────────────────────────────────────────────────
+    print_step "MySQL Workbench..."
+    print_info "Download RPM from: https://dev.mysql.com/downloads/workbench/"
+    print_info "Then install: sudo dnf install ./mysql-workbench-*.rpm"
+    echo ""
+
+    # ── NerdFonts (JetBrainsMono) ───────────────────────────────────────────
+    print_step "Installing JetBrainsMono Nerd Font..."
+    local NERD_FONTS_DIR="$HOME/.local/share/fonts/NerdFonts"
+    mkdir -p "$NERD_FONTS_DIR"
+    
+    if [ ! -f "$NERD_FONTS_DIR/JetBrainsMonoNerdFont-Regular.ttf" ]; then
+        local nf_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
+        echo -e "  ${GRAY}Downloading JetBrainsMono Nerd Font...${NC}"
+        if curl -fsSL "$nf_url" -o "/tmp/JetBrainsMono.tar.xz"; then
+            tar xf "/tmp/JetBrainsMono.tar.xz" -C "$NERD_FONTS_DIR"
+            rm -f "/tmp/JetBrainsMono.tar.xz"
+            fc-cache -fv > /dev/null 2>&1
+            print_success "JetBrainsMono Nerd Font installed"
+        else
+            print_error "Failed to download JetBrainsMono Nerd Font"
+        fi
+    else
+        print_info "JetBrainsMono Nerd Font already installed"
+    fi
+    echo ""
 }
 
 install_dotfiles_task() {
@@ -540,14 +666,9 @@ install_themes_task() {
             [ -f "$zipfile" ] || continue
             print_info "Extracting $(basename "$zipfile")..."
             
-            # Create temp dir for extraction
             TEMP_FONT_DIR=$(mktemp -d)
             unzip -q "$zipfile" -d "$TEMP_FONT_DIR"
-            
-            # Install fonts from extraction dir
             install_font_files_from_dir "$TEMP_FONT_DIR"
-            
-            # Cleanup
             rm -rf "$TEMP_FONT_DIR"
         done
 
@@ -571,19 +692,7 @@ install_themes_task() {
     print_success "Font cache updated"
 }
 
-disable_services_task() {
-    print_header "🛑  Disabling Services"
-    
-    SERVICES=(NetworkManager wpa_supplicant systemd-resolved systemd-networkd)
-    for service in "${SERVICES[@]}"; do
-        if systemctl list-unit-files "${service}.service" &>/dev/null; then
-            sudo systemctl disable --now "$service" > /dev/null 2>&1
-            print_success "$service"
-        else
-            print_warning "$service not found"
-        fi
-    done
-}
+
 
 mask_service_task() {
     print_header "🛑  Masking Services"
@@ -593,7 +702,7 @@ mask_service_task() {
 enable_services_task() {
     print_header "⚙️  Enabling Services"
 
-    SERVICES=(greetd bluetooth iwd udisks2 tailscaled)
+    SERVICES=(gdm bluetooth NetworkManager udisks2)
 
     for service in "${SERVICES[@]}"; do
         if systemctl list-unit-files "${service}.service" &>/dev/null; then
@@ -603,42 +712,24 @@ enable_services_task() {
             print_warning "$service not found"
         fi
     done
+
+    # Ensure NetworkManager is running
+    print_step "Starting NetworkManager..."
+    if sudo systemctl start NetworkManager 2>/dev/null; then
+        print_success "NetworkManager is running"
+    else
+        print_info "NetworkManager already running"
+    fi
 }
 
 install_system_configs_task() {
     print_header "🔧 Installing System Configurations"
 
-    # ── IWD Configuration ────────────────────────────────────────────────────
-    print_step "Configuring IWD..."
-    copy_system_config \
-        "$DOTFILES_DIR/etc/iwd/main.conf" \
-        "/etc/iwd/main.conf" \
-        "iwd main.conf"
-    echo ""
-
-    # ── DNS Resolver ─────────────────────────────────────────────────────────
-    print_step "Configuring DNS resolver..."
-    copy_system_config \
-        "$DOTFILES_DIR/etc/resolv.conf " \
-        "/etc/resolv.conf" \
-        "resolv.conf"
-    echo ""
-
-    # ── Greetd ──────────────────────────────────────────────────────────────
-    print_step "Installing greetd configuration..."
-    if copy_system_config \
-        "$DOTFILES_DIR/etc/greetd/config.toml" \
-        "/etc/greetd/config.toml" \
-        "greetd config"; then
-        print_info "tuigreet will launch Hyprland by default"
-    fi
-    echo ""
-
     # ── Hotspot Sudoers ──────────────────────────────────────────────────────
     print_step "Configuring hotspot sudoers..."
     local sudoers_file="/etc/sudoers.d/hyprland-hotspot"
     local hotspot_script="$HOME/.config/hypr/Scripts/Hostpot.py"
-    local sudoers_entry="$USER ALL=(ALL) NOPASSWD: /usr/bin/python $hotspot_script toggle"
+    local sudoers_entry="$USER ALL=(ALL) NOPASSWD: /usr/bin/python3 $hotspot_script toggle"
     
     if echo "$sudoers_entry" | sudo tee "$sudoers_file" > /dev/null && sudo chmod 440 "$sudoers_file"; then
         print_success "Hotspot sudoers rule installed"
@@ -685,7 +776,7 @@ configure_qemu_kvm_task() {
     print_header "🖥️  Configuring QEMU/KVM"
 
     # Check if libvirt is installed
-    if ! pacman -Qi libvirt &>/dev/null; then
+    if ! rpm -q libvirt &>/dev/null; then
         print_info "libvirt not installed, skipping QEMU/KVM configuration"
         return 0
     fi
@@ -730,264 +821,17 @@ configure_qemu_kvm_task() {
     echo ""
 }
 
-install_gpu_drivers_task() {
-    print_header "🖥️  Installing GPU Drivers"
-
-    local gpu_info
-    gpu_info=$(lspci -nn 2>/dev/null | grep -iE "vga|3d|display")
-
-    local has_nvidia=false
-    local has_amd=false
-    local has_intel=false
-
-    # Detect GPU vendors
-    if echo "$gpu_info" | grep -qi "nvidia"; then
-        has_nvidia=true
-    fi
-    if echo "$gpu_info" | grep -qiE "amd|radeon|ati"; then
-        has_amd=true
-    fi
-    if echo "$gpu_info" | grep -qi "intel"; then
-        has_intel=true
-    fi
-
-    print_step "Detected GPU(s):"
-    echo "$gpu_info" | while read -r line; do
-        echo -e "     ${WHITE}$line${NC}"
-    done
-    echo ""
-
-    # Ask for confirmation before proceeding
-    choice=$(confirm_prompt "Proceed with GPU driver installation? [Y/n]" "y")
-    if [[ "$choice" != "y" && "$choice" != "yes" ]]; then
-        print_info "Skipping GPU driver installation"
-        return 0
-    fi
-    echo ""
-
-    # ── NVIDIA Driver Installation ──────────────────────────────────────────
-    if [ "$has_nvidia" = true ]; then
-        print_step "NVIDIA GPU detected"
-        
-        # Detect kernel type
-        local current_kernel
-        current_kernel=$(uname -r)
-        local is_standard_kernel=false
-        
-        if [[ "$current_kernel" == *"-arch"* ]] && [[ "$current_kernel" != *"-zen"* ]] && [[ "$current_kernel" != *"-lts"* ]] && [[ "$current_kernel" != *"-hardened"* ]]; then
-            is_standard_kernel=true
-        fi
-        
-        echo ""
-        echo -e "  ${DIM}Detected kernel: ${WHITE}$current_kernel${NC}"
-        echo ""
-        
-        if [ "$is_standard_kernel" = true ]; then
-            echo -e "  ${BOLD}Select NVIDIA driver:${NC}"
-            echo -e "  ${CYAN}1)${NC} nvidia-dkms       ${DIM}(Works with all kernels)${NC}"
-            echo -e "  ${CYAN}2)${NC} nvidia            ${DIM}(Standard - for linux kernel only)${NC}"
-            echo -e "  ${CYAN}3)${NC} nvidia-open-dkms  ${DIM}(Open source - for RTX 20+ series)${NC}"
-            echo -e "  ${CYAN}4)${NC} Skip NVIDIA driver"
-            echo ""
-            echo -ne "  ${YELLOW}?${NC}  Enter choice [1-4]: " > /dev/tty
-            read nvidia_choice < /dev/tty
-        else
-            # Non-standard kernel (zen, lts, hardened, etc.) - must use DKMS
-            print_info "Non-standard kernel detected, DKMS driver required"
-            echo ""
-            echo -e "  ${BOLD}Select NVIDIA driver:${NC}"
-            echo -e "  ${CYAN}1)${NC} nvidia-dkms       ${DIM}(Recommended for $current_kernel)${NC}"
-            echo -e "  ${CYAN}2)${NC} nvidia-open-dkms  ${DIM}(Open source - for RTX 20+ series)${NC}"
-            echo -e "  ${CYAN}3)${NC} Skip NVIDIA driver"
-            echo ""
-            echo -ne "  ${YELLOW}?${NC}  Enter choice [1-3]: " > /dev/tty
-            read nvidia_choice < /dev/tty
-            
-            # Remap choices for non-standard kernel
-            case $nvidia_choice in
-                1) nvidia_choice=1 ;;  # nvidia-dkms
-                2) nvidia_choice=3 ;;  # nvidia-open-dkms
-                3) nvidia_choice=4 ;;  # skip
-                *) nvidia_choice=0 ;;  # invalid
-            esac
-        fi
-
-        local nvidia_packages=()
-
-        case $nvidia_choice in
-            1)
-                nvidia_packages=("nvidia-dkms" "nvidia-utils" "nvidia-settings" "lib32-nvidia-utils" "libva-nvidia-driver")
-                print_step "Installing nvidia-dkms driver..."
-                ;;
-            2)
-                nvidia_packages=("nvidia" "nvidia-utils" "nvidia-settings" "lib32-nvidia-utils" "libva-nvidia-driver")
-                print_step "Installing nvidia driver..."
-                ;;
-            3)
-                nvidia_packages=("nvidia-open-dkms" "nvidia-utils" "nvidia-settings" "lib32-nvidia-utils" "libva-nvidia-driver")
-                print_step "Installing nvidia-open-dkms driver..."
-                ;;
-            4)
-                print_info "Skipping NVIDIA driver installation"
-                ;;
-            *)
-                print_warning "Invalid choice, skipping NVIDIA driver"
-                ;;
-        esac
-
-        if [ ${#nvidia_packages[@]} -gt 0 ]; then
-            echo ""
-            for pkg in "${nvidia_packages[@]}"; do
-                echo -e "  ${GRAY}Installing: $pkg${NC}"
-                if sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
-                    print_success "$pkg"
-                else
-                    print_warning "$pkg (may not be available or already installed)"
-                fi
-            done
-
-            # Configure NVIDIA for Wayland/Hyprland
-            print_step "Configuring NVIDIA for Hyprland..."
-
-            # Add nvidia modules to mkinitcpio
-            if [ -f /etc/mkinitcpio.conf ]; then
-                if ! grep -q "nvidia" /etc/mkinitcpio.conf; then
-                    print_info "Adding NVIDIA modules to mkinitcpio.conf"
-                    # Handle both empty and non-empty MODULES arrays
-                    if grep -q "^MODULES=()" /etc/mkinitcpio.conf; then
-                        sudo sed -i 's/^MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
-                    else
-                        sudo sed -i 's/^MODULES=(\([^)]*\))/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
-                    fi
-                    sudo mkinitcpio -P
-                    print_success "mkinitcpio updated"
-                else
-                    print_info "NVIDIA modules already in mkinitcpio.conf"
-                fi
-            fi
-
-            # Create modprobe config for nvidia_drm.modeset=1
-            print_info "Enabling nvidia_drm.modeset"
-            echo "options nvidia_drm modeset=1 fbdev=1" | sudo tee /etc/modprobe.d/nvidia.conf > /dev/null
-            print_success "NVIDIA modprobe config created"
-
-            # Add environment variables hint
-            echo ""
-            print_info "Add these to your Hyprland config for best experience:"
-            echo -e "  ${DIM}env = LIBVA_DRIVER_NAME,nvidia${NC}"
-            echo -e "  ${DIM}env = XDG_SESSION_TYPE,wayland${NC}"
-            echo -e "  ${DIM}env = GBM_BACKEND,nvidia-drm${NC}"
-            echo -e "  ${DIM}env = __GLX_VENDOR_LIBRARY_NAME,nvidia${NC}"
-            echo -e "  ${DIM}env = NVD_BACKEND,direct${NC}"
-        fi
-        echo ""
-    fi
-
-    # ── AMD Driver Installation ─────────────────────────────────────────────
-    if [ "$has_amd" = true ]; then
-        print_step "AMD GPU detected"
-        echo ""
-
-        local amd_packages=(
-            "mesa"
-            "lib32-mesa"
-            "vulkan-radeon"
-            "lib32-vulkan-radeon"
-            "libva-mesa-driver"
-            "lib32-libva-mesa-driver"
-            "mesa-vdpau"
-            "lib32-mesa-vdpau"
-        )
-
-        echo -e "  ${BOLD}AMD packages to install:${NC}"
-        for pkg in "${amd_packages[@]}"; do
-            echo -e "  ${DIM}  - $pkg${NC}"
-        done
-        echo ""
-
-        choice=$(confirm_prompt "Install AMD drivers? [Y/n]" "y")
-
-        if [[ "$choice" == "y" || "$choice" == "yes" ]]; then
-            for pkg in "${amd_packages[@]}"; do
-                echo -e "  ${GRAY}Installing: $pkg${NC}"
-                if sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
-                    print_success "$pkg"
-                else
-                    print_warning "$pkg (may not be available)"
-                fi
-            done
-
-            echo ""
-            print_info "AMD drivers use open-source AMDGPU, no extra config needed"
-            print_info "For hardware video acceleration, add to Hyprland:"
-            echo -e "  ${DIM}env = LIBVA_DRIVER_NAME,radeonsi${NC}"
-        else
-            print_info "Skipping AMD driver installation"
-        fi
-        echo ""
-    fi
-
-    # ── Intel Driver Installation ───────────────────────────────────────────
-    if [ "$has_intel" = true ]; then
-        print_step "Intel GPU detected"
-        echo ""
-
-        local intel_packages=(
-            "mesa"
-            "lib32-mesa"
-            "vulkan-intel"
-            "lib32-vulkan-intel"
-            "intel-media-driver"
-        )
-
-        echo -e "  ${BOLD}Intel packages to install:${NC}"
-        for pkg in "${intel_packages[@]}"; do
-            echo -e "  ${DIM}  - $pkg${NC}"
-        done
-        echo ""
-
-        choice=$(confirm_prompt "Install Intel drivers? [Y/n]" "y")
-
-        if [[ "$choice" == "y" || "$choice" == "yes" ]]; then
-            for pkg in "${intel_packages[@]}"; do
-                echo -e "  ${GRAY}Installing: $pkg${NC}"
-                if sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
-                    print_success "$pkg"
-                else
-                    print_warning "$pkg (may not be available)"
-                fi
-            done
-
-            echo ""
-            print_info "Intel drivers configured. For VA-API, add to Hyprland:"
-            echo -e "  ${DIM}env = LIBVA_DRIVER_NAME,iHD${NC}"
-        else
-            print_info "Skipping Intel driver installation"
-        fi
-        echo ""
-    fi
-
-    # ── No GPU Detected ─────────────────────────────────────────────────────
-    if [ "$has_nvidia" = false ] && [ "$has_amd" = false ] && [ "$has_intel" = false ]; then
-        print_warning "No supported GPU detected"
-        print_info "Installing generic mesa drivers..."
-        sudo pacman -S --noconfirm --needed mesa lib32-mesa 2>/dev/null
-        print_success "Generic drivers installed"
-    fi
-
-    print_success "GPU driver setup complete"
-}
-
 full_install() {
     system_update
-    install_gpu_drivers_task
+    setup_repos_task
     install_packages_task
+    install_github_packages_task
+    install_thirdparty_apps_task
     install_dotfiles_task
     configure_shell_task
     install_themes_task
     install_system_configs_task
     configure_qemu_kvm_task
-    disable_services_task
     enable_services_task
     mask_service_task
     show_completion
@@ -1004,9 +848,19 @@ show_completion() {
     │   Your Hyprland environment is ready.                        │
     │   Please reboot to apply all changes.                        │
     │                                                              │
+    │   GDM will start on next boot.                               │
+    │   Select Hyprland from the session menu.                     │
+    │                                                              │
     ╰──────────────────────────────────────────────────────────────╯
 EOF
     echo -e "${NC}"
+
+    echo -e "  ${DIM}Post-install reminders:${NC}"
+    echo -e "  ${GRAY}  • Zen Browser: https://zen-browser.app/download${NC}"
+    echo -e "  ${GRAY}  • OnlyOffice:  flatpak install flathub org.onlyoffice.desktopeditors${NC}"
+    echo -e "  ${GRAY}  • LocalSend:   flatpak install flathub org.localsend.localsend_app${NC}"
+    echo -e "  ${GRAY}  • Heroic:      flatpak install flathub com.heroicgameslauncher.hgl${NC}"
+    echo ""
 
     choice=$(confirm_prompt "Reboot now? [y/N]" "n")
 
@@ -1018,7 +872,7 @@ EOF
     fi
 
     echo ""
-    echo -e "  ${DIM}Run 'Hyprland' to start your new desktop!${NC}"
+    echo -e "  ${DIM}Run 'systemctl start gdm' or reboot to start your new desktop!${NC}"
     echo ""
 }
 
@@ -1027,32 +881,34 @@ EOF
 main_menu() {
     print_logo
     
-    echo -e "  ${DIM}This installer will set up your Hyprland environment.${NC}"
+    echo -e "  ${DIM}This installer will set up your Hyprland environment on Fedora.${NC}"
     echo ""
     echo -e "  ${BOLD}Select an option:${NC}"
     echo ""
-    echo -e "  ${CYAN}1)${NC} Full Installation        ${DIM}(GPU, Packages, Configs, Themes, Shell, XAMPP)${NC}"
-    echo -e "  ${CYAN}2)${NC} Install GPU Drivers      ${DIM}(AMD, NVIDIA, Intel auto-detect)${NC}"
-    echo -e "  ${CYAN}3)${NC} Install Packages Only    ${DIM}(Pacman, AUR, VSCode)${NC}"
-    echo -e "  ${CYAN}4)${NC} Install Dotfiles Only    ${DIM}(~/.config, ~/.local/bin)${NC}"
-    echo -e "  ${CYAN}5)${NC} Install Themes Only      ${DIM}(Icons, GTK Themes)${NC}"
-    echo -e "  ${CYAN}6)${NC} Configure Shell Only     ${DIM}(Zsh, Oh My Zsh)${NC}"
+    echo -e "  ${CYAN}1)${NC} Full Installation          ${DIM}(Repos, Packages, Configs, Themes, Shell)${NC}"
+    echo -e "  ${CYAN}2)${NC} Setup Repos Only           ${DIM}(Copr, VS Code, Chrome, RPM Fusion)${NC}"
+    echo -e "  ${CYAN}3)${NC} Install Packages Only      ${DIM}(DNF, Third-party, VS Code extensions)${NC}"
+    echo -e "  ${CYAN}4)${NC} Install Dotfiles Only      ${DIM}(~/.config, ~/.local/bin)${NC}"
+    echo -e "  ${CYAN}5)${NC} Install Themes Only        ${DIM}(Icons, GTK Themes, Fonts)${NC}"
+    echo -e "  ${CYAN}6)${NC} Configure Shell Only       ${DIM}(Zsh, Oh My Zsh)${NC}"
     echo -e "  ${CYAN}7)${NC} Install VS Code Extensions ${DIM}(From CodeExtensions.txt)${NC}"
+    echo -e "  ${CYAN}8)${NC} Build GitHub Packages      ${DIM}(rofi-emoji, rofi-calc)${NC}"
     echo -e "  ${RED}0)${NC} Quit"
     echo ""
     
-    echo -ne "  ${YELLOW}?${NC}  Enter choice [0-7]: "
+    echo -ne "  ${YELLOW}?${NC}  Enter choice [0-8]: "
     read choice < /dev/tty
     echo ""
 
     case $choice in
         1) full_install ;;
-        2) install_gpu_drivers_task; show_completion ;;
+        2) setup_repos_task; show_completion ;;
         3) install_packages_task; show_completion ;;
         4) install_dotfiles_task; show_completion ;;
         5) install_themes_task; show_completion ;;
         6) configure_shell_task; show_completion ;;
         7) install_vscode_extensions_task; show_completion ;;
+        8) install_github_packages_task; show_completion ;;
         0) echo -e "  ${DIM}Bye!${NC}"; exit 0 ;;
         *) echo -e "  ${RED}Invalid choice!${NC}"; sleep 1; clear; main_menu ;;
     esac

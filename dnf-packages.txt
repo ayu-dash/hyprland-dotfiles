@@ -1,0 +1,102 @@
+# =============================================================================
+# Hyprland Dotfiles - Fedora DNF Packages
+# =============================================================================
+# Installed via: sudo dnf install -y $(grep -v '^#' dnf-packages.txt | tr '\n' ' ')
+
+# ── Desktop & Window Manager (from Copr: solopasha/hyprland) ────────────────
+hyprland
+hyprlock
+hypridle
+hyprpicker
+hyprsunset
+
+# ── Notification (from Copr: erikreider/SwayNotificationCenter) ─────────────
+SwayNotificationCenter
+
+# ── Bar & Launcher ──────────────────────────────────────────────────────────
+waybar
+rofi-wayland
+
+# ── Terminal & Shell ────────────────────────────────────────────────────────
+kitty
+zsh
+
+# ── System Utilities ────────────────────────────────────────────────────────
+git
+swww
+btop
+fastfetch
+brightnessctl
+unrar
+unzip
+cliphist
+udiskie
+upower
+imagemagick
+simple-scan
+dconf-editor
+swappy
+gvfs
+
+# ── Network & Bluetooth ────────────────────────────────────────────────────
+NetworkManager
+nm-connection-editor
+bluez
+bluez-tools
+blueman
+iw
+hostapd
+iptables
+
+
+# ── GNOME Apps (Replacements) ───────────────────────────────────────────────
+nautilus
+gnome-text-editor
+file-roller
+loupe
+mpv
+
+# ── Qt Theming ──────────────────────────────────────────────────────────────
+qt6ct
+qt5ct
+qt5-qtwayland
+qt6-qtwayland
+kvantum
+nwg-look
+
+# ── Desktop Portals ─────────────────────────────────────────────────────────
+xdg-desktop-portal-gtk
+xdg-desktop-portal-hyprland
+xdg-desktop-portal-gnome
+xdg-user-dirs
+polkit-gnome
+
+# ── Display Manager ─────────────────────────────────────────────────────────
+gdm
+
+# ── Virtualization ──────────────────────────────────────────────────────────
+qemu-kvm
+libvirt
+virt-manager
+dnsmasq
+edk2-ovmf
+
+# ── Database ────────────────────────────────────────────────────────────────
+# mysql-workbench
+# NOTE: mysql-workbench may not be in default Fedora repos. Install via Flatpak
+# or download RPM from https://dev.mysql.com/downloads/workbench/
+
+# ── Development ─────────────────────────────────────────────────────────────
+uv
+composer
+man-pages
+alsa-tools
+freerdp
+
+# ── Fonts ───────────────────────────────────────────────────────────────────
+google-noto-fonts-common
+google-noto-emoji-fonts
+fontawesome-fonts
+
+# ── Browser ─────────────────────────────────────────────────────────────────
+firefox

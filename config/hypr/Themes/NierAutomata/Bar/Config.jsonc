@@ -235,7 +235,7 @@
     "exec": "python $HOME/.config/hypr/Themes/NierAutomata/Bar/Scripts/WifiSignal.py",
     "return-type": "json",
     "interval": 1,
-    "on-click": "kitty impala",
+    "on-click": "nm-connection-editor",
     "tooltip": true,
   },
   "custom/battery": {

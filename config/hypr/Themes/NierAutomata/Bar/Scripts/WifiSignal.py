@@ -1,6 +1,7 @@
 """
 WiFi signal strength module for Waybar.
 Displays connection status and signal strength icons.
+Uses NetworkManager (nmcli) for WiFi status.
 """
 
 import json
@@ -12,35 +13,23 @@ from Utils import run_capture
 
 
 def get_wifi_info() -> tuple[int | None, str | None]:
-    """Get current WiFi connection info (signal strength, SSID) using iwd."""
-    stdout, _, returncode = run_capture(["iwctl", "station", "wlan0", "show"])
+    """Get current WiFi connection info (signal strength, SSID) using nmcli."""
+    stdout, _, returncode = run_capture(
+        ["nmcli", "-t", "-f", "ACTIVE,SSID,SIGNAL", "dev", "wifi"]
+    )
 
     if returncode != 0 or not stdout:
         return None, None
 
-    ssid = None
-    signal = None
-
-    for line in stdout.split("\n"):
-        line = line.strip()
-        if "Connected network" in line:
-            # Format: "Connected network              SSID_NAME"
-            parts = line.split()
-            if len(parts) >= 3:
-                ssid = " ".join(parts[2:])
-        elif "RSSI" in line:
-            # Format: "RSSI                          -XX dBm"
-            parts = line.split()
-            for i, part in enumerate(parts):
-                if part.startswith("-") and part[1:].isdigit():
-                    rssi = int(part)
-                    # Convert RSSI (dBm) to percentage (rough approximation)
-                    # -30 dBm = 100%, -90 dBm = 0%
-                    signal = max(0, min(100, 2 * (rssi + 100)))
-                    break
-
-    if ssid and signal is not None:
-        return signal, ssid
+    for line in stdout.strip().split("\n"):
+        parts = line.split(":")
+        if len(parts) >= 3 and parts[0] == "yes":
+            ssid = parts[1]
+            try:
+                signal = int(parts[2])
+            except ValueError:
+                continue
+            return signal, ssid
 
     return None, None
 
