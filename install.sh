@@ -203,7 +203,7 @@ update_repo() {
                 fi
                 
                 echo ""
-                if git pull origin main 2>&1 || git pull origin master 2>&1; then
+                if git pull origin fedora 2>&1; then
                     echo ""
                     echo -e "  ${GREEN}✓${NC}  Updated to latest version"
                     echo -e "  ${GRAY}ℹ${NC}  Restarting installer..."
