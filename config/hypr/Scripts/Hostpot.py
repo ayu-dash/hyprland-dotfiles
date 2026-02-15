@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
 """
 Hotspot Management Script for Hyprland
 
 This script manages a WiFi hotspot using hostapd and dnsmasq with virtual interface
 support. It provides toggle functionality and status output compatible with Waybar.
 
-Dependencies: hostapd, dnsmasq, iw, nmcli, iptables
+Dependencies: hostapd, dnsmasq, iw, iptables
 Requires: Root privileges for network operations
 """
 
@@ -94,8 +93,7 @@ def create_virtual_interface(parent_interface: str) -> bool:
     """Create and configure a virtual AP interface."""
     log.info(f"Creating virtual interface on {parent_interface}")
     try:
-        run_silent(["nmcli", "device", "set", parent_interface, "managed", "no"])
-        
+
         log.debug("Resetting WiFi radio")
         run_silent(["rfkill", "block", "wifi"])
         time.sleep(0.5)
@@ -117,10 +115,10 @@ def create_virtual_interface(parent_interface: str) -> bool:
             "address", generate_virtual_mac(parent_interface)
         ])
         run_silent(["ip", "link", "set", parent_interface, "up"])
-        run_silent(["nmcli", "device", "set", parent_interface, "managed", "yes"])
+
         time.sleep(0.5)
         run_silent(["ip", "link", "set", VIRTUAL_INTERFACE, "up"])
-        run_silent(["nmcli", "device", "set", VIRTUAL_INTERFACE, "managed", "no"])
+
         
         log.info(f"Virtual interface {VIRTUAL_INTERFACE} created successfully")
         return True
