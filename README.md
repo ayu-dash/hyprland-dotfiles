@@ -18,7 +18,7 @@ An automated Hyprland dotfiles setup optimized for Fedora Linux, featuring modul
 ## 📦 Installation
 
 ```bash
-git clone https://github.com/ayu-dash/hyprland-dotfiles.git ~/hyprland-dotfiles
+git clone -b fedora https://github.com/ayu-dash/hyprland-dotfiles.git ~/hyprland-dotfiles
 cd ~/hyprland-dotfiles
 chmod +x install.sh
 ./install.sh
