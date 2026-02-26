@@ -1,8 +1,6 @@
 [Match]
 Name=en*
-Name=eth*
 
 [Network]
 DHCP=yes
-DNS=8.8.8.8
-DNS=1.1.1.1
+IPv6PrivacyExtensions=yes
