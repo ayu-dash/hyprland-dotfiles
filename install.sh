@@ -574,7 +574,7 @@ install_themes_task() {
 disable_services_task() {
     print_header "🛑  Disabling Services"
     
-    SERVICES=(NetworkManager wpa_supplicant systemd-resolved systemd-networkd)
+    SERVICES=(NetworkManager wpa_supplicant systemd-networkd)
     for service in "${SERVICES[@]}"; do
         if systemctl list-unit-files "${service}.service" &>/dev/null; then
             sudo systemctl disable --now "$service" > /dev/null 2>&1
@@ -593,7 +593,7 @@ mask_service_task() {
 enable_services_task() {
     print_header "⚙️  Enabling Services"
 
-    SERVICES=(greetd bluetooth iwd udisks2 tailscaled)
+    SERVICES=(greetd bluetooth iwd udisks2 tailscaled systemd-resolved)
 
     for service in "${SERVICES[@]}"; do
         if systemctl list-unit-files "${service}.service" &>/dev/null; then
@@ -616,12 +616,16 @@ install_system_configs_task() {
         "iwd main.conf"
     echo ""
 
-    # ── DNS Resolver ─────────────────────────────────────────────────────────
-    print_step "Configuring DNS resolver..."
-    copy_system_config \
-        "$DOTFILES_DIR/etc/resolv.conf " \
-        "/etc/resolv.conf" \
-        "resolv.conf"
+    # ── DNS Resolver (systemd-resolved) ────────────────────────────────────────
+    print_step "Configuring DNS resolver (systemd-resolved)..."
+    sudo chattr -i /etc/resolv.conf 2>/dev/null
+    sudo rm -f /etc/resolv.conf
+    if sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf; then
+        print_success "resolv.conf -> systemd-resolved stub"
+        print_info "DNS managed by systemd-resolved via iwd"
+    else
+        print_error "Failed to create resolv.conf symlink"
+    fi
     echo ""
 
     # ── Greetd ──────────────────────────────────────────────────────────────
