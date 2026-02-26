@@ -574,7 +574,7 @@ install_themes_task() {
 disable_services_task() {
     print_header "🛑  Disabling Services"
     
-    SERVICES=(NetworkManager wpa_supplicant systemd-networkd)
+    SERVICES=(NetworkManager wpa_supplicant)
     for service in "${SERVICES[@]}"; do
         if systemctl list-unit-files "${service}.service" &>/dev/null; then
             sudo systemctl disable --now "$service" > /dev/null 2>&1
@@ -593,7 +593,7 @@ mask_service_task() {
 enable_services_task() {
     print_header "⚙️  Enabling Services"
 
-    SERVICES=(greetd bluetooth iwd udisks2 tailscaled systemd-resolved)
+    SERVICES=(greetd bluetooth iwd udisks2 tailscaled systemd-resolved systemd-networkd)
 
     for service in "${SERVICES[@]}"; do
         if systemctl list-unit-files "${service}.service" &>/dev/null; then
@@ -614,6 +614,14 @@ install_system_configs_task() {
         "$DOTFILES_DIR/etc/iwd/main.conf" \
         "/etc/iwd/main.conf" \
         "iwd main.conf"
+    echo ""
+
+    # ── systemd-networkd (Wired/NAT/Bridge) ─────────────────────────────────
+    print_step "Configuring systemd-networkd..."
+    copy_system_config \
+        "$DOTFILES_DIR/etc/systemd/network/20-wired.network" \
+        "/etc/systemd/network/20-wired.network" \
+        "systemd-networkd wired config"
     echo ""
 
     # ── DNS Resolver (systemd-resolved) ────────────────────────────────────────

@@ -45,19 +45,46 @@ def get_wifi_info() -> tuple[int | None, str | None]:
     return None, None
 
 
-def check_ethernet() -> bool:
-    """Check if ethernet is connected via /sys/class/net."""
-    eth_interfaces = ["eth0", "enp0s31f6", "eno1"]
-    for iface in eth_interfaces:
-        operstate_path = Path(f"/sys/class/net/{iface}/operstate")
-        if operstate_path.exists():
-            try:
-                state = operstate_path.read_text().strip()
-                if state == "up":
-                    return True
-            except (OSError, IOError):
-                continue
-    return False
+def check_network() -> tuple[str | None, str | None, str | None]:
+    """Check active network interfaces via /sys/class/net.
+    Returns (icon, type_name, iface_name) or (None, None, None).
+    """
+    net_dir = Path("/sys/class/net")
+    if not net_dir.exists():
+        return None, None, None
+
+    # (prefix_tuple, type_name, icon, priority)
+    types = [
+        (("en", "eth"),           "Ethernet", "󰈀", 1),
+        (("tun", "wg"),           "VPN",      "󰦝", 2),
+        (("br", "virbr"),         "Bridge",   "󰌗", 3),
+        (("vnet", "tap", "veth"), "NAT",      "󰛳", 4),
+        (("docker", "podman"),    "Container","󰡨", 5),
+    ]
+
+    found = []
+    for iface_path in net_dir.iterdir():
+        name = iface_path.name
+        if name in ("lo",) or name.startswith(("wl", "wlan")):
+            continue
+        try:
+            state = (iface_path / "operstate").read_text().strip()
+        except (OSError, IOError):
+            continue
+        if state != "up":
+            continue
+        for prefixes, type_name, icon, priority in types:
+            if name.startswith(prefixes):
+                found.append((icon, type_name, name, priority))
+                break
+        else:
+            found.append(("󰛳", "Network", name, 99))
+
+    if not found:
+        return None, None, None
+
+    found.sort(key=lambda x: x[3])
+    return found[0][0], found[0][1], found[0][2]
 
 
 def get_signal_icon(signal: int) -> tuple[str, str]:
@@ -78,12 +105,13 @@ def main() -> None:
     signal, ssid = get_wifi_info()
 
     if signal is None:
-        # No WiFi, check ethernet
-        if check_ethernet():
+        # No WiFi, check other interfaces
+        icon, type_name, iface_name = check_network()
+        if icon:
             output = {
-                "text": "󰈀",
-                "tooltip": "Ethernet",
-                "class": "ethernet"
+                "text": icon,
+                "tooltip": f"{type_name}: {iface_name}",
+                "class": type_name.lower()
             }
         else:
             output = {
