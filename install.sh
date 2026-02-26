@@ -593,7 +593,7 @@ mask_service_task() {
 enable_services_task() {
     print_header "⚙️  Enabling Services"
 
-    SERVICES=(greetd bluetooth iwd udisks2 tailscaled systemd-resolved systemd-networkd)
+    SERVICES=(greetd bluetooth iwd udisks2 tailscaled)
 
     for service in "${SERVICES[@]}"; do
         if systemctl list-unit-files "${service}.service" &>/dev/null; then
@@ -608,33 +608,33 @@ enable_services_task() {
 install_system_configs_task() {
     print_header "🔧 Installing System Configurations"
 
-    # ── IWD Configuration ────────────────────────────────────────────────────
-    print_step "Configuring IWD..."
-    copy_system_config \
-        "$DOTFILES_DIR/etc/iwd/main.conf" \
-        "/etc/iwd/main.conf" \
-        "iwd main.conf"
-    echo ""
+    # # ── IWD Configuration ────────────────────────────────────────────────────
+    # print_step "Configuring IWD..."
+    # copy_system_config \
+    #     "$DOTFILES_DIR/etc/iwd/main.conf" \
+    #     "/etc/iwd/main.conf" \
+    #     "iwd main.conf"
+    # echo ""
 
-    # ── systemd-networkd (Wired/NAT/Bridge) ─────────────────────────────────
-    print_step "Configuring systemd-networkd..."
-    copy_system_config \
-        "$DOTFILES_DIR/etc/systemd/network/20-wired.network" \
-        "/etc/systemd/network/20-wired.network" \
-        "systemd-networkd wired config"
-    echo ""
+    # # ── systemd-networkd (Wired/NAT/Bridge) ─────────────────────────────────
+    # print_step "Configuring systemd-networkd..."
+    # copy_system_config \
+    #     "$DOTFILES_DIR/etc/systemd/network/20-wired.network" \
+    #     "/etc/systemd/network/20-wired.network" \
+    #     "systemd-networkd wired config"
+    # echo ""
 
-    # ── DNS Resolver (systemd-resolved) ────────────────────────────────────────
-    print_step "Configuring DNS resolver (systemd-resolved)..."
-    sudo chattr -i /etc/resolv.conf 2>/dev/null
-    sudo rm -f /etc/resolv.conf
-    if sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf; then
-        print_success "resolv.conf -> systemd-resolved stub"
-        print_info "DNS managed by systemd-resolved via iwd"
-    else
-        print_error "Failed to create resolv.conf symlink"
-    fi
-    echo ""
+    # # ── DNS Resolver (systemd-resolved) ────────────────────────────────────────
+    # print_step "Configuring DNS resolver (systemd-resolved)..."
+    # sudo chattr -i /etc/resolv.conf 2>/dev/null
+    # sudo rm -f /etc/resolv.conf
+    # if sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf; then
+    #     print_success "resolv.conf -> systemd-resolved stub"
+    #     print_info "DNS managed by systemd-resolved via iwd"
+    # else
+    #     print_error "Failed to create resolv.conf symlink"
+    # fi
+    # echo ""
 
     # ── Greetd ──────────────────────────────────────────────────────────────
     print_step "Installing greetd configuration..."
