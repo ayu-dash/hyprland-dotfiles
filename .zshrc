@@ -17,7 +17,7 @@ source $ZSH/oh-my-zsh.sh
 # User configuration
 export PATH="$HOME/.local/bin:$PATH"
 
-export PATH="$PATH:/opt/lampp/bin:$PATH"
+export PATH="/opt/lampp/bin:$PATH"
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" #
@@ -31,13 +31,9 @@ alias la="ls -A"
 alias l="ls -CF"
 
 # Package management
-alias p="sudo pacman"
-alias ps="sudo pacman -S"
-alias pr="sudo pacman -Rns"
-alias pu="sudo pacman -Syu"
-alias y="yay"
-alias ys="yay -S"
-alias yu="yay -Syu"
+alias i="sudo dnf install"
+alias r="sudo dnf remove"
+alias uu="sudo dnf update -y && sudo dnf upgrade -y"
 
 # Navigation
 alias ..="cd .."
