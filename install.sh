@@ -574,7 +574,7 @@ install_themes_task() {
 disable_services_task() {
     print_header "🛑  Disabling Services"
     
-    SERVICES=(NetworkManager wpa_supplicant)
+    SERVICES=(iwd wpa_supplicant systemd-networkd)
     for service in "${SERVICES[@]}"; do
         if systemctl list-unit-files "${service}.service" &>/dev/null; then
             sudo systemctl disable --now "$service" > /dev/null 2>&1
@@ -593,7 +593,7 @@ mask_service_task() {
 enable_services_task() {
     print_header "⚙️  Enabling Services"
 
-    SERVICES=(greetd bluetooth iwd udisks2 tailscaled)
+    SERVICES=(greetd bluetooth NetworkManager udisks2 tailscaled)
 
     for service in "${SERVICES[@]}"; do
         if systemctl list-unit-files "${service}.service" &>/dev/null; then
