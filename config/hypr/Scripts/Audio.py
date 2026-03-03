@@ -63,6 +63,15 @@ def get_mic_icon(is_muted: bool) -> str:
     return str(ICON_DIR / icon_name)
 
 
+def set_mic_led(muted: bool) -> None:
+    """Set the microphone mute LED via HDA codec GPIO."""
+    hda_device = "/dev/snd/hwC1D0"
+    run_silent(["sudo", "hda-verb", hda_device, "0x01", "SET_GPIO_MASK", "0x01"])
+    run_silent(["sudo", "hda-verb", hda_device, "0x01", "SET_GPIO_DIRECTION", "0x01"])
+    gpio_data = "0x00" if muted else "0x01"
+    run_silent(["sudo", "hda-verb", hda_device, "0x01", "SET_GPIO_DATA", gpio_data])
+
+
 def audio_unmute() -> None:
     """Unmute the audio sink."""
     run_silent(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "0"])
@@ -84,17 +93,17 @@ def mic_mute_toggle() -> None:
     run_silent(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"])
     now_muted = is_mic_muted()
 
-    # Control mic mute LED via HDA codec GPIO
-    hda_device = "/dev/snd/hwC1D0"
-    run_silent(["sudo", "hda-verb", hda_device, "0x01", "SET_GPIO_MASK", "0x01"])
-    run_silent(["sudo", "hda-verb", hda_device, "0x01", "SET_GPIO_DIRECTION", "0x01"])
-    gpio_data = "0x00" if now_muted else "0x01"
-    run_silent(["sudo", "hda-verb", hda_device, "0x01", "SET_GPIO_DATA", gpio_data])
+    set_mic_led(now_muted)
 
     status = "Muted" if now_muted else "Unmuted"
     log.info(f"Microphone {status.lower()}")
     icon = get_mic_icon(now_muted)
     notify(icon, f"Microphone is {status}", level="critical")
+
+
+def sync_mic_led() -> None:
+    """Synchronize mic LED state with current mute state."""
+    set_mic_led(is_mic_muted())
 
 
 def adjust_volume(step: int, action: str = "raise") -> None:
@@ -119,7 +128,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Audio control utility")
     parser.add_argument(
         "action",
-        choices=["raiseVolume", "lowerVolume", "muteToggle", "micToggle"],
+        choices=["raiseVolume", "lowerVolume", "muteToggle", "micToggle", "syncMicLed"],
         help="Audio action to perform"
     )
     parser.add_argument(
@@ -140,6 +149,8 @@ def main() -> None:
             audio_mute_toggle()
         case "micToggle":
             mic_mute_toggle()
+        case "syncMicLed":
+            sync_mic_led()
 
 
 if __name__ == "__main__":
