@@ -574,7 +574,7 @@ install_themes_task() {
 disable_services_task() {
     print_header "🛑  Disabling Services"
     
-    SERVICES=(NetworkManager wpa_supplicant)
+    SERVICES=(NetworkManager wpa_supplicant systemd-networkd-wait-online.service)
     for service in "${SERVICES[@]}"; do
         if systemctl list-unit-files "${service}.service" &>/dev/null; then
             sudo systemctl disable --now "$service" > /dev/null 2>&1
@@ -587,7 +587,16 @@ disable_services_task() {
 
 mask_service_task() {
     print_header "🛑  Masking Services"
-    systemctl --user mask swaync.service    
+
+    SERVICES=(swaync.service systemd-networkd-wait-online.service)
+    for service in "${SERVICES[@]}"; do
+        if systemctl list-unit-files "${service}.service" &>/dev/null; then
+            sudo systemctl mask "$service" > /dev/null 2>&1
+            print_success "$service"
+        else
+            print_warning "$service not found"
+        fi
+    done
 }
 
 enable_services_task() {
@@ -603,6 +612,106 @@ enable_services_task() {
             print_warning "$service not found"
         fi
     done
+}
+
+
+lock_dns_to_resolved() {
+    for file in /etc/systemd/network/*.network; do
+        [[ -f $file ]] || continue
+        if ! grep -q "^\[DHCPv4\]" "$file"; then continue; fi
+
+        if ! sed -n '/^\[DHCPv4\]/,/^\[/p' "$file" | grep -q "^UseDNS="; then
+            sudo sed -i '/^\[DHCPv4\]/a UseDNS=no' "$file"
+        fi
+
+        if grep -q "^\[IPv6AcceptRA\]" "$file" && ! sed -n '/^\[IPv6AcceptRA\]/,/^\[/p' "$file" | grep -q "^UseDNS="; then
+            sudo sed -i '/^\[IPv6AcceptRA\]/a UseDNS=no' "$file"
+        fi
+    done
+}
+
+unlock_dns_to_dhcp() {
+    for file in /etc/systemd/network/*.network; do
+        [[ -f $file ]] || continue
+        sudo sed -i '/^\[DHCPv4\]/{n;/^UseDNS=no$/d}' "$file"
+        sudo sed -i '/^\[IPv6AcceptRA\]/{n;/^UseDNS=no$/d}' "$file"
+    done
+}
+
+configure_dns_task() {
+    print_header "🌐 Configuring DNS Resolver"
+
+    local dns_choice
+    if command -v gum &> /dev/null; then
+        dns_choice=$(gum choose --height 8 --header "Select DNS provider" Cloudflare Google DHCP Custom "Skip (Current)")
+    else
+        echo -e "  ${BOLD}Select DNS Provider:${NC}"
+        options=("Cloudflare" "Google" "DHCP" "Custom" "Skip")
+        select opt in "${options[@]}"; do
+            dns_choice=$opt
+            break
+        done
+    fi
+    case "$dns_choice" in
+        Cloudflare)
+            print_step "Setting up Cloudflare DNS..."
+            sudo tee /etc/systemd/resolved.conf >/dev/null <<'EOF'
+[Resolve]
+DNS=1.1.1.1#cloudflare-dns.com 1.0.0.1#cloudflare-dns.com
+FallbackDNS=9.9.9.9 149.112.112.112
+DNSOverTLS=opportunistic
+EOF
+            lock_dns_to_resolved
+            print_success "Cloudflare DNS configured"
+            ;;
+        Google)
+            print_step "Setting up Google DNS..."
+            sudo tee /etc/systemd/resolved.conf >/dev/null <<'EOF'
+[Resolve]
+DNS=8.8.8.8#dns.google 8.8.4.4#dns.google
+FallbackDNS=9.9.9.9 149.112.112.112
+DNSOverTLS=opportunistic
+EOF
+            lock_dns_to_resolved
+            print_success "Google DNS configured"
+            ;;
+        DHCP)
+            print_step "Reverting to DHCP DNS..."
+            sudo tee /etc/systemd/resolved.conf >/dev/null <<'EOF'
+[Resolve]
+DNSOverTLS=no
+EOF
+            unlock_dns_to_dhcp
+            print_success "DHCP DNS restored"
+            ;;
+        Custom)
+            echo -e "  ${BOLD}Enter your DNS servers (space-separated):${NC}"
+            read -r dns_servers
+            if [[ -n $dns_servers ]]; then
+                sudo tee /etc/systemd/resolved.conf >/dev/null <<EOF
+[Resolve]
+DNS=$dns_servers
+FallbackDNS=9.9.9.9 149.112.112.112
+EOF
+                lock_dns_to_resolved
+                print_success "Custom DNS configured"
+            fi
+            ;;
+        *)
+            print_info "Skipping DNS configuration"
+            return
+            ;;
+    esac
+
+    # Ensure symlink exists
+    print_step "Finalizing resolv.conf symlink..."
+    sudo chattr -i /etc/resolv.conf 2>/dev/null
+    sudo rm -f /etc/resolv.conf
+    sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+
+    print_step "Restarting network services..."
+    sudo systemctl restart systemd-networkd systemd-resolved
+    print_success "DNS configuration applied"
 }
 
 install_system_configs_task() {
@@ -626,7 +735,6 @@ install_system_configs_task() {
 
     # ── DNS Resolver (systemd-resolved) ────────────────────────────────────────
     print_step "Configuring DNS resolver (systemd-resolved)..."
-    sudo chattr -i /etc/resolv.conf 2>/dev/null
     sudo rm -f /etc/resolv.conf
     if sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf; then
         print_success "resolv.conf -> systemd-resolved stub"
@@ -1004,6 +1112,7 @@ full_install() {
     disable_services_task
     enable_services_task
     mask_service_task
+    configure_dns_task
     show_completion
 }
 
