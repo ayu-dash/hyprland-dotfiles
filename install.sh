@@ -901,14 +901,16 @@ install_gpu_drivers_task() {
         echo ""
 
         local amd_packages=(
-            "mesa"
             "lib32-mesa"
-            "vulkan-radeon"
             "lib32-vulkan-radeon"
-            "libva-mesa-driver"
             "lib32-libva-mesa-driver"
-            "mesa-vdpau"
             "lib32-mesa-vdpau"
+            "xf86-video-amdgpu"
+            "xf86-video-ati"
+            "mesa"
+            "mesa-vdpau"
+            "vulkan-radeon"
+            "libva-mesa-driver"
         )
 
         echo -e "  ${BOLD}AMD packages to install:${NC}"

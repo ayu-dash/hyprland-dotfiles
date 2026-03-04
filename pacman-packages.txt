@@ -44,7 +44,7 @@ zsh
 upower
 mysql-workbench
 tailscale
-kwallet
+keepassxc
 hyprland
 qemu-full
 libvirt
