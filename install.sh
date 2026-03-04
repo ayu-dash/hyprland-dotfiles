@@ -45,7 +45,7 @@ print_logo() {
     echo ""
     gum style \
         --foreground "$C_CYAN" --border double --border-foreground "$C_CYAN" \
-        --align center --width 66 --padding "1 2" \
+        --align center --width 80 --padding "1 2" \
         "██╗  ██╗██╗   ██╗██████╗ ██████╗ ██╗      █████╗ ███╗   ██╗██████╗ " \
         "██║  ██║╚██╗ ██╔╝██╔══██╗██╔══██╗██║     ██╔══██╗████╗  ██║██╔══██╗" \
         "███████║ ╚████╔╝ ██████╔╝██████╔╝██║     ███████║██╔██╗ ██║██║  ██║" \
@@ -53,15 +53,15 @@ print_logo() {
         "██║  ██║   ██║   ██║     ██║  ██║███████╗██║  ██║██║ ╚████║██████╔╝" \
         "╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝"
     echo ""
-    gum style --foreground "$C_MAGENTA" --bold --align center --width 66 "D O T F I L E S  v2.0"
-    gum style --foreground "$C_GRAY" --align center --width 66 "by ayudash"
+    gum style --foreground "$C_MAGENTA" --bold --align center --width 80 "D O T F I L E S  v2.0"
+    gum style --foreground "$C_GRAY" --align center --width 80 "by ayudash"
     echo ""
 }
 
 print_header() {
     echo ""
     gum style --foreground "$C_WHITE" --bold --border rounded \
-        --border-foreground "$C_BLUE" --padding "0 2" --width 66 "$1"
+        --border-foreground "$C_BLUE" --padding "0 2" --width 72 "$1"
     echo ""
 }
 
@@ -739,7 +739,7 @@ show_completion() {
     echo ""
     gum style \
         --foreground "$C_GREEN" --border double --border-foreground "$C_GREEN" \
-        --align center --width 66 --padding "1 2" \
+        --align center --width 72 --padding "1 2" \
         "" "Installation Complete!" "" \
         "Your Hyprland environment is ready." \
         "Please reboot to apply all changes." ""
