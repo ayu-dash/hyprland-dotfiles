@@ -33,10 +33,10 @@ window#waybar {
   padding: 1px 2px;
   margin: 4px;
   margin-bottom: 6px;
-  font-family: "JetBrainsMono Nerd Font";
 }
 
 #workspaces button {
+  color: @foreground;
   background: transparent;
   border-radius: 50%;
   min-width: 20px;
@@ -52,6 +52,7 @@ window#waybar {
 }
 
 #workspaces button:hover {
+  box-shadow: none;
   background: @overlay;
 }
 
