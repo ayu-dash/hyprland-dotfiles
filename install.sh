@@ -518,6 +518,10 @@ install_system_configs_task() {
     copy_system_config "$DOTFILES_DIR/etc/systemd/system.conf.d/99-timeout.conf" "/etc/systemd/system.conf.d/99-timeout.conf" "DefaultTimeoutStopSec=10s"
     echo ""
 
+    print_step "Disabling hardware watchdog..."
+    copy_system_config "$DOTFILES_DIR/etc/modprobe.d/nowatchdog.conf" "/etc/modprobe.d/nowatchdog.conf" "Blacklist iTCO_wdt"
+    echo ""
+
     print_step "Configuring DNS resolver (systemd-resolved)..."
     sudo rm -f /etc/resolv.conf
     if sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf; then
@@ -719,6 +723,66 @@ install_gpu_drivers_task() {
     print_success "GPU driver setup complete"
 }
 
+configure_plymouth_task() {
+    print_header "Configuring Plymouth Boot Splash"
+
+    if ! pacman -Qi plymouth &>/dev/null; then
+        print_info "Plymouth not installed, skipping"
+        return 0
+    fi
+
+    print_step "Adding plymouth hook to mkinitcpio..."
+    if [[ -f /etc/mkinitcpio.conf ]]; then
+        if ! grep -q "plymouth" /etc/mkinitcpio.conf; then
+            sudo sed -i 's/^HOOKS=(\(.*\)udev\(.*\))/HOOKS=(\1udev plymouth\2)/' /etc/mkinitcpio.conf
+            print_success "Plymouth hook added after udev"
+        else
+            print_info "Plymouth hook already present"
+        fi
+    fi
+
+    print_step "Selecting Plymouth theme..."
+    local themes
+    themes=$(plymouth-set-default-theme --list 2>/dev/null)
+    if [[ -n "$themes" ]]; then
+        local theme
+        theme=$(echo "$themes" | gum choose --height 10 --header "Select boot splash theme")
+        if [[ -n "$theme" ]]; then
+            sudo plymouth-set-default-theme -R "$theme"
+            print_success "Theme set to: $theme"
+        fi
+    else
+        print_info "No themes found, using default"
+        sudo plymouth-set-default-theme -R bgrt 2>/dev/null || sudo mkinitcpio -P
+    fi
+
+    print_step "Configuring kernel parameters..."
+    local params="quiet splash loglevel=3"
+
+    if [[ -d /boot/loader/entries ]]; then
+        for entry in /boot/loader/entries/*.conf; do
+            [[ -f "$entry" ]] || continue
+            if ! grep -q "splash" "$entry"; then
+                sudo sed -i "/^options/s/$/ $params/" "$entry"
+                print_success "Updated: $(basename "$entry")"
+            else
+                print_info "Already configured: $(basename "$entry")"
+            fi
+        done
+    elif [[ -f /etc/default/grub ]]; then
+        if ! grep -q "splash" /etc/default/grub; then
+            sudo sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\"\(.*\)\"/GRUB_CMDLINE_LINUX_DEFAULT=\"\1 $params\"/" /etc/default/grub
+            sudo grub-mkconfig -o /boot/grub/grub.cfg
+            print_success "GRUB config updated"
+        else
+            print_info "GRUB already configured"
+        fi
+    else
+        print_warning "Bootloader not detected, add manually: $params"
+    fi
+    echo ""
+}
+
 full_install() {
     system_update
     install_gpu_drivers_task
@@ -728,6 +792,7 @@ full_install() {
     install_themes_task
     install_system_configs_task
     configure_qemu_kvm_task
+    configure_plymouth_task
     disable_services_task
     enable_services_task
     mask_service_task

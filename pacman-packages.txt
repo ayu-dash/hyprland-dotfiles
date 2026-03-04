@@ -67,3 +67,4 @@ gvfs
 freerdp
 alsa-tools
 power-profiles-daemon
+plymouth
