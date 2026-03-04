@@ -506,10 +506,6 @@ FallbackDNS=9.9.9.9 149.112.112.112"
 install_system_configs_task() {
     print_header "Installing System Configurations"
 
-    print_step "Configuring IWD..."
-    copy_system_config "$DOTFILES_DIR/etc/iwd/main.conf" "/etc/iwd/main.conf" "iwd main.conf"
-    echo ""
-
     print_step "Configuring systemd-networkd..."
     copy_system_config "$DOTFILES_DIR/etc/systemd/network/20-wired.network" "/etc/systemd/network/20-wired.network" "systemd-networkd wired config"
     echo ""
@@ -520,16 +516,6 @@ install_system_configs_task() {
 
     print_step "Disabling hardware watchdog..."
     copy_system_config "$DOTFILES_DIR/etc/modprobe.d/nowatchdog.conf" "/etc/modprobe.d/nowatchdog.conf" "Blacklist iTCO_wdt"
-    echo ""
-
-    print_step "Configuring DNS resolver (systemd-resolved)..."
-    sudo rm -f /etc/resolv.conf
-    if sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf; then
-        print_success "resolv.conf -> systemd-resolved stub"
-        print_info "DNS managed by systemd-resolved via iwd"
-    else
-        print_error "Failed to create resolv.conf symlink"
-    fi
     echo ""
 
     print_step "Installing greetd configuration..."
@@ -571,6 +557,10 @@ EOF
     else
         print_info "No battery detected, skipping WiFi power save"
     fi
+    echo ""
+
+    print_step "Installing polkit rules..."
+    copy_system_config "$DOTFILES_DIR/etc/polkit-1/rules.d/10-manage-iwd.rules" "/etc/polkit-1/rules.d/10-manage-iwd.rules" "iwd polkit rule (wheel group)"
     echo ""
 }
 
