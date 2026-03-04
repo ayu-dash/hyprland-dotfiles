@@ -66,4 +66,3 @@ man
 gvfs
 freerdp
 alsa-tools
-gum
