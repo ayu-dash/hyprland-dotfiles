@@ -733,17 +733,6 @@ install_system_configs_task() {
         "systemd-networkd wired config"
     echo ""
 
-    # ── DNS Resolver (systemd-resolved) ────────────────────────────────────────
-    print_step "Configuring DNS resolver (systemd-resolved)..."
-    sudo rm -f /etc/resolv.conf
-    if sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf; then
-        print_success "resolv.conf -> systemd-resolved stub"
-        print_info "DNS managed by systemd-resolved via iwd"
-    else
-        print_error "Failed to create resolv.conf symlink"
-    fi
-    echo ""
-
     # ── Greetd ──────────────────────────────────────────────────────────────
     print_step "Installing greetd configuration..."
     if copy_system_config \
