@@ -514,6 +514,10 @@ install_system_configs_task() {
     copy_system_config "$DOTFILES_DIR/etc/systemd/network/20-wired.network" "/etc/systemd/network/20-wired.network" "systemd-networkd wired config"
     echo ""
 
+    print_step "Configuring faster shutdown..."
+    copy_system_config "$DOTFILES_DIR/etc/systemd/system.conf.d/99-timeout.conf" "/etc/systemd/system.conf.d/99-timeout.conf" "DefaultTimeoutStopSec=10s"
+    echo ""
+
     print_step "Configuring DNS resolver (systemd-resolved)..."
     sudo rm -f /etc/resolv.conf
     if sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf; then
@@ -547,6 +551,22 @@ install_system_configs_task() {
     install_sudoers_rule "/etc/sudoers.d/hyprland-hda-verb" \
         "$USER ALL=(ALL) NOPASSWD: /usr/bin/hda-verb" \
         "HDA Verb sudoers rule"
+    echo ""
+
+    print_step "Configuring WiFi power save..."
+    if [ -d /sys/class/power_supply ] && ls /sys/class/power_supply/BAT* &>/dev/null; then
+        local wifi_script="$BIN_DIR/wifiPowersave"
+        cat <<EOF | sudo tee /etc/udev/rules.d/99-wifi-powersave.rules >/dev/null
+SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="0", RUN+="$wifi_script on"
+SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="1", RUN+="$wifi_script off"
+EOF
+        sudo udevadm control --reload
+        sudo udevadm trigger --subsystem-match=power_supply
+        print_success "WiFi power save udev rules installed"
+        print_info "Battery: power save on / AC: power save off"
+    else
+        print_info "No battery detected, skipping WiFi power save"
+    fi
     echo ""
 }
 
