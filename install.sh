@@ -28,6 +28,7 @@ ICONS_DIR="$HOME/.icons"
 KVANTUM_DIR="$CONFIG_DIR/Kvantum"
 BIN_DIR="$HOME/.local/bin"
 FONTS_DIR="$HOME/.local/share/fonts"
+APPS_DIR="$HOME/.local/share/applications"
 BUILD_DIR="$HOME/build"
 TEMP_DIR="/tmp/installation"
 
@@ -493,6 +494,15 @@ install_dotfiles_task() {
         print_success "Scripts copied to ~/.local/bin"
     else
         print_error "Failed to copy scripts"
+    fi
+    echo ""
+
+    print_step "Copying desktop applications..."
+    mkdir -p "$APPS_DIR"
+    if cp -R "$DOTFILES_DIR/applications/"* "$APPS_DIR/" 2>/dev/null; then
+        print_success "Applications copied to ~/.local/share/applications"
+    else
+        print_error "Failed to copy applications"
     fi
 }
 
