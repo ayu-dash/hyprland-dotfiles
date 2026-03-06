@@ -63,3 +63,4 @@ google-noto-emoji-fonts
 fontawesome-fonts
 firefox
 micro
+seahorse
