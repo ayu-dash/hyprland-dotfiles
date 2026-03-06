@@ -659,7 +659,10 @@ EOF
 
 
     print_step "Configuring faster shutdown..."
-    copy_system_config "$DOTFILES_DIR/etc/systemd/system.conf.d/99-timeout.conf" "/etc/systemd/system.conf.d/99-timeout.conf" "DefaultTimeoutStopSec=10s"
+    copy_system_config "$DOTFILES_DIR/etc/systemd/system.conf.d/99-timeout.conf" "/etc/systemd/system.conf.d/99-timeout.conf" "System DefaultTimeoutStopSec=10s"
+    copy_system_config "$DOTFILES_DIR/etc/systemd/user.conf.d/timeout.conf" "/etc/systemd/user.conf.d/timeout.conf" "User DefaultTimeoutStopSec=5s"
+    sudo systemctl daemon-reload
+    systemctl --user daemon-reload
     echo ""
 
     print_step "Optimizing systemd-journald..."
