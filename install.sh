@@ -38,7 +38,7 @@ VSCODE_EXTENSIONS="$DOTFILES_DIR/etc/CodeExtensions.txt"
 ensure_gum() {
     command -v gum &>/dev/null && return
     echo "Installing gum..."
-    sudo dnf install -y gum 2>/dev/null || { echo "ERROR: Install gum manually: sudo dnf install gum"; exit 1; }
+    sudo dnf install -y gum || { echo "ERROR: Install gum manually: sudo dnf install gum"; exit 1; }
 }
 
 print_logo() {
@@ -285,7 +285,7 @@ CHROME_REPO
 
     print_step "Enabling Flathub (Flatpak) repository..."
     if ! flatpak remote-list | grep -q flathub; then
-        sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo \
+        sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo \
             && print_success "Flathub repository enabled" || print_warning "Failed to enable Flathub"
     else
         print_info "Flathub repository already configured"
@@ -335,73 +335,61 @@ install_packages_task() {
     install_vscode_ext
 }
 
+build_cargo_package() {
+    local name="$1"
+    if cargo build --release; then
+        cp -f "target/release/$name" "$BIN_DIR/"
+        chmod +x "$BIN_DIR/$name"
+        mkdir -p "$HOME/bin"
+        ln -sf "$BIN_DIR/$name" "$HOME/bin/$name"
+        print_success "$name installed to ~/.local/bin and symlinked to ~/bin"
+    else
+        print_error "$name build failed"
+    fi
+}
+
+prepare_github_repo() {
+    local name="$1" repo_url="$2"
+    print_step "Building $name..."
+    if [ -d "$BUILD_DIR/$name" ]; then
+        print_info "$name directory already exists, pulling updates..."
+        cd "$BUILD_DIR/$name"
+        git pull 2>&1
+    else
+        git clone "$repo_url" "$BUILD_DIR/$name"
+        cd "$BUILD_DIR/$name"
+    fi
+}
+
 install_github_packages_task() {
     print_header "Building Packages from GitHub"
 
     mkdir -p "$BUILD_DIR"
 
-    print_step "Installing build dependencies for rofi plugins..."
-    sudo dnf install -y \
-        autoconf automake libtool meson cargo rust \
-        rofi-devel rofi-wayland-devel \
-        cairo-devel \
-        glib2-devel \
-        qalculate libqalculate-devel \
-        json-glib-devel \
-        xdotool \
-        xsel \
-        wl-clipboard \
-        wtype \
-        2>&1
-    echo ""
-
-    print_step "Building rofi-emoji..."
-    if [ -d "$BUILD_DIR/rofi-emoji" ]; then
-        print_info "rofi-emoji directory already exists, pulling updates..."
-        cd "$BUILD_DIR/rofi-emoji"
-        git pull 2>&1
-    else
-        git clone https://github.com/Mange/rofi-emoji.git "$BUILD_DIR/rofi-emoji"
-        cd "$BUILD_DIR/rofi-emoji"
-    fi
+    prepare_github_repo "rofi-emoji" "https://github.com/Mange/rofi-emoji.git"
 
     autoreconf -i && mkdir -p build && cd build && ../configure && make && sudo make install \
         && print_success "rofi-emoji installed" || print_error "rofi-emoji build failed"
     cd "$BUILD_DIR" > /dev/null 2>&1
     echo ""
 
-    print_step "Building rofi-calc..."
-    if [ -d "$BUILD_DIR/rofi-calc" ]; then
-        print_info "rofi-calc directory already exists, pulling updates..."
-        cd "$BUILD_DIR/rofi-calc"
-        git pull 2>&1
-    else
-        git clone https://github.com/svenstaro/rofi-calc.git "$BUILD_DIR/rofi-calc"
-        cd "$BUILD_DIR/rofi-calc"
-    fi
+    prepare_github_repo "rofi-calc" "https://github.com/svenstaro/rofi-calc.git"
 
     meson setup build && meson compile -C build && sudo meson install -C build \
         && print_success "rofi-calc installed" || print_error "rofi-calc build failed"
     cd "$BUILD_DIR" > /dev/null 2>&1
     echo ""
 
-    print_step "Building wlctl..."
-    if [ -d "$BUILD_DIR/wlctl" ]; then
-        print_info "wlctl directory already exists, pulling updates..."
-        cd "$BUILD_DIR/wlctl"
-        git pull 2>&1
-    else
-        git clone https://github.com/aashish-thapa/wlctl.git "$BUILD_DIR/wlctl"
-        cd "$BUILD_DIR/wlctl"
-    fi
+    prepare_github_repo "wlctl" "https://github.com/aashish-thapa/wlctl.git"
 
-    if cargo build --release; then
-        cp -f target/release/wlctl "$BIN_DIR/"
-        chmod +x "$BIN_DIR/wlctl"
-        print_success "wlctl installed to ~/.local/bin"
-    else
-        print_error "wlctl build failed"
-    fi
+
+    build_cargo_package "wlctl"
+    cd "$BUILD_DIR" > /dev/null 2>&1
+    echo ""
+
+    prepare_github_repo "bluetui" "https://github.com/pythops/bluetui"
+
+    build_cargo_package "bluetui"
     cd "$BUILD_DIR" > /dev/null 2>&1
     echo ""
 
@@ -731,13 +719,6 @@ show_completion() {
         "" \
         "GDM will start on next boot." \
         "Select Hyprland from the session menu." ""
-    echo ""
-
-    echo -e "  ${DIM}Post-install reminders:${NC}"
-    echo -e "  ${GRAY}  - Zen Browser: https://zen-browser.app/download${NC}"
-    echo -e "  ${GRAY}  - OnlyOffice:  flatpak install flathub org.onlyoffice.desktopeditors${NC}"
-    echo -e "  ${GRAY}  - LocalSend:   flatpak install flathub org.localsend.localsend_app${NC}"
-    echo -e "  ${GRAY}  - Heroic:      flatpak install flathub com.heroicgameslauncher.hgl${NC}"
     echo ""
 
     if gum confirm "Reboot now?" --default=false; then
