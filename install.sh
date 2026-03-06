@@ -638,6 +638,16 @@ install_system_configs_task() {
     fi
     echo ""
 
+    print_step "Configuring WiFi power save..."
+    local wifi_script="$BIN_DIR/wifiPowersave"
+    sudo tee /etc/udev/rules.d/99-wifi-powersave.rules >/dev/null <<EOF
+SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="0", RUN+="$wifi_script on"
+SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="1", RUN+="$wifi_script off"
+EOF
+    print_success "WiFi power save udev rules installed"
+    echo ""
+
+
     print_step "Configuring faster shutdown..."
     copy_system_config "$DOTFILES_DIR/etc/systemd/system.conf.d/99-timeout.conf" "/etc/systemd/system.conf.d/99-timeout.conf" "DefaultTimeoutStopSec=10s"
     echo ""
