@@ -587,9 +587,14 @@ install_themes_task() {
     print_success "Font cache updated"
 }
 
+disable_services_task() {
+    print_header "Disabling Services"
+    manage_services disable swaync.service NetworkManager-wait-online.service plymouth-quit-wait.service ModemManager.service  nfs-client.target gssproxy.service rpcbind.service sssd-kcm.service lvm2-monitor.service
+}
+
 mask_service_task() {
     print_header "Masking Services"
-    manage_services mask swaync.service NetworkManager-wait-online.service plymouth-quit-wait.service ModemManager.service
+    manage_services mask swaync.service NetworkManager-wait-online.service plymouth-quit-wait.service ModemManager.service  nfs-client.target gssproxy.service rpcbind.service sssd-kcm.service lvm2-monitor.service
 }
 
 enable_services_task() {
@@ -603,6 +608,23 @@ enable_services_task() {
 
 install_system_configs_task() {
     print_header "Installing System Configurations"
+
+    print_step "Optimizing DNF configuration..."
+    sudo tee /etc/dnf/dnf.conf > /dev/null << 'EOF'
+# see `man dnf.conf` for defaults and possible options
+
+[main]
+gpgcheck=True
+installonly_limit=3
+clean_requirements_on_remove=True
+best=False
+skip_if_unavailable=True
+fastestmirror=True
+max_parallel_downloads=10
+defaultyes=True
+EOF
+    print_success "DNF configuration optimized"
+    echo ""
 
     print_step "Configuring faster boot (GRUB timeout & Plymouth fix)..."
     local grub_updated=false
@@ -704,6 +726,7 @@ full_install() {
     install_system_configs_task
     configure_qemu_kvm_task
     enable_services_task
+    disable_services_task
     mask_service_task
     show_completion
 }
