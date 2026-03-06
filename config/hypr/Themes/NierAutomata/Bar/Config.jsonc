@@ -226,7 +226,7 @@
   "custom/hotspot": {
     "format": "{} ",
     "exec": "/usr/bin/python /home/wtf/.config/hypr/Scripts/Hostpot.py status",
-    "on-click": "sudo /usr/bin/python /home/wtf/.config/hypr/Scripts/Hostpot.py toggle",
+    "on-click": "sudo /usr/bin/python3 /home/wtf/.config/hypr/Scripts/Hostpot.py toggle",
     "return-type": "json",
     "interval": "once",
   },

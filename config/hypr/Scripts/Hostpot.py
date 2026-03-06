@@ -177,6 +177,23 @@ def kill_dnsmasq() -> None:
             log.warning(f"Error killing dnsmasq: {e}")
 
 
+def get_wifi_interface() -> str:
+    """Discover the default WiFi interface if not specified in config."""
+    if "IFNAME" in CONFIG and CONFIG["IFNAME"]:
+        return CONFIG["IFNAME"]
+        
+    try:
+        interfaces = os.listdir('/sys/class/net/')
+        for iface in interfaces:
+            if iface != VIRTUAL_INTERFACE and os.path.exists(f'/sys/class/net/{iface}/wireless'):
+                log.debug(f"Auto-discovered WiFi interface: {iface}")
+                return iface
+    except OSError as e:
+        log.warning(f"Failed to auto-discover WiFi interface: {e}")
+        
+    log.warning("Could not auto-discover WiFi interface, falling back to 'wlan0'")
+    return "wlan0"
+
 def start_hotspot() -> None:
     """Start the WiFi hotspot with all required services."""
     if os.geteuid() != 0:
@@ -184,7 +201,7 @@ def start_hotspot() -> None:
         print("Error: Root privileges required. Run with sudo.")
         sys.exit(1)
 
-    parent_interface = CONFIG.get("IFNAME", "wlan0")
+    parent_interface = get_wifi_interface()
     channel = get_active_channel(parent_interface)
 
     log.info(f"Starting hotspot on channel {channel}")
