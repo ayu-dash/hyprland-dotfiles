@@ -393,6 +393,14 @@ install_github_packages_task() {
     cd "$BUILD_DIR" > /dev/null 2>&1
     echo ""
 
+    prepare_github_repo "hyprshot" "https://github.com/Gustash/hyprshot.git"
+
+    chmod +x hyprshot
+    ln -sf "$BUILD_DIR/hyprshot/hyprshot" "$BIN_DIR/hyprshot"
+    print_success "hyprshot installed to ~/.local/bin"
+    cd "$BUILD_DIR" > /dev/null 2>&1
+    echo ""
+
     print_info "GitHub packages built in ~/build"
 }
 
