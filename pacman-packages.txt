@@ -44,7 +44,10 @@ zsh
 upower
 mysql-workbench
 tailscale
-keepassxc
+kwallet
+kwalletmanager
+kwallet-pam
+kio
 hyprland
 qemu-full
 libvirt
@@ -55,8 +58,6 @@ virt-manager
 dnsmasq
 edk2-ovmf
 iwd
-pcmanfm
-engrampa
 papirus-icon-theme 
 uv
 nvm
@@ -68,3 +69,6 @@ freerdp
 alsa-tools
 power-profiles-daemon
 plymouth
+wiremix
+dolphin
+ark

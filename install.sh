@@ -424,7 +424,7 @@ mask_service_task() {
 
 enable_services_task() {
     print_header "Enabling Services"
-    manage_services enable greetd bluetooth iwd udisks2 tailscaled systemd-resolved systemd-networkd
+    manage_services enable greetd bluetooth iwd udisks2 tailscaled systemd-resolved systemd-networkd wifi-resume
 }
 
 lock_dns_to_resolved() {
@@ -514,6 +514,10 @@ install_system_configs_task() {
     copy_system_config "$DOTFILES_DIR/etc/systemd/system.conf.d/99-timeout.conf" "/etc/systemd/system.conf.d/99-timeout.conf" "DefaultTimeoutStopSec=10s"
     echo ""
 
+    print_step "Configuring faster user session shutdown..."
+    copy_system_config "$DOTFILES_DIR/etc/systemd/user.conf.d/99-timeout.conf" "/etc/systemd/user.conf.d/99-timeout.conf" "DefaultTimeoutStopSec=5s (user)"
+    echo ""
+
     print_step "Disabling hardware watchdog..."
     copy_system_config "$DOTFILES_DIR/etc/modprobe.d/nowatchdog.conf" "/etc/modprobe.d/nowatchdog.conf" "Blacklist iTCO_wdt"
     echo ""
@@ -561,6 +565,10 @@ EOF
 
     print_step "Installing polkit rules..."
     copy_system_config "$DOTFILES_DIR/etc/polkit-1/rules.d/10-manage-iwd.rules" "/etc/polkit-1/rules.d/10-manage-iwd.rules" "iwd polkit rule (wheel group)"
+    echo ""
+
+    print_step "Installing WiFi resume service..."
+    copy_system_config "$DOTFILES_DIR/etc/systemd/system/wifi-resume.service" "/etc/systemd/system/wifi-resume.service" "WiFi resume service"
     echo ""
 }
 
