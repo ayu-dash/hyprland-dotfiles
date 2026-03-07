@@ -441,6 +441,19 @@ install_system_configs_task() {
     print_step "Disabling hardware watchdog..."
     copy_system_config "$DOTFILES_DIR/etc/modprobe.d/nowatchdog.conf" "/etc/modprobe.d/nowatchdog.conf" "Blacklist iTCO_wdt"
     echo ""
+    print_step "Configuring WiFi power save..."
+    if [ -d /sys/class/power_supply ] && ls /sys/class/power_supply/BAT* &>/dev/null; then
+        local wifi_script="$BIN_DIR/wifiPowersave"
+        cat <<EOF | sudo tee /etc/udev/rules.d/99-wifi-powersave.rules >/dev/null
+SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="0", RUN+="$wifi_script on"
+SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="1", RUN+="$wifi_script off"
+EOF
+        sudo udevadm control --reload
+        print_success "WiFi power save rules installed"
+    else
+        print_info "No battery detected, skipping WiFi power save rules"
+    fi
+    echo ""
 
     print_step "Installing greetd configuration..."
     copy_system_config "$DOTFILES_DIR/etc/greetd/config.toml" "/etc/greetd/config.toml" "greetd config" \
