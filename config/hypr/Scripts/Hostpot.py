@@ -30,6 +30,23 @@ CONFIG_PATH = USER_HOME / ".config/hypr/Configs/Hostpot.conf"
 HOSTAPD_CONF = "/tmp/hypr_hostapd.conf"
 DNSMASQ_PID = "/tmp/hypr_dnsmasq.pid"
 VIRTUAL_INTERFACE = "ap0"
+ 
+def get_wifi_interface() -> str:
+    """Discover the default WiFi interface if not specified in config."""
+    if "IFNAME" in CONFIG and CONFIG["IFNAME"]:
+        return CONFIG["IFNAME"]
+        
+    try:
+        interfaces = os.listdir('/sys/class/net/')
+        for iface in interfaces:
+            if iface != VIRTUAL_INTERFACE and os.path.exists(f'/sys/class/net/{iface}/wireless'):
+                log.debug(f"Auto-discovered WiFi interface: {iface}")
+                return iface
+    except OSError as e:
+        log.warning(f"Failed to auto-discover WiFi interface: {e}")
+        
+    log.warning("Could not auto-discover WiFi interface, falling back to 'wlan0'")
+    return "wlan0"
 
 def load_config(path: str) -> dict:
     """Load hotspot configuration from file."""
@@ -182,7 +199,9 @@ def start_hotspot() -> None:
         print("Error: Root privileges required. Run with sudo.")
         sys.exit(1)
 
-    parent_interface = CONFIG.get("IFNAME", "wlan0")
+    parent_interface = CONFIG.get("IFNAME")
+    if not parent_interface:
+        parent_interface = get_wifi_interface()
     channel = get_active_channel(parent_interface)
 
     log.info(f"Starting hotspot on channel {channel}")
