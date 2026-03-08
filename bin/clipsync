@@ -1,0 +1,126 @@
+#!/bin/bash
+
+POLL_INTERVAL=0.5
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+LOG_FILE="$DIR/clipsync.log"
+MY_UID=$(id -u)
+SCRIPT_NAME=$(basename "$0")
+
+show_help() {
+    echo "Usage: $SCRIPT_NAME [OPTION]"
+    echo "Options:"
+    echo "  (no option)       Start/Restart in background"
+    echo "  -f, --foreground  Run in foreground (useful for debugging)"
+    echo "  -s, --stop        Stop the background process"
+    echo "  -h, --help        Show this help"
+}
+
+if [[ "$1" == "--daemon-internal" ]]; then
+    shift
+elif [[ "$1" == "-f" || "$1" == "--foreground" ]]; then
+    :
+elif [[ "$1" == "-s" || "$1" == "--stop" ]]; then
+    if pgrep -f "/$SCRIPT_NAME --daemon-internal" > /dev/null; then
+        pkill -f "/$SCRIPT_NAME --daemon-internal"
+        echo "Sync process stopped."
+    else
+        echo "Sync process is not running."
+    fi
+    exit 0
+elif [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    show_help
+    exit 0
+else
+    if ! command -v xclip &> /dev/null; then
+        echo "Error: xclip is not installed."
+        exit 1
+    fi
+
+    if pgrep -f "/$SCRIPT_NAME --daemon-internal" > /dev/null; then
+        pkill -f "/$SCRIPT_NAME --daemon-internal"
+        sleep 1
+    fi
+
+    echo "Starting Sync in background..."
+    nohup "$0" --daemon-internal > /dev/null 2>&1 &
+    exit 0
+fi
+
+get_active_displays() {
+    local displays=""
+    for f in /tmp/.X11-unix/X*; do
+        [ -e "$f" ] || continue
+        local socket_name="${f#/tmp/.X11-unix/X}"
+        [[ "$socket_name" == *_ ]] && continue
+        if [ "$(stat -c %u "$f")" -eq "$MY_UID" ]; then
+            displays+=" $socket_name"
+        fi
+    done
+    echo "${displays# }"
+}
+
+get_selection_content() {
+    local display="$1"
+    local selection="$2"
+    local content=""
+    
+    if [[ "$display" == "0" && -n "$WAYLAND_DISPLAY" ]]; then
+        local opts=""
+        [[ "$selection" == "primary" ]] && opts="--primary"
+        content=$(wl-paste $opts --no-newline 2>/dev/null; echo x)
+    else
+        content=$(DISPLAY=":$display" xclip -selection "$selection" -o -t UTF8_STRING 2>/dev/null; echo x)
+        if [ "$content" == "x" ]; then
+            content=$(DISPLAY=":$display" xclip -selection "$selection" -o -t STRING 2>/dev/null; echo x)
+        fi
+    fi
+    echo -n "${content%x}"
+}
+
+set_selection_content() {
+    local display="$1"
+    local selection="$2"
+    local data="$3"
+    
+    if [[ "$display" == "0" && -n "$WAYLAND_DISPLAY" ]]; then
+        local opts=""
+        [[ "$selection" == "primary" ]] && opts="--primary"
+        echo -n "$data" | wl-copy $opts 2>/dev/null &
+    else
+        echo -n "$data" | DISPLAY=":$display" xclip -selection "$selection" -i 2>/dev/null &
+    fi
+}
+
+declare -A global_data
+
+while true; do
+    displays=$(get_active_displays)
+    [ -z "$displays" ] && sleep 2 && continue
+
+    for sel in clipboard primary; do
+        new_data=""
+        source_display=""
+        
+        for d in $displays; do
+            current=$(get_selection_content "$d" "$sel")
+            
+            if [ -n "$current" ]; then
+                if [ "${global_data[$sel]}" != "$current" ]; then
+                    new_data="$current"
+                    source_display="$d"
+                    global_data["$sel"]="$current"
+                    break
+                fi
+            fi
+        done
+        
+        if [ -n "$new_data" ]; then
+            for d in $displays; do
+                if [ "$d" != "$source_display" ]; then
+                    set_selection_content "$d" "$sel" "$new_data"
+                fi
+            done
+        fi
+    done
+    sleep "$POLL_INTERVAL"
+done

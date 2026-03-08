@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if ! pgrep -f "clipsync --daemon-internal" > /dev/null; then
+    echo "starting clipsync..."
+    clipsync
+fi
+
+echo "starting netbeans..."
+firejail --x11 netbeans "$@"
+
+clipsync --stop

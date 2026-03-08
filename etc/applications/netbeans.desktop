@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=Apache NetBeans
+Comment=Apache NetBeans, The Smarter Way to Code
+Exec=sh -c 'exec ~/.local/bin/netbeansWrapper %F'
+Categories=Development;IDE
+Icon=netbeans
+Terminal=false

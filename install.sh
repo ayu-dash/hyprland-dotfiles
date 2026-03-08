@@ -321,6 +321,28 @@ install_dotfiles_task() {
     else
         print_error "Failed to copy scripts"
     fi
+
+    print_step "Installing custom desktop entries..."
+    local apps_dir="$HOME/.local/share/applications"
+    mkdir -p "$apps_dir"
+    if [[ -d "$DOTFILES_DIR/etc/applications" ]]; then
+        for desktop_file in "$DOTFILES_DIR/etc/applications/"*.desktop; do
+            [[ -f "$desktop_file" ]] || continue
+            local name=$(basename "$desktop_file")
+            cp "$desktop_file" "$apps_dir/" && print_success "$name" || print_error "$name"
+        done
+        update-desktop-database "$apps_dir" 2>/dev/null
+    fi
+
+    local sys_netbeans="/usr/share/applications/netbeans.desktop"
+    if [[ -f "$sys_netbeans" ]]; then
+        print_step "Updating system-level NetBeans entry..."
+        if sudo sed -i "s|^Exec=.*|Exec=sh -c 'exec ~/.local/bin/netbeansWrapper %F'|" "$sys_netbeans" 2>/dev/null; then
+            print_success "System-level path updated"
+        else
+            print_warning "Could not update system entry (non-critical)"
+        fi
+    fi
 }
 
 configure_shell_task() {
