@@ -1,0 +1,12 @@
+[Unit]
+Description=Restart WiFi once before Display Manager
+After=network.target
+Before=display-manager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl restart iwd systemd-networkd
+RemainAfterExit=yes
+
+[Install]
+WantedBy=graphical.target

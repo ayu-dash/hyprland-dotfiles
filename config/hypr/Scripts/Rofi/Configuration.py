@@ -4,6 +4,7 @@ Displays config files and opens them in the editor.
 """
 
 import sys
+import os
 from pathlib import Path
 
 sys.path.insert(0, str(Path.home() / ".config/hypr/Scripts"))
@@ -13,7 +14,6 @@ from .Shared import ROFI_THEMES
 
 CONFIG_DIR: Path = Path.home() / ".config/hypr/Configs"
 THEME: Path = ROFI_THEMES / "Configuration"
-EDITOR: str = "code"
 
 # Icon mapping for specific config files
 ICON_MAP: dict[str, str] = {
@@ -87,9 +87,11 @@ def exec() -> None:
         idx = int(selection_index)
         selected_file = items[idx][1]
         target_path = CONFIG_DIR / selected_file
-
+        editor = os.environ.get("EDITOR")
+        terminal = "kitty"
+        
         if target_path.exists():
-            run_bg([EDITOR, str(target_path)], start_new_session=True)
+            run_bg([terminal, "-e", editor,  str(target_path)], start_new_session=True)
 
     except (ValueError, IndexError):
         pass

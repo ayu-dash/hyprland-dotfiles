@@ -424,7 +424,7 @@ mask_service_task() {
 
 enable_services_task() {
     print_header "Enabling Services"
-    manage_services enable greetd bluetooth iwd udisks2 tailscaled systemd-resolved systemd-networkd wifi-resume
+    manage_services enable greetd bluetooth iwd udisks2 tailscaled systemd-resolved systemd-networkd wifi-restart
 }
 
 lock_dns_to_resolved() {
@@ -525,6 +525,7 @@ install_system_configs_task() {
     print_step "Installing greetd configuration..."
     copy_system_config "$DOTFILES_DIR/etc/greetd/config.toml" "/etc/greetd/config.toml" "greetd config" \
         && print_info "tuigreet will launch Hyprland by default"
+    copy_system_config "$DOTFILES_DIR/etc/pam.d/greetd" "/etc/pam.d/greetd" "greetd PAM config"
     echo ""
 
     print_step "Configuring sudoers rules..."
@@ -567,8 +568,8 @@ EOF
     copy_system_config "$DOTFILES_DIR/etc/polkit-1/rules.d/10-manage-iwd.rules" "/etc/polkit-1/rules.d/10-manage-iwd.rules" "iwd polkit rule (wheel group)"
     echo ""
 
-    print_step "Installing WiFi resume service..."
-    copy_system_config "$DOTFILES_DIR/etc/systemd/system/wifi-resume.service" "/etc/systemd/system/wifi-resume.service" "WiFi resume service"
+    print_step "Installing WiFi restart service..."
+    copy_system_config "$DOTFILES_DIR/etc/systemd/system/wifi-restart.service" "/etc/systemd/system/wifi-restart.service" "WiFi restart service"
     echo ""
 }
 

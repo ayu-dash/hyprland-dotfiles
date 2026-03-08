@@ -72,3 +72,4 @@ plymouth
 wiremix
 dolphin
 ark
+lazygit
