@@ -70,7 +70,7 @@ alsa-tools
 power-profiles-daemon
 plymouth
 wiremix
-dolphin
+pcmanfm
 ark
 lazygit
 lutris
