@@ -351,6 +351,33 @@ configure_shell_task() {
     cp -f "$DOTFILES_DIR/.zshrc" "$HOME/"
     chsh -s /usr/bin/zsh
     print_success "Default shell set to Zsh"
+    echo ""
+}
+
+configure_git_task() {
+    print_header "Configuring Git Globals"
+    print_step "Setting up Git user configuration..."
+    echo ""
+
+    if gum confirm "Configure Git global user data?" --default=true; then
+        local git_name
+        git_name=$(gum input --placeholder "Enter Git username (user.name)")
+        if [[ -n "$git_name" ]]; then
+            git config --global user.name "$git_name"
+            print_success "Git user.name set to: $git_name"
+        fi
+
+        local git_email
+        git_email=$(gum input --placeholder "Enter Git email (user.email)")
+        if [[ -n "$git_email" ]]; then
+            git config --global user.email "$git_email"
+            print_success "Git user.email set to: $git_email"
+        fi
+        echo ""
+    else
+        print_info "Skipping Git configuration"
+        echo ""
+    fi
 }
 
 install_themes_task() {
@@ -796,6 +823,7 @@ full_install() {
     enable_services_task
     mask_service_task
     configure_dns_task
+    configure_git_task
     show_completion
 }
 
@@ -831,6 +859,7 @@ main_menu() {
         "Install Themes Only       (Icons, GTK Themes)" \
         "Configure Shell Only      (Zsh, Oh My Zsh)" \
         "Install VS Code Ext       (From CodeExtensions.txt)" \
+        "Configure Git Globals     (user.name, user.email)" \
         "Quit")
     echo ""
 
@@ -842,6 +871,7 @@ main_menu() {
         "Install Themes Only"*)   install_themes_task; show_completion ;;
         "Configure Shell Only"*)  configure_shell_task; show_completion ;;
         "Install VS Code Ext"*)   install_vscode_extensions_task; show_completion ;;
+        "Configure Git Globals"*) configure_git_task; show_completion ;;
         "Quit"|"")                gum style --foreground "$C_DIM" "  Bye!"; exit 0 ;;
         *)                        print_error "Invalid choice!"; sleep 1; clear; main_menu ;;
     esac
