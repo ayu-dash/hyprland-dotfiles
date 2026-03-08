@@ -73,3 +73,4 @@ wiremix
 dolphin
 ark
 lazygit
+lutris
