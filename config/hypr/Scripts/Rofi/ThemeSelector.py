@@ -101,7 +101,6 @@ def apply_theme(folder_name: str) -> None:
 def exec() -> None:
     """Execute the theme selector."""
     themes = get_themes_with_names()
-
     if not themes:
         notify("dialog-error", "No themes found!")
         return
