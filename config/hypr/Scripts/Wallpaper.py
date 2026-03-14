@@ -53,10 +53,8 @@ DEFAULT_THEME: str = "NierAutomata"
 
 def _get_default_wallpaper() -> str | None:
     """Find a default wallpaper from the active or default theme."""
-    # Try active theme from env
     theme_dir = os.environ.get("HYPR_THEME_DIR", "")
     if not theme_dir:
-        # Fallback to default theme
         theme_dir = str(HYPR_THEMES_DIR / DEFAULT_THEME)
 
     wp_dir = Path(theme_dir) / "Wallpapers"

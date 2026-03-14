@@ -476,8 +476,8 @@ enable_services_task() {
     manage_services enable greetd bluetooth iwd udisks2 tailscaled systemd-resolved systemd-networkd wifi-restart
 
     print_step "Enabling user services..."
-    systemctl --user enable captive-portal.service && print_success "captive-portal (user)" || print_warning "captive-portal not found"
     systemctl --user daemon-reload
+    systemctl --user enable captive-portal.service && print_success "captive-portal (user)" || print_warning "captive-portal not found"
 }
 
 lock_dns_to_resolved() {
