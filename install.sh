@@ -575,6 +575,7 @@ install_system_configs_task() {
 
     print_step "Configuring systemd-networkd..."
     copy_system_config "$DOTFILES_DIR/etc/systemd/network/20-wired.network" "/etc/systemd/network/20-wired.network" "systemd-networkd wired config"
+    copy_system_config "$DOTFILES_DIR/etc/systemd/network/20-wlan.network" "/etc/systemd/network/20-wlan.network" "systemd-networkd wifi config"
     echo ""
 
     print_step "Configuring faster shutdown..."
