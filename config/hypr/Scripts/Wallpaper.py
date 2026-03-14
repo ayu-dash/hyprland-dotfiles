@@ -4,6 +4,7 @@ Handles wallpaper setting and swww daemon control.
 """
 
 import argparse
+import os
 import shutil
 from pathlib import Path
 
@@ -46,10 +47,39 @@ def swww_kill() -> None:
     run_silent(["swww", "kill"])
 
 
+HYPR_THEMES_DIR: Path = Path.home() / ".config/hypr/Themes"
+DEFAULT_THEME: str = "NierAutomata"
+
+
+def _get_default_wallpaper() -> str | None:
+    """Find a default wallpaper from the active or default theme."""
+    # Try active theme from env
+    theme_dir = os.environ.get("HYPR_THEME_DIR", "")
+    if not theme_dir:
+        # Fallback to default theme
+        theme_dir = str(HYPR_THEMES_DIR / DEFAULT_THEME)
+
+    wp_dir = Path(theme_dir) / "Wallpapers"
+    if wp_dir.is_dir():
+        images = sorted(wp_dir.glob("*"))
+        if images:
+            return str(images[0])
+    return None
+
+
 def swww_run() -> None:
     """Start swww daemon and restore previous wallpaper."""
     start_daemon()
-    run_silent(["swww", "restore"])
+    if WAL_DEST.exists():
+        run_silent(["swww", "restore"])
+        return
+    # Fresh install: set default wallpaper
+    wp = _get_default_wallpaper()
+    if wp:
+        log.info(f"No cached wallpaper, using default: {wp}")
+        set_wallpaper(wp)
+    else:
+        log.warning("No wallpaper found to set")
 
 
 def set_wallpaper(image_path: str) -> None:
@@ -60,7 +90,6 @@ def set_wallpaper(image_path: str) -> None:
     path = Path(image_path)
     ext = path.suffix.lower()
 
-    # For GIFs, extract first frame as static image
     if ext == ".gif":
         log.debug("Extracting first frame from GIF")
         run_silent(["magick", f"{image_path}[0]", str(WAL_DEST)])

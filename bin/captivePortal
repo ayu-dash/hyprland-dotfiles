@@ -39,18 +39,15 @@ portal_handler() {
 }
 
 portal_monitor() {
-    # Wait for IWD to be available
     while ! busctl status net.connman.iwd &>/dev/null; do
         sleep 1
     done
 
-    # If WiFi is already connected, check for captive portal
     if iwctl station list 2>/dev/null | grep -q "connected"; then
         sleep 2
         portal_handler
     fi
 
-    # Monitor for future state changes
     gdbus monitor --system --dest net.connman.iwd | while read -r line; do
         if echo "$line" | grep -q "State" && echo "$line" | grep -qE "'connected'|'roaming'"; then
             echo "Network state changed. Triggering connectivity check..."
