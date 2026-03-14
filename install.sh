@@ -463,12 +463,12 @@ install_themes_task() {
 
 disable_services_task() {
     print_header "Disabling Services"
-    manage_services "disable --now" NetworkManager wpa_supplicant systemd-networkd-wait-online.service
+    manage_services "disable --now" NetworkManager wpa_supplicant systemd-networkd-wait-online
 }
 
 mask_service_task() {
     print_header "Masking Services"
-    manage_services mask swaync.service systemd-networkd-wait-online.service
+    manage_services "mask --user" swaync systemd-networkd-wait-online
 }
 
 enable_services_task() {

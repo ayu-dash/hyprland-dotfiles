@@ -13,3 +13,4 @@ localsend
 greetd-tuigreet
 google-chrome
 zen-browser-bin
+matchbox-window-manager     
