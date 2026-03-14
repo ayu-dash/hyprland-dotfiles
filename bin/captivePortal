@@ -1,0 +1,63 @@
+#!/bin/bash
+
+CHECK_URL="http://connectivitycheck.gstatic.com/generate_204"
+PORTAL_TRIGGER_URL="http://detectportal.firefox.com/canonical.html"
+BROWSER="firefox"
+BROWSER_CLASS="portal-browser"
+NOTIFICATION_ICON="network-wireless"
+
+portal_handler() {
+    echo "Checking connectivity to $CHECK_URL..."
+    local response
+    response=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 "$CHECK_URL")
+
+    if [ "$response" != "204" ]; then
+        if [ "$response" == "000" ]; then
+            echo "No connection detected (Response: 000)."
+            return 1
+        fi
+
+        echo "Captive portal detected (Response: $response). Notifying user..."
+        
+        notify-send -i "$NOTIFICATION_ICON" \
+            -a "Captive Portal" \
+            "Captive Portal Detected" \
+            "Opening isolated browser for login..."
+            
+        local temp_profile
+        temp_profile=$(mktemp -d -t portal-firefox-XXXXXX)
+        echo "Launching isolated $BROWSER instance with profile $temp_profile"
+        
+        $BROWSER --class "$BROWSER_CLASS" \
+                 --profile "$temp_profile" \
+                 --no-remote \
+                 --new-instance \
+                 "$PORTAL_TRIGGER_URL" > /dev/null 2>&1 &
+    else
+        echo "Internet connectivity confirmed (Response: 204)."
+    fi
+}
+
+portal_monitor() {
+    # Wait for IWD to be available
+    while ! busctl status net.connman.iwd &>/dev/null; do
+        sleep 1
+    done
+
+    # If WiFi is already connected, check for captive portal
+    if iwctl station list 2>/dev/null | grep -q "connected"; then
+        sleep 2
+        portal_handler
+    fi
+
+    # Monitor for future state changes
+    gdbus monitor --system --dest net.connman.iwd | while read -r line; do
+        if echo "$line" | grep -q "State" && echo "$line" | grep -qE "'connected'|'roaming'"; then
+            echo "Network state changed. Triggering connectivity check..."
+            sleep 2
+            portal_handler
+        fi
+    done
+}
+
+portal_monitor
