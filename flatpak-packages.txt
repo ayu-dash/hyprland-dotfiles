@@ -1,5 +1,4 @@
-app.zen_browser.zen
 org.onlyoffice.desktopeditors
 org.localsend.localsend_app
-com.heroicgameslauncher.hgl
 com.brave.Browser
+org.apache.netbeans

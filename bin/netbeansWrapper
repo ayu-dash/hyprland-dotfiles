@@ -1,0 +1,19 @@
+#!/bin/bash
+
+export PATH="$HOME/.local/bin:$PATH"
+
+DISPLAY_NUM=":1"
+RESOLUTION="1920x1080"
+
+if ! pgrep -f "Xephyr ${DISPLAY_NUM}" > /dev/null; then
+    Xephyr ${DISPLAY_NUM} -screen ${RESOLUTION} -dpi 110 -resizeable -host-cursor -ac +extension RANDR &
+    sleep 1
+fi
+
+DISPLAY=${DISPLAY_NUM} XCURSOR_THEME=Sweet-cursors XCURSOR_SIZE=24 \
+    matchbox-window-manager -use_titlebar no -use_desktop_mode plain &
+sleep 0.5
+
+DISPLAY=${DISPLAY_NUM} XCURSOR_THEME=Sweet-cursors XCURSOR_SIZE=24 flatpak run org.apache.netbeans "$@"
+
+pkill -f "Xephyr ${DISPLAY_NUM}" 2>/dev/null

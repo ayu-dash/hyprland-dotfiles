@@ -1,5 +1,4 @@
 hyprland
-hyprland-qutils
 hyprlock
 hypridle
 hyprpicker
@@ -45,7 +44,6 @@ kvantum
 nwg-look
 xdg-desktop-portal-gtk
 xdg-desktop-portal-hyprland
-xdg-desktop-portal-gnome
 xdg-user-dirs
 qemu-kvm
 libvirt
@@ -78,6 +76,9 @@ qalculate
 libqalculate-devel
 json-glib-devel
 xdotool
-xsel
+xclip
 wl-clipboard
 wtype
+lutris
+matchbox-window-manager 
+xorg-x11-server-Xephyr 
