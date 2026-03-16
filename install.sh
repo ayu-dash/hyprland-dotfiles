@@ -683,6 +683,9 @@ skip_if_unavailable=True
 fastestmirror=True
 max_parallel_downloads=10
 defaultyes=True
+deltarpm=False
+zchunk=False
+metadata_expire=48h
 EOF
     print_success "DNF configuration optimized"
     echo ""
