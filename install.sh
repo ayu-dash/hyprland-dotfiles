@@ -122,9 +122,20 @@ install_packages_from_file() {
 
 manage_services() {
     local action="$1"; shift
+    local is_user=false
+    local cmd_prefix=("sudo" "systemctl")
+    local list_prefix=("systemctl")
+
+    if [[ "$1" == "--user" ]]; then
+        is_user=true
+        cmd_prefix=("systemctl" "--user")
+        list_prefix=("systemctl" "--user")
+        shift
+    fi
+
     for svc in "$@"; do
-        if systemctl list-unit-files "${svc}.service" &>/dev/null; then
-            sudo systemctl $action "$svc" >/dev/null 2>&1
+        if "${list_prefix[@]}" list-unit-files "${svc}" &>/dev/null; then
+            "${cmd_prefix[@]}" "$action" "$svc" >/dev/null 2>&1
             print_success "$svc"
         else
             print_warning "$svc not found"
@@ -607,12 +618,18 @@ install_themes_task() {
 
 disable_services_task() {
     print_header "Disabling Services"
-    manage_services disable swaync.service NetworkManager-wait-online.service plymouth-quit-wait.service ModemManager.service  nfs-client.target gssproxy.service rpcbind.service sssd-kcm.service lvm2-monitor.service
+    print_step "Disabling user services..."
+    manage_services disable --user swaync.service
+    print_step "Disabling system services..."
+    manage_services disable NetworkManager-wait-online.service plymouth-quit-wait.service ModemManager.service nfs-client.target gssproxy.service rpcbind.service sssd-kcm.service lvm2-monitor.service
 }
 
 mask_service_task() {
     print_header "Masking Services"
-    manage_services mask swaync.service NetworkManager-wait-online.service plymouth-quit-wait.service ModemManager.service  nfs-client.target gssproxy.service rpcbind.service sssd-kcm.service lvm2-monitor.service
+    print_step "Masking user services..."
+    manage_services mask --user swaync.service
+    print_step "Masking system services..."
+    manage_services mask NetworkManager-wait-online.service plymouth-quit-wait.service ModemManager.service nfs-client.target gssproxy.service rpcbind.service sssd-kcm.service lvm2-monitor.service
 }
 
 enable_services_task() {
