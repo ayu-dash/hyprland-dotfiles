@@ -2,3 +2,5 @@ org.onlyoffice.desktopeditors
 org.localsend.localsend_app
 com.brave.Browser
 org.apache.netbeans
+md.obsidian.Obsidian
+io.beekeeperstudio.Studio

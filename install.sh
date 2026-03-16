@@ -186,6 +186,32 @@ install_vscode_ext() {
     print_success "Installed $((current - ${#failed[@]}))/$total extensions"
 }
 
+configure_git_task() {
+    print_header "Configuring Git Globals"
+    print_step "Setting up Git user configuration..."
+    echo ""
+
+    if gum confirm "Configure Git global user data?" --default=true; then
+        local git_name
+        git_name=$(gum input --placeholder "Enter Git username (user.name)")
+        if [[ -n "$git_name" ]]; then
+            git config --global user.name "$git_name"
+            print_success "Git user.name set to: $git_name"
+        fi
+
+        local git_email
+        git_email=$(gum input --placeholder "Enter Git email (user.email)")
+        if [[ -n "$git_email" ]]; then
+            git config --global user.email "$git_email"
+            print_success "Git user.email set to: $git_email"
+        fi
+        echo ""
+    else
+        print_info "Skipping Git configuration"
+        echo ""
+    fi
+}
+
 update_repo() {
     [[ -d "$DOTFILES_DIR/.git" ]] || return
     print_step "Checking for updates..."
@@ -766,6 +792,7 @@ full_install() {
     enable_services_task
     disable_services_task
     mask_service_task
+    configure_git_task
     show_completion
 }
 

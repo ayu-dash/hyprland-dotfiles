@@ -1,19 +1,21 @@
 [Default Applications]
 # Web Browser
-x-scheme-handler/http=zen-browser.desktop
-x-scheme-handler/https=zen-browser.desktop
-x-scheme-handler/chrome=zen-browser.desktop
-text/html=zen-browser.desktop
-application/x-extension-htm=zen-browser.desktop
-application/x-extension-html=zen-browser.desktop
-application/x-extension-shtml=zen-browser.desktop
-application/xhtml+xml=zen-browser.desktop
-application/x-extension-xhtml=zen-browser.desktop
-application/x-extension-xht=zen-browser.desktop
+x-scheme-handler/http=com.brave.Browser.desktop
+x-scheme-handler/https=com.brave.Browser.desktop
+x-scheme-handler/chrome=com.brave.Browser.desktop
+text/html=com.brave.Browser.desktop
+application/x-extension-htm=com.brave.Browser.desktop
+application/x-extension-html=com.brave.Browser.desktop
+application/x-extension-shtml=com.brave.Browser.desktop
+application/xhtml+xml=com.brave.Browser.desktop
+application/x-extension-xhtml=com.brave.Browser.desktop
+x-scheme-handler/x-extension-xht=com.brave.Browser.desktop
+x-scheme-handler/obsidian=md.obsidian.Obsidian.desktop
+x-scheme-handler/bitwarden=com.bitwarden.desktop.desktop
 
 # File Manager
-inode/directory=pcmanfm.desktop
-application/x-directory=pcmanfm.desktop
+inode/directory=org.gnome.Nautilus.desktop
+application/x-directory=org.gnome.Nautilus.desktop
 
 # Terminal
 x-scheme-handler/terminal=kitty.desktop
@@ -33,8 +35,8 @@ text/x-c++=code.desktop
 text/x-chdr=code.desktop
 text/x-java=code.desktop
 text/x-rust=code.desktop
-text/markdown=code.desktop
-text/x-markdown=code.desktop
+text/markdown=md.obsidian.Obsidian.desktop
+text/x-markdown=md.obsidian.Obsidian.desktop
 application/x-yaml=code.desktop
 text/x-yaml=code.desktop
 application/toml=code.desktop
@@ -63,17 +65,21 @@ video/3gpp=mpv.desktop
 video/mpeg=mpv.desktop
 
 # Archives (using file manager)
-application/zip=pcmanfm.desktop
-application/x-tar=pcmanfm.desktop
-application/x-gzip=pcmanfm.desktop
-application/x-bzip2=pcmanfm.desktop
-application/x-xz=pcmanfm.desktop
-application/x-7z-compressed=pcmanfm.desktop
-application/x-rar=pcmanfm.desktop
+application/zip=org.gnome.Nautilus.desktop
+application/x-tar=org.gnome.Nautilus.desktop
+application/x-gzip=org.gnome.Nautilus.desktop
+application/x-bzip2=org.gnome.Nautilus.desktop
+application/x-xz=org.gnome.Nautilus.desktop
+application/x-7z-compressed=org.gnome.Nautilus.desktop
+application/x-rar=org.gnome.Nautilus.desktop
 
 [Added Associations]
-x-scheme-handler/http=zen-browser.desktop;
-x-scheme-handler/https=zen-browser.desktop;
-text/html=zen-browser.desktop;
-inode/directory=pcmanfm.desktop;
+x-scheme-handler/http=com.brave.Browser.desktop;
+x-scheme-handler/https=com.brave.Browser.desktop;
+text/html=com.brave.Browser.desktop;
+inode/directory=org.gnome.Nautilus.desktop;
 text/plain=code.desktop;
+text/markdown=md.obsidian.Obsidian.desktop;code.desktop;
+text/x-markdown=md.obsidian.Obsidian.desktop;code.desktop;
+x-scheme-handler/obsidian=md.obsidian.Obsidian.desktop;
+x-scheme-handler/db=io.beekeeperstudio.Studio.desktop;
