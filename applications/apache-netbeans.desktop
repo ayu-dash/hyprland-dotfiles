@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Apache NetBeans (Xephyr)
+Comment=Apache NetBeans IDE (via Xephyr Wrapper)
+GenericName=Integrated Development Environment
+Exec=/home/wtf/.local/bin/netbeansWrapper
+Icon=org.apache.netbeans
+Terminal=false
+Type=Application
+Categories=Development;IDE;Java;
+StartupWMClass=netbeans
+Keywords=development;IDE;Java;

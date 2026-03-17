@@ -4,7 +4,6 @@ hypridle
 hyprpicker
 hyprsunset
 SwayNotificationCenter
-waybar
 rofi-wayland
 kitty
 zsh
@@ -66,6 +65,7 @@ autoconf
 automake
 libtool 
 meson 
+ninja-build
 cargo 
 rust 
 rofi-devel 
@@ -82,3 +82,7 @@ wtype
 lutris
 matchbox-window-manager 
 xorg-x11-server-Xephyr 
+gtkmm30-devel    
+wayland-devel 
+wayland-protocols-devel 
+xrandr

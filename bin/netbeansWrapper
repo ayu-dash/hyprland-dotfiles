@@ -10,6 +10,10 @@ if ! pgrep -f "Xephyr ${DISPLAY_NUM}" > /dev/null; then
     sleep 1
 fi
 
+if ! pgrep -f "clipsync --daemon-internal" > /dev/null; then
+    clipsync &
+fi
+
 DISPLAY=${DISPLAY_NUM} XCURSOR_THEME=Sweet-cursors XCURSOR_SIZE=24 \
     matchbox-window-manager -use_titlebar no -use_desktop_mode plain &
 sleep 0.5
@@ -17,3 +21,4 @@ sleep 0.5
 DISPLAY=${DISPLAY_NUM} XCURSOR_THEME=Sweet-cursors XCURSOR_SIZE=24 flatpak run org.apache.netbeans "$@"
 
 pkill -f "Xephyr ${DISPLAY_NUM}" 2>/dev/null
+clipsync --stop

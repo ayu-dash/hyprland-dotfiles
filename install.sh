@@ -143,6 +143,13 @@ manage_services() {
     done
 }
 
+initialize_directories() {
+    print_step "Initializing directories..."
+    mkdir -p "$CONFIG_DIR" "$BIN_DIR" "$THEMES_DIR" "$ICONS_DIR" "$BUILD_DIR" "$FONTS_DIR" "$APPS_DIR"
+    print_success "Directories initialized"
+    echo ""
+}
+
 install_sudoers_rule() {
     local file="$1" content="$2" label="$3"
     if echo "$content" | sudo tee "$file" >/dev/null && sudo chmod 440 "$file"; then
@@ -402,7 +409,8 @@ prepare_github_repo() {
 install_github_packages_task() {
     print_header "Building Packages from GitHub"
 
-    mkdir -p "$BUILD_DIR"
+    initialize_directories
+
 
     prepare_github_repo "rofi-emoji" "https://github.com/Mange/rofi-emoji.git"
 
@@ -428,6 +436,13 @@ install_github_packages_task() {
     prepare_github_repo "bluetui" "https://github.com/pythops/bluetui"
 
     build_cargo_package "bluetui"
+    cd "$BUILD_DIR" > /dev/null 2>&1
+    echo ""
+
+    prepare_github_repo "Waybar" "https://github.com/Alexays/Waybar.git"
+
+    meson setup build && ninja -C build && sudo ninja -C build install \
+        && print_success "Waybar installed" || print_error "Waybar build failed"
     cd "$BUILD_DIR" > /dev/null 2>&1
     echo ""
 
@@ -489,7 +504,7 @@ install_thirdparty_apps_task() {
 install_dotfiles_task() {
     print_header "Installing Dotfiles"
 
-    mkdir -p "$CONFIG_DIR" "$BIN_DIR" "$THEMES_DIR" "$ICONS_DIR"
+    initialize_directories
     xdg-user-dirs-update 2>&1
 
     print_step "Copying configuration files..."
@@ -757,6 +772,7 @@ configure_qemu_kvm_task() {
 }
 
 full_install() {
+    initialize_directories
     system_update
     setup_repos_task
     install_packages_task
