@@ -484,31 +484,6 @@ install_thirdparty_apps_task() {
     else
         print_info "Flatpak not installed, skipping Flatpak applications"
     fi
-
-    print_step "MySQL Workbench..."
-    print_info "Download RPM from: https://dev.mysql.com/downloads/workbench/"
-    print_info "Then install: sudo dnf install ./mysql-workbench-*.rpm"
-    echo ""
-
-    print_step "Installing JetBrainsMono Nerd Font..."
-    local NERD_FONTS_DIR="$HOME/.local/share/fonts/NerdFonts"
-    mkdir -p "$NERD_FONTS_DIR"
-
-    if [ ! -f "$NERD_FONTS_DIR/JetBrainsMonoNerdFont-Regular.ttf" ]; then
-        local nf_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
-        echo -e "  ${GRAY}Downloading JetBrainsMono Nerd Font...${NC}"
-        if curl -fsSL "$nf_url" -o "/tmp/JetBrainsMono.tar.xz"; then
-            tar xf "/tmp/JetBrainsMono.tar.xz" -C "$NERD_FONTS_DIR"
-            rm -f "/tmp/JetBrainsMono.tar.xz"
-            gum spin --spinner dot --title "Rebuilding font cache..." -- fc-cache -fv >/dev/null 2>&1
-            print_success "JetBrainsMono Nerd Font installed"
-        else
-            print_error "Failed to download JetBrainsMono Nerd Font"
-        fi
-    else
-        print_info "JetBrainsMono Nerd Font already installed"
-    fi
-    echo ""
 }
 
 install_dotfiles_task() {
