@@ -17,7 +17,7 @@ unzip
 cliphist
 udiskie
 upower
-imagemagick
+ImageMagick
 simple-scan
 dconf-editor
 swappy
