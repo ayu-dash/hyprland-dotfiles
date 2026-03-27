@@ -12,5 +12,5 @@ antigravity
 localsend
 greetd-tuigreet
 google-chrome
-zen-browser-bin
+brave-bin
 matchbox-window-manager     

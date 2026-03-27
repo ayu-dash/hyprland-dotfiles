@@ -556,12 +556,28 @@ FallbackDNS=9.9.9.9 149.112.112.112"
     print_success "DNS configuration applied"
 }
 
+configure_hosts_task() {
+    print_header "Configuring Hosts File"
+    print_step "Updating /etc/hosts..."
+
+    cat <<EOF | sudo tee /etc/hosts >/dev/null
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+EOF
+
+    if [[ $? -eq 0 ]]; then
+        print_success "/etc/hosts updated"
+    else
+        print_error "Failed to update /etc/hosts"
+    fi
+}
+
 configure_nsswitch_task() {
     print_header "Configuring Name Service Switch"
     print_step "Updating /etc/nsswitch.conf..."
 
     local nss_config="/etc/nsswitch.conf"
-    local new_hosts="hosts: mymachines mdns_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] files myhostname dns"
+    local new_hosts="hosts: files myhostname mdns4_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] dns"
 
     if [[ -f "$nss_config" ]]; then
         if sudo sed -i "s/^hosts:.*/$new_hosts/" "$nss_config"; then
@@ -868,6 +884,7 @@ full_install() {
     enable_services_task
     mask_service_task
     configure_dns_task
+    configure_hosts_task
     configure_nsswitch_task
     configure_git_task
     show_completion
@@ -906,6 +923,7 @@ main_menu() {
         "Configure Shell Only      (Zsh, Oh My Zsh)" \
         "Install VS Code Ext       (From CodeExtensions.txt)" \
         "Configure Git Globals     (user.name, user.email)" \
+        "Configure Hosts File      (/etc/hosts)" \
         "Configure nsswitch        (mdns_minimal, resolve)" \
         "Quit")
     echo ""
@@ -919,6 +937,7 @@ main_menu() {
         "Configure Shell Only"*)  configure_shell_task; show_completion ;;
         "Install VS Code Ext"*)   install_vscode_extensions_task; show_completion ;;
         "Configure Git Globals"*) configure_git_task; show_completion ;;
+        "Configure Hosts File"*)  configure_hosts_task; show_completion ;;
         "Configure nsswitch"*)    configure_nsswitch_task; show_completion ;;
         "Quit"|"")                gum style --foreground "$C_DIM" "  Bye!"; exit 0 ;;
         *)                        print_error "Invalid choice!"; sleep 1; clear; main_menu ;;

@@ -5,7 +5,6 @@ rofi-wayland
 rofi-calc
 rofi-emoji
 xdg-desktop-portal-gtk
-xdg-desktop-portal-kde
 xdg-desktop-portal-hyprland
 xdg-user-dirs
 polkit-gnome
@@ -65,6 +64,9 @@ pnpm
 composer
 man
 gvfs
+gvfs-mtp 
+gvfs-afc 
+libmtp
 freerdp
 alsa-tools
 power-profiles-daemon
