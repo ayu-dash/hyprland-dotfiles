@@ -19,7 +19,7 @@ hyprctl keyword env "KITTY_CONFIG_DIRECTORY,$THEME_DIR/Kitty/"
 # ── GTK / Libadwaita Dark Theme ─────────────────────────────────────────────
 gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark'
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-kvantummanager --set KvLibadwaita
+kvantummanager --set KvLibadwaitaDark
 
 # ── Restart Services ────────────────────────────────────────────────────────
 killall -qw swaync waybar
