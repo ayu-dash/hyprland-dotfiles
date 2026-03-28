@@ -9,7 +9,7 @@ visual-studio-code-bin
 hyprpicker
 hyprsunset
 antigravity
-localsend
+localsend-bin
 greetd-tuigreet
 google-chrome
 brave-bin

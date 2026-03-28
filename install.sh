@@ -108,7 +108,7 @@ install_packages_from_file() {
         [[ -z "$pkg" || "$pkg" =~ ^# ]] && continue
         ((current++))
         echo -e "\n${GRAY}($current/$total)${NC} Installing ${CYAN}$pkg${NC}..."
-        $installer -S --noconfirm --needed "$pkg" || failed+=("$pkg")
+        $installer -S --noconfirm "$pkg" || failed+=("$pkg")
     done < "$file"
 
     echo ""
