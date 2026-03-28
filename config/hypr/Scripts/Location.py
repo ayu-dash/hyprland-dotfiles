@@ -22,8 +22,8 @@ def get_location():
             except:
                 pass
 
-    # Fetch new data from ipinfo.io
-    stdout, stderr, code = run_capture(["curl", "-s", "ipinfo.io"])
+    # Fetch new data from ip-api.com
+    stdout, stderr, code = run_capture(["curl", "-s", "ip-api.com/json"])
     if code == 0 and stdout:
         try:
             data = json.loads(stdout)
