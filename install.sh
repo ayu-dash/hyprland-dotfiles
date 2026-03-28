@@ -632,6 +632,57 @@ install_themes_task() {
     print_success "Font cache updated"
 }
 
+install_plymouth_theme_task() {
+    print_header "Installing Plymouth Theme"
+
+    local theme_url="https://github.com/adi1090x/plymouth-themes/releases/download/v1.0/cross_hud.tar.gz"
+    local theme_name="cross_hud"
+    local plymouth_themes_dir="/usr/share/plymouth/themes"
+
+    if ! command -v plymouth &>/dev/null; then
+        print_error "Plymouth not found. Skipping theme installation."
+        return 1
+    fi
+
+    print_step "Downloading $theme_name theme..."
+    local tmp_dir=$(mktemp -d)
+    if curl -L "$theme_url" -o "$tmp_dir/$theme_name.tar.gz"; then
+        print_success "Downloaded $theme_name"
+    else
+        print_error "Failed to download $theme_name"
+        rm -rf "$tmp_dir"
+        return 1
+    fi
+
+    print_step "Extracting theme..."
+    if tar -xzf "$tmp_dir/$theme_name.tar.gz" -C "$tmp_dir"; then
+        print_success "Extracted $theme_name"
+    else
+        print_error "Failed to extract $theme_name"
+        rm -rf "$tmp_dir"
+        return 1
+    fi
+
+    print_step "Installing theme to $plymouth_themes_dir..."
+    sudo mkdir -p "$plymouth_themes_dir"
+    if sudo cp -r "$tmp_dir/$theme_name" "$plymouth_themes_dir/"; then
+        print_success "Theme installed successfully"
+    else
+        print_error "Failed to install theme"
+        rm -rf "$tmp_dir"
+        return 1
+    fi
+
+    print_step "Applying theme (this may take a while)..."
+    if sudo plymouth-set-default-theme -R "$theme_name"; then
+        print_success "Plymouth theme $theme_name applied"
+    else
+        print_error "Failed to apply Plymouth theme"
+    fi
+
+    rm -rf "$tmp_dir"
+}
+
 disable_services_task() {
     print_header "Disabling Services"
     print_step "Disabling user services..."
@@ -781,6 +832,7 @@ full_install() {
     install_dotfiles_task
     configure_shell_task
     install_themes_task
+    install_plymouth_theme_task
     install_system_configs_task
     configure_qemu_kvm_task
     enable_services_task
@@ -824,7 +876,7 @@ main_menu() {
         "Setup Repos Only          (Copr, VS Code, Chrome, RPM Fusion)" \
         "Install Packages Only     (DNF, Third-party, VS Code extensions)" \
         "Install Dotfiles Only     (~/.config, ~/.local/bin)" \
-        "Install Themes Only       (Icons, GTK Themes, Fonts)" \
+        "Install Themes Only       (Icons, GTK Themes, Fonts, Plymouth)" \
         "Configure Shell Only      (Zsh, Oh My Zsh)" \
         "Install VS Code Ext       (From CodeExtensions.txt)" \
         "Build GitHub Packages     (rofi-emoji, rofi-calc)" \
@@ -836,7 +888,7 @@ main_menu() {
         "Setup Repos Only"*)      setup_repos_task; show_completion ;;
         "Install Packages Only"*) install_packages_task; show_completion ;;
         "Install Dotfiles Only"*) install_dotfiles_task; show_completion ;;
-        "Install Themes Only"*)   install_themes_task; show_completion ;;
+        "Install Themes Only"*)   install_themes_task; install_plymouth_theme_task; show_completion ;;
         "Configure Shell Only"*)  configure_shell_task; show_completion ;;
         "Install VS Code Ext"*)   install_vscode_ext; show_completion ;;
         "Build GitHub Packages"*) install_github_packages_task; show_completion ;;
