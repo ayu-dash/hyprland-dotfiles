@@ -17,7 +17,7 @@ hyprctl keyword env "HYPR_THEME_DIR,$THEME_DIR"
 hyprctl keyword env "KITTY_CONFIG_DIRECTORY,$THEME_DIR/Kitty/"
 
 # ── GTK / Libadwaita Dark Theme ─────────────────────────────────────────────
-gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark'
+gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 kvantummanager --set KvLibadwaita
 
