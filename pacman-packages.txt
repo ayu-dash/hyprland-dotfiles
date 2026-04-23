@@ -5,7 +5,6 @@ rofi-wayland
 rofi-calc
 rofi-emoji
 xdg-desktop-portal-gtk
-xdg-desktop-portal-kde
 xdg-desktop-portal-hyprland
 xdg-user-dirs
 polkit-gnome
@@ -18,6 +17,7 @@ simple-scan
 cliphist
 bluez-utils
 blueman
+impala
 mpv
 loupe
 qt6ct
@@ -46,6 +46,7 @@ tailscale
 kwallet
 kwalletmanager
 kwallet-pam
+kio
 hyprland
 qemu-full
 libvirt
@@ -58,7 +59,6 @@ edk2-ovmf
 networkmanager
 network-manager-applet
 pcmanfm
-engrampa
 papirus-icon-theme 
 uv
 nvm
@@ -66,8 +66,20 @@ pnpm
 composer
 man
 gvfs
+gvfs-mtp 
+gvfs-afc 
+libmtp
 freerdp
 alsa-tools
 wiremix
 power-profiles-daemon
 plymouth
+ark
+lazygit
+lutris
+xorg-server
+xorg-xauth   
+xorg-server-xephyr        
+xclip
+netbeans
+nss-mdns

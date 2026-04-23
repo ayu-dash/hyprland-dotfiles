@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 C_RED="196"
 C_GREEN="82"
 C_YELLOW="220"
@@ -109,7 +108,7 @@ install_packages_from_file() {
         [[ -z "$pkg" || "$pkg" =~ ^# ]] && continue
         ((current++))
         echo -e "\n${GRAY}($current/$total)${NC} Installing ${CYAN}$pkg${NC}..."
-        $installer -S --noconfirm --needed "$pkg" || failed+=("$pkg")
+        $installer -S --noconfirm "$pkg" || failed+=("$pkg")
     done < "$file"
 
     echo ""
@@ -190,8 +189,6 @@ install_font_files() {
 write_resolved_conf() {
     sudo tee /etc/systemd/resolved.conf >/dev/null <<< "$1"
 }
-
-
 
 update_repo() {
     [[ -d "$DOTFILES_DIR/.git" ]] || return
@@ -324,6 +321,28 @@ install_dotfiles_task() {
     else
         print_error "Failed to copy scripts"
     fi
+
+    print_step "Installing custom desktop entries..."
+    local apps_dir="$HOME/.local/share/applications"
+    mkdir -p "$apps_dir"
+    if [[ -d "$DOTFILES_DIR/etc/applications" ]]; then
+        for desktop_file in "$DOTFILES_DIR/etc/applications/"*.desktop; do
+            [[ -f "$desktop_file" ]] || continue
+            local name=$(basename "$desktop_file")
+            cp "$desktop_file" "$apps_dir/" && print_success "$name" || print_error "$name"
+        done
+        update-desktop-database "$apps_dir" 2>/dev/null
+    fi
+
+    local sys_netbeans="/usr/share/applications/netbeans.desktop"
+    if [[ -f "$sys_netbeans" ]]; then
+        print_step "Updating system-level NetBeans entry..."
+        if sudo sed -i "s|^Exec=.*|Exec=sh -c 'exec ~/.local/bin/netbeansWrapper %F'|" "$sys_netbeans" 2>/dev/null; then
+            print_success "System-level path updated"
+        else
+            print_warning "Could not update system entry (non-critical)"
+        fi
+    fi
 }
 
 configure_shell_task() {
@@ -354,6 +373,33 @@ configure_shell_task() {
     cp -f "$DOTFILES_DIR/.zshrc" "$HOME/"
     chsh -s /usr/bin/zsh
     print_success "Default shell set to Zsh"
+    echo ""
+}
+
+configure_git_task() {
+    print_header "Configuring Git Globals"
+    print_step "Setting up Git user configuration..."
+    echo ""
+
+    if gum confirm "Configure Git global user data?" --default=true; then
+        local git_name
+        git_name=$(gum input --placeholder "Enter Git username (user.name)")
+        if [[ -n "$git_name" ]]; then
+            git config --global user.name "$git_name"
+            print_success "Git user.name set to: $git_name"
+        fi
+
+        local git_email
+        git_email=$(gum input --placeholder "Enter Git email (user.email)")
+        if [[ -n "$git_email" ]]; then
+            git config --global user.email "$git_email"
+            print_success "Git user.email set to: $git_email"
+        fi
+        echo ""
+    else
+        print_info "Skipping Git configuration"
+        echo ""
+    fi
 }
 
 install_themes_task() {
@@ -417,47 +463,158 @@ install_themes_task() {
 
 disable_services_task() {
     print_header "Disabling Services"
-    manage_services disable --now NetworkManager-wait-online ModemManager
+    manage_services "disable --now" iwd systemd-networkd-wait-online ModemManager
+    manage_services mask NetworkManager-wait-online ModemManager
 }
 
 mask_service_task() {
     print_header "Masking Services"
-    manage_services mask swaync.service NetworkManager-wait-online ModemManager
+    manage_services "mask --user" swaync systemd-networkd-wait-online
 }
 
 enable_services_task() {
     print_header "Enabling Services"
-    manage_services enable greetd bluetooth NetworkManager udisks2 tailscaled
+    manage_services enable greetd bluetooth NetworkManager udisks2 tailscaled wifi-restart
+
+    print_step "Enabling user services..."
+    systemctl --user daemon-reload
+    systemctl --user enable captive-portal.service && print_success "captive-portal (user)" || print_warning "captive-portal not found"
+}
+
+lock_dns_to_resolved() {
+    for file in /etc/systemd/network/*.network; do
+        [[ -f $file ]] || continue
+        grep -q "^\[DHCPv4\]" "$file" || continue
+        sed -n '/^\[DHCPv4\]/,/^\[/p' "$file" | grep -q "^UseDNS=" || sudo sed -i '/^\[DHCPv4\]/a UseDNS=no' "$file"
+        grep -q "^\[IPv6AcceptRA\]" "$file" && ! sed -n '/^\[IPv6AcceptRA\]/,/^\[/p' "$file" | grep -q "^UseDNS=" \
+            && sudo sed -i '/^\[IPv6AcceptRA\]/a UseDNS=no' "$file"
+    done
+}
+
+unlock_dns_to_dhcp() {
+    for file in /etc/systemd/network/*.network; do
+        [[ -f $file ]] || continue
+        sudo sed -i '/^\[DHCPv4\]/{n;/^UseDNS=no$/d}' "$file"
+        sudo sed -i '/^\[IPv6AcceptRA\]/{n;/^UseDNS=no$/d}' "$file"
+    done
+}
+
+configure_dns_task() {
+    print_header "Configuring DNS Resolver"
+
+    local choice
+    choice=$(gum choose --height 8 --header "Select DNS provider" \
+        Cloudflare Google DHCP Custom "Skip (Current)")
+
+    case "$choice" in
+        Cloudflare)
+            print_step "Setting up Cloudflare DNS..."
+            write_resolved_conf "[Resolve]
+DNS=1.1.1.1#cloudflare-dns.com 1.0.0.1#cloudflare-dns.com
+FallbackDNS=9.9.9.9 149.112.112.112
+DNSOverTLS=opportunistic"
+            lock_dns_to_resolved
+            print_success "Cloudflare DNS configured"
+            ;;
+        Google)
+            print_step "Setting up Google DNS..."
+            write_resolved_conf "[Resolve]
+DNS=8.8.8.8#dns.google 8.8.4.4#dns.google
+FallbackDNS=9.9.9.9 149.112.112.112
+DNSOverTLS=opportunistic"
+            lock_dns_to_resolved
+            print_success "Google DNS configured"
+            ;;
+        DHCP)
+            print_step "Reverting to DHCP DNS..."
+            write_resolved_conf "[Resolve]
+DNSOverTLS=no"
+            unlock_dns_to_dhcp
+            print_success "DHCP DNS restored"
+            ;;
+        Custom)
+            local servers
+            servers=$(gum input --placeholder "Enter DNS servers (space-separated, e.g. 1.1.1.1 8.8.8.8)")
+            [[ -z "$servers" ]] && return
+            write_resolved_conf "[Resolve]
+DNS=$servers
+FallbackDNS=9.9.9.9 149.112.112.112"
+            lock_dns_to_resolved
+            print_success "Custom DNS configured"
+            ;;
+        *)
+            print_info "Skipping DNS configuration"; return
+            ;;
+    esac
+
+    print_step "Finalizing resolv.conf symlink..."
+    sudo chattr -i /etc/resolv.conf 2>/dev/null
+    sudo rm -f /etc/resolv.conf
+    sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+
+    print_step "Restarting network services..."
+    sudo systemctl restart systemd-networkd systemd-resolved
+    print_success "DNS configuration applied"
+}
+
+configure_hosts_task() {
+    print_header "Configuring Hosts File"
+    print_step "Updating /etc/hosts..."
+
+    cat <<EOF | sudo tee /etc/hosts >/dev/null
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+EOF
+
+    if [[ $? -eq 0 ]]; then
+        print_success "/etc/hosts updated"
+    else
+        print_error "Failed to update /etc/hosts"
+    fi
+}
+
+configure_nsswitch_task() {
+    print_header "Configuring Name Service Switch"
+    print_step "Updating /etc/nsswitch.conf..."
+
+    local nss_config="/etc/nsswitch.conf"
+    local new_hosts="hosts: files myhostname mdns4_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] dns"
+
+    if [[ -f "$nss_config" ]]; then
+        if sudo sed -i "s/^hosts:.*/$new_hosts/" "$nss_config"; then
+            print_success "nsswitch.conf updated"
+        else
+            print_error "Failed to update nsswitch.conf"
+        fi
+    else
+        print_error "/etc/nsswitch.conf not found"
+    fi
 }
 
 install_system_configs_task() {
     print_header "Installing System Configurations"
 
+    print_step "Configuring systemd-networkd..."
+    copy_system_config "$DOTFILES_DIR/etc/systemd/network/20-wired.network" "/etc/systemd/network/20-wired.network" "systemd-networkd wired config"
+    copy_system_config "$DOTFILES_DIR/etc/systemd/network/20-wlan.network" "/etc/systemd/network/20-wlan.network" "systemd-networkd wifi config"
+    echo ""
+
     print_step "Configuring faster shutdown..."
-    copy_system_config "$DOTFILES_DIR/etc/systemd/system.conf.d/99-timeout.conf" "/etc/systemd/system.conf.d/99-timeout.conf" "System DefaultTimeoutStopSec=10s"
-    copy_system_config "$DOTFILES_DIR/etc/systemd/user.conf.d/99-timeout.conf" "/etc/systemd/user.conf.d/99-timeout.conf" "User DefaultTimeoutStopSec=10s"
+    copy_system_config "$DOTFILES_DIR/etc/systemd/system.conf.d/99-timeout.conf" "/etc/systemd/system.conf.d/99-timeout.conf" "DefaultTimeoutStopSec=10s"
+    echo ""
+
+    print_step "Configuring faster user session shutdown..."
+    copy_system_config "$DOTFILES_DIR/etc/systemd/user.conf.d/99-timeout.conf" "/etc/systemd/user.conf.d/99-timeout.conf" "DefaultTimeoutStopSec=5s (user)"
     echo ""
 
     print_step "Disabling hardware watchdog..."
     copy_system_config "$DOTFILES_DIR/etc/modprobe.d/nowatchdog.conf" "/etc/modprobe.d/nowatchdog.conf" "Blacklist iTCO_wdt"
     echo ""
-    print_step "Configuring WiFi power save..."
-    if [ -d /sys/class/power_supply ] && ls /sys/class/power_supply/BAT* &>/dev/null; then
-        local wifi_script="$BIN_DIR/wifiPowersave"
-        cat <<EOF | sudo tee /etc/udev/rules.d/99-wifi-powersave.rules >/dev/null
-SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="0", RUN+="$wifi_script on"
-SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="1", RUN+="$wifi_script off"
-EOF
-        sudo udevadm control --reload
-        print_success "WiFi power save rules installed"
-    else
-        print_info "No battery detected, skipping WiFi power save rules"
-    fi
-    echo ""
 
     print_step "Installing greetd configuration..."
     copy_system_config "$DOTFILES_DIR/etc/greetd/config.toml" "/etc/greetd/config.toml" "greetd config" \
         && print_info "tuigreet will launch Hyprland by default"
+    copy_system_config "$DOTFILES_DIR/etc/pam.d/greetd" "/etc/pam.d/greetd" "greetd PAM config"
     echo ""
 
     print_step "Configuring sudoers rules..."
@@ -478,6 +635,30 @@ EOF
     install_sudoers_rule "/etc/sudoers.d/hyprland-hda-verb" \
         "$USER ALL=(ALL) NOPASSWD: /usr/bin/hda-verb" \
         "HDA Verb sudoers rule"
+    echo ""
+
+    print_step "Configuring WiFi power save..."
+    if [ -d /sys/class/power_supply ] && ls /sys/class/power_supply/BAT* &>/dev/null; then
+        local wifi_script="$BIN_DIR/wifiPowersave"
+        cat <<EOF | sudo tee /etc/udev/rules.d/99-wifi-powersave.rules >/dev/null
+SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="0", RUN+="$wifi_script on"
+SUBSYSTEM=="power_supply", ATTR{type}=="Mains", ATTR{online}=="1", RUN+="$wifi_script off"
+EOF
+        sudo udevadm control --reload
+        sudo udevadm trigger --subsystem-match=power_supply
+        print_success "WiFi power save udev rules installed"
+        print_info "Battery: power save on / AC: power save off"
+    else
+        print_info "No battery detected, skipping WiFi power save"
+    fi
+    echo ""
+
+    print_step "Installing polkit rules..."
+    copy_system_config "$DOTFILES_DIR/etc/polkit-1/rules.d/10-manage-iwd.rules" "/etc/polkit-1/rules.d/10-manage-iwd.rules" "iwd polkit rule (wheel group)"
+    echo ""
+
+    print_step "Installing WiFi restart service..."
+    copy_system_config "$DOTFILES_DIR/etc/systemd/system/wifi-restart.service" "/etc/systemd/system/wifi-restart.service" "WiFi restart service"
     echo ""
 }
 
@@ -563,7 +744,7 @@ install_gpu_drivers_task() {
                 if grep -q "^MODULES=()" /etc/mkinitcpio.conf; then
                     sudo sed -i 's/^MODULES=()/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
                 else
-                    sudo sed -i 's/^MODULES=(\([^)]*\))/MODULES=( nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
+                    sudo sed -i 's/^MODULES=(\([^)]*\))/MODULES=(\1 nvidia nvidia_modeset nvidia_uvm nvidia_drm)/' /etc/mkinitcpio.conf
                 fi
                 sudo mkinitcpio -P
                 print_success "mkinitcpio updated"
@@ -703,6 +884,10 @@ full_install() {
     disable_services_task
     enable_services_task
     mask_service_task
+    configure_dns_task
+    configure_hosts_task
+    configure_nsswitch_task
+    configure_git_task
     show_completion
 }
 
@@ -738,6 +923,9 @@ main_menu() {
         "Install Themes Only       (Icons, GTK Themes)" \
         "Configure Shell Only      (Zsh, Oh My Zsh)" \
         "Install VS Code Ext       (From CodeExtensions.txt)" \
+        "Configure Git Globals     (user.name, user.email)" \
+        "Configure Hosts File      (/etc/hosts)" \
+        "Configure nsswitch        (mdns_minimal, resolve)" \
         "Quit")
     echo ""
 
@@ -749,6 +937,9 @@ main_menu() {
         "Install Themes Only"*)   install_themes_task; show_completion ;;
         "Configure Shell Only"*)  configure_shell_task; show_completion ;;
         "Install VS Code Ext"*)   install_vscode_extensions_task; show_completion ;;
+        "Configure Git Globals"*) configure_git_task; show_completion ;;
+        "Configure Hosts File"*)  configure_hosts_task; show_completion ;;
+        "Configure nsswitch"*)    configure_nsswitch_task; show_completion ;;
         "Quit"|"")                gum style --foreground "$C_DIM" "  Bye!"; exit 0 ;;
         *)                        print_error "Invalid choice!"; sleep 1; clear; main_menu ;;
     esac

@@ -32,9 +32,9 @@ alias l="ls -CF"
 
 # Package management
 alias p="sudo pacman"
-alias ps="sudo pacman -S"
-alias pr="sudo pacman -Rns"
-alias pu="sudo pacman -Syu"
+alias i="sudo pacman -S"
+alias r="sudo pacman -Rns"
+alias u="sudo pacman -Syu"
 alias y="yay"
 alias ys="yay -S"
 alias yu="yay -Syu"
@@ -60,7 +60,7 @@ alias gl="git pull"
 alias gd="git diff"
 alias glog="git log --oneline -10"
 alias gg="git log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)' --all"
-
+alias lz="lazygit"
 
 # Dev
 alias py="python"

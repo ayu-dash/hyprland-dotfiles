@@ -1,0 +1,11 @@
+[Unit]
+Description=Captive Portal Auto-Detection
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/captivePortal
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
