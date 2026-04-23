@@ -86,3 +86,8 @@ gtkmm30-devel
 wayland-devel 
 wayland-protocols-devel 
 xrandr
+plymouth-plugin-script
+gcc-c++
+python3
+python3-pip
+curl
