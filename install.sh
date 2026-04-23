@@ -31,14 +31,36 @@ BIN_DIR="$HOME/.local/bin"
 FONTS_DIR="$HOME/.local/share/fonts"
 TEMP_DIR="/tmp/installation"
 
-PACMAN_PACKAGES="$DOTFILES_DIR/pacman-packages.txt"
-YAY_PACKAGES="$DOTFILES_DIR/yay-packages.txt"
+PACKAGES_FILE="$DOTFILES_DIR/packages.txt"
 VSCODE_EXTENSIONS="$DOTFILES_DIR/etc/CodeExtensions.txt"
+
+install_yay() {
+    if command -v yay &>/dev/null; then
+        return 0
+    fi
+
+    echo -e "${CYAN}Yay not found. Bootstrapping with pacman...${NC}"
+    sudo pacman -S --noconfirm --needed base-devel git
+
+    echo -e "\n${CYAN}Building yay from AUR...${NC}"
+    mkdir -p "$TEMP_DIR"
+    rm -rf "$TEMP_DIR/yay"
+    if git clone "$YAY_REPO" "$TEMP_DIR/yay"; then
+        cd "$TEMP_DIR/yay"
+        if makepkg -si --noconfirm; then
+            echo -e "\n${GREEN}✓ Yay installed successfully${NC}"
+            cd - >/dev/null
+            return 0
+        fi
+    fi
+    echo -e "\n${RED}✗ Failed to install Yay${NC}"
+    exit 1
+}
 
 ensure_gum() {
     command -v gum &>/dev/null && return
     echo "Installing gum..."
-    sudo pacman -S --noconfirm gum 2>/dev/null || { echo "ERROR: Install gum manually: sudo pacman -S gum"; exit 1; }
+    yay -S --noconfirm gum 2>/dev/null || { echo "ERROR: Install gum manually: yay -S gum"; exit 1; }
 }
 
 print_logo() {
@@ -119,11 +141,11 @@ install_packages_from_file() {
     print_success "Installed $((current - ${#failed[@]}))/$total packages"
 }
 
-install_pacman_packages() {
+install_packages() {
     local -n _pkgs=$1
     for pkg in "${_pkgs[@]}"; do
         echo -e "  ${GRAY}Installing: $pkg${NC}"
-        if sudo pacman -S --noconfirm --needed "$pkg" 2>/dev/null; then
+        if yay -S --noconfirm "$pkg" 2>/dev/null; then
             print_success "$pkg"
         else
             print_warning "$pkg (may not be available)"
@@ -228,9 +250,9 @@ update_repo() {
 system_update() {
     print_header "Updating System"
     print_step "Synchronizing package databases and upgrading system..."
-    echo -e "\n  ${GRAY}Running: sudo pacman -Syyu${NC}\n"
+    echo -e "\n  ${GRAY}Running: yay -Syu${NC}\n"
 
-    if sudo pacman -Syyu --noconfirm; then
+    if yay -Syu --noconfirm; then
         echo ""; print_success "System updated successfully"
     else
         echo ""; print_error "System update failed"; print_warning "Continuing..."
@@ -240,57 +262,8 @@ system_update() {
 install_packages_task() {
     print_header "Installing Packages"
 
-    print_step "Installing official packages..."
-    install_packages_from_file "$PACMAN_PACKAGES" "sudo pacman"
-    echo ""
-
-    print_step "Setting up Yay (AUR helper)..."
-    if ! command -v yay &>/dev/null; then
-        mkdir -p "$TEMP_DIR"
-        local yay_installed=false attempt=0 max_attempts=2
-
-        while [[ "$yay_installed" == false && $attempt -lt $max_attempts ]]; do
-            ((attempt++))
-
-            if [[ -d "$TEMP_DIR/yay" ]]; then
-                print_info "Reusing existing yay folder..."
-            else
-                echo -e "\n${GRAY}(1/2)${NC} Cloning ${CYAN}yay-git${NC} from AUR..."
-                echo ""
-                if git clone --progress "$YAY_REPO" "$TEMP_DIR/yay"; then
-                    echo ""; print_success "Yay repository cloned"
-                else
-                    print_error "Failed to clone Yay"; return 1
-                fi
-            fi
-
-            echo -e "\n${GRAY}(2/2)${NC} Building ${CYAN}yay${NC}..."
-            echo ""
-            cd "$TEMP_DIR/yay"
-
-            if makepkg -si --noconfirm; then
-                echo ""; print_success "Yay installed successfully"
-                yay_installed=true
-            else
-                print_error "Failed to build Yay (attempt $attempt/$max_attempts)"
-                cd - >/dev/null
-                rm -rf "$TEMP_DIR/yay"
-
-                if (( attempt < max_attempts )); then
-                    gum confirm "Retry yay installation?" || { print_warning "Skipping AUR packages"; return 1; }
-                else
-                    print_error "Max attempts reached"; print_warning "Skipping AUR packages"; return 1
-                fi
-            fi
-            cd - >/dev/null 2>&1
-        done
-    else
-        print_info "Yay already installed, skipping"
-    fi
-    echo ""
-
-    print_step "Installing AUR packages..."
-    install_packages_from_file "$YAY_PACKAGES" "yay"
+    print_step "Installing packages from list..."
+    install_packages_from_file "$PACKAGES_FILE" "yay"
     echo ""
 
     print_step "Installing VS Code extensions..."
@@ -664,7 +637,7 @@ EOF
 configure_qemu_kvm_task() {
     print_header "Configuring QEMU/KVM"
 
-    pacman -Qi libvirt &>/dev/null || { print_info "libvirt not installed, skipping"; return 0; }
+    yay -Qi libvirt &>/dev/null || { print_info "libvirt not installed, skipping"; return 0; }
 
     print_step "Enabling libvirtd service..."
     sudo systemctl enable libvirtd && print_success "libvirtd enabled" || print_error "Failed to enable libvirtd"
@@ -735,7 +708,7 @@ install_gpu_drivers_task() {
 
         if (( ${#nvidia_pkgs[@]} > 0 )); then
             echo ""
-            install_pacman_packages nvidia_pkgs
+            install_packages nvidia_pkgs
 
             print_step "Configuring NVIDIA for Hyprland..."
             if [[ -f /etc/mkinitcpio.conf ]] && ! grep -q "nvidia" /etc/mkinitcpio.conf; then
@@ -771,7 +744,7 @@ install_gpu_drivers_task() {
         echo ""
 
         if gum confirm "Install AMD drivers?"; then
-            install_pacman_packages amd_pkgs
+            install_packages amd_pkgs
             echo ""
             print_info "AMD uses open-source AMDGPU, no extra config needed"
             print_info "For HW video accel: env = LIBVA_DRIVER_NAME,radeonsi"
@@ -791,7 +764,7 @@ install_gpu_drivers_task() {
         echo ""
 
         if gum confirm "Install Intel drivers?"; then
-            install_pacman_packages intel_pkgs
+            install_packages intel_pkgs
             echo ""
             print_info "For VA-API: env = LIBVA_DRIVER_NAME,iHD"
         else
@@ -803,7 +776,7 @@ install_gpu_drivers_task() {
     if [[ "$has_nvidia" == false && "$has_amd" == false && "$has_intel" == false ]]; then
         print_warning "No supported GPU detected"
         print_info "Installing generic mesa drivers..."
-        sudo pacman -S --noconfirm --needed mesa lib32-mesa 2>/dev/null
+        yay -S --noconfirm --needed mesa lib32-mesa 2>/dev/null
         print_success "Generic drivers installed"
     fi
 
@@ -813,7 +786,7 @@ install_gpu_drivers_task() {
 configure_plymouth_task() {
     print_header "Configuring Plymouth Boot Splash"
 
-    if ! pacman -Qi plymouth &>/dev/null; then
+    if ! yay -Qi plymouth &>/dev/null; then
         print_info "Plymouth not installed, skipping"
         return 0
     fi
@@ -948,11 +921,12 @@ clear
 
 [[ $EUID -eq 0 ]] && { echo -e "${RED}Error: Do not run as root!${NC}"; exit 1; }
 
+echo -e "${YELLOW}This installer requires sudo privileges.${NC}"
+sudo -v || { echo -e "${RED}Failed to obtain sudo privileges${NC}"; exit 1; }
+
+install_yay
 ensure_gum
 
-gum style --foreground "$C_YELLOW" "This installer requires sudo privileges."
-echo ""
-sudo -v || { echo -e "${RED}Failed to obtain sudo privileges${NC}"; exit 1; }
 
 (while true; do sudo -n true; sleep 50; kill -0 "$$" 2>/dev/null || exit; done) &
 SUDO_KEEPALIVE_PID=$!

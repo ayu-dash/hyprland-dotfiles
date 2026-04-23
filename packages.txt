@@ -1,6 +1,5 @@
 waybar
 swaync
-git
 rofi-wayland
 rofi-calc
 rofi-emoji
@@ -17,7 +16,6 @@ simple-scan
 cliphist
 bluez-utils
 blueman
-impala
 mpv
 loupe
 qt6ct
@@ -29,7 +27,6 @@ udiskie
 nwg-look
 firefox
 btop
-base-devel
 imagemagick
 fastfetch
 brightnessctl
@@ -56,7 +53,9 @@ iw
 virt-manager
 dnsmasq
 edk2-ovmf
-iwd
+networkmanager
+network-manager-applet
+pcmanfm
 papirus-icon-theme 
 uv
 nvm
@@ -69,10 +68,9 @@ gvfs-afc
 libmtp
 freerdp
 alsa-tools
+wiremix
 power-profiles-daemon
 plymouth
-wiremix
-pcmanfm
 ark
 lazygit
 lutris
@@ -81,4 +79,19 @@ xorg-xauth
 xorg-server-xephyr        
 xclip
 netbeans
-nss-mdns
+hyprshot
+noto-fonts
+noto-fonts-emoji
+ttf-material-design-icons-webfont
+ttf-font-awesome
+nerd-fonts
+onlyoffice-bin
+visual-studio-code-bin
+hyprpicker
+hyprsunset
+antigravity
+localsend-bin
+greetd-tuigreet
+google-chrome
+brave-bin
+matchbox-window-manager     
