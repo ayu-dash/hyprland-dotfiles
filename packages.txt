@@ -56,15 +56,16 @@ edk2-ovmf
 networkmanager
 network-manager-applet
 pcmanfm
-papirus-icon-theme 
+papirus-icon-theme
 uv
 nvm
 pnpm
 composer
-man
+man-db
+man-pages
 gvfs
-gvfs-mtp 
-gvfs-afc 
+gvfs-mtp
+gvfs-afc
 libmtp
 freerdp
 alsa-tools
@@ -75,8 +76,8 @@ ark
 lazygit
 lutris
 xorg-server
-xorg-xauth   
-xorg-server-xephyr        
+xorg-xauth
+xorg-server-xephyr
 xclip
 netbeans
 hyprshot
@@ -84,7 +85,7 @@ noto-fonts
 noto-fonts-emoji
 ttf-material-design-icons-webfont
 ttf-font-awesome
-nerd-fonts
+ttf-jetbrains-mono-nerd
 onlyoffice-bin
 visual-studio-code-bin
 hyprpicker
@@ -94,4 +95,4 @@ localsend-bin
 greetd-tuigreet
 google-chrome
 brave-bin
-matchbox-window-manager     
+matchbox-window-manager

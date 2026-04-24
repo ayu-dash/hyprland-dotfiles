@@ -60,7 +60,7 @@ install_yay() {
 ensure_gum() {
     command -v gum &>/dev/null && return
     echo "Installing gum..."
-    yay -S --noconfirm gum 2>/dev/null || { echo "ERROR: Install gum manually: yay -S gum"; exit 1; }
+    yes "" | yay -S --noconfirm --answerclean All --answerdiff None --answeredit None --answerupgrade All gum 2>/dev/null || { echo "ERROR: Install gum manually: yay -S gum"; exit 1; }
 }
 
 print_logo() {
@@ -130,7 +130,7 @@ install_packages_from_file() {
         [[ -z "$pkg" || "$pkg" =~ ^# ]] && continue
         ((current++))
         echo -e "\n${GRAY}($current/$total)${NC} Installing ${CYAN}$pkg${NC}..."
-        $installer -S --noconfirm "$pkg" || failed+=("$pkg")
+        yes "" | $installer -S --noconfirm --answerclean All --answerdiff None --answeredit None --answerupgrade All "$pkg" || failed+=("$pkg")
     done < "$file"
 
     echo ""
@@ -145,7 +145,7 @@ install_packages() {
     local -n _pkgs=$1
     for pkg in "${_pkgs[@]}"; do
         echo -e "  ${GRAY}Installing: $pkg${NC}"
-        if yay -S --noconfirm "$pkg" 2>/dev/null; then
+        if yes "" | yay -S --noconfirm --answerclean All --answerdiff None --answeredit None --answerupgrade All "$pkg" 2>/dev/null; then
             print_success "$pkg"
         else
             print_warning "$pkg (may not be available)"
@@ -776,7 +776,7 @@ install_gpu_drivers_task() {
     if [[ "$has_nvidia" == false && "$has_amd" == false && "$has_intel" == false ]]; then
         print_warning "No supported GPU detected"
         print_info "Installing generic mesa drivers..."
-        yay -S --noconfirm --needed mesa lib32-mesa 2>/dev/null
+        yes "" | yay -S --noconfirm --needed --answerclean All --answerdiff None --answeredit None --answerupgrade All mesa lib32-mesa 2>/dev/null
         print_success "Generic drivers installed"
     fi
 
