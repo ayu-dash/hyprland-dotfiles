@@ -2,7 +2,7 @@
 Type=Application
 Encoding=UTF-8
 Name=Apache NetBeans
-Comment=Apache NetBeans, The Smarter Way to Code
+Comment=Custom Apache NetBeans Launcher
 Exec=sh -c 'exec ~/.local/bin/netbeansWrapper %F'
 Categories=Development;IDE
 Icon=netbeans

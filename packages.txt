@@ -79,7 +79,6 @@ xorg-server
 xorg-xauth
 xorg-server-xephyr
 xclip
-netbeans
 hyprshot
 noto-fonts
 noto-fonts-emoji
@@ -95,4 +94,5 @@ localsend-bin
 greetd-tuigreet
 google-chrome
 brave-bin
-matchbox-window-manager
+openbox
+flatpak
