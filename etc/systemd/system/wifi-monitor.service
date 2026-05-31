@@ -1,0 +1,15 @@
+[Unit]
+Description=WiFi Monitor
+After=iwd.service systemd-networkd.service systemd-resolved.service
+Wants=iwd.service systemd-networkd.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/wifi-monitor monitor
+Restart=on-failure
+RestartSec=10
+AmbientCapabilities=CAP_NET_ADMIN
+SupplementaryGroups=systemd-network
+
+[Install]
+WantedBy=multi-user.target

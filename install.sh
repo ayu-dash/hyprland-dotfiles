@@ -28,6 +28,7 @@ THEMES_DIR="$HOME/.themes"
 ICONS_DIR="$HOME/.icons"
 KVANTUM_DIR="$CONFIG_DIR/Kvantum"
 BIN_DIR="$HOME/.local/bin"
+SYS_BIN_DIR="/usr/local/bin"
 FONTS_DIR="$HOME/.local/share/fonts"
 TEMP_DIR="/tmp/installation"
 
@@ -287,6 +288,14 @@ install_dotfiles_task() {
     done
     echo ""
 
+    print_step "Installing system scripts..."
+    if cp -R "$DOTFILES_DIR/etc/bin/"* "$SYS_BIN_DIR/" 2>/dev/null; then
+        chmod +x "$SYS_BIN_DIR"/* 2>/dev/null
+        print_success "Scripts copied to /usr/local/bin"
+    else
+        print_error "Failed to copy scripts"
+    fi
+
     print_step "Installing scripts..."
     if cp -R "$DOTFILES_DIR/bin/"* "$BIN_DIR/" 2>/dev/null; then
         chmod +x "$BIN_DIR"/* 2>/dev/null
@@ -446,7 +455,7 @@ mask_service_task() {
 
 enable_services_task() {
     print_header "Enabling Services"
-    manage_services enable greetd bluetooth iwd udisks2 tailscaled systemd-resolved systemd-networkd wifi-restart
+    manage_services enable greetd bluetooth iwd udisks2 tailscaled systemd-resolved systemd-networkd wifi-monitor
 
     print_step "Enabling user services..."
     systemctl --user daemon-reload
@@ -629,8 +638,8 @@ EOF
     copy_system_config "$DOTFILES_DIR/etc/polkit-1/rules.d/10-manage-iwd.rules" "/etc/polkit-1/rules.d/10-manage-iwd.rules" "iwd polkit rule (wheel group)"
     echo ""
 
-    print_step "Installing WiFi restart service..."
-    copy_system_config "$DOTFILES_DIR/etc/systemd/system/wifi-restart.service" "/etc/systemd/system/wifi-restart.service" "WiFi restart service"
+    print_step "Installing  wifi-monitor.service..."
+    copy_system_config "$DOTFILES_DIR/etc/systemd/system/wifi-monitor.service" "/etc/systemd/system/wifi-monitor.service" "WiFi monitor service"
     echo ""
 }
 

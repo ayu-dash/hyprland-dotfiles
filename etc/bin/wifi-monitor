@@ -1,0 +1,249 @@
+#!/bin/bash
+
+IFACE="${WIFI_IFACE:-wlan0}"
+DNS_TEST_HOST="archlinux.org"
+DNS_SERVERS=("1.1.1.1" "8.8.8.8")
+CHECK_INTERVAL=10        
+FAIL_INTERVAL=5          
+MAX_HEAL_ATTEMPTS=3     
+LOG_TAG="wifi-monitor"
+NOTIFY_USER=""           
+
+RED='\033[0;31m'; YELLOW='\033[0;33m'; GREEN='\033[0;32m'
+CYAN='\033[0;36m'; DIM='\033[2m'; NC='\033[0m'
+
+log()     { echo "[$(date '+%H:%M:%S')] $*"; logger -t "$LOG_TAG" "$*"; }
+log_ok()  { echo "[$(date '+%H:%M:%S')] [OK] $*"; logger -t "$LOG_TAG" "OK: $*"; }
+log_err() { echo "[$(date '+%H:%M:%S')] [ERR] $*"; logger -t "$LOG_TAG" "ERR: $*"; }
+log_warn(){ echo "[$(date '+%H:%M:%S')] [WARN] $*"; logger -t "$LOG_TAG" "WARN: $*"; }
+
+notify() {
+    [[ -z "$NOTIFY_USER" ]] && return
+    local msg="$1"
+    sudo -u "$NOTIFY_USER" DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u "$NOTIFY_USER")/bus" \
+        notify-send "WiFi Monitor" "$msg" --icon=network-wireless 2>/dev/null || true
+}
+
+check_ipv4() {
+    ip -4 addr show "$IFACE" 2>/dev/null | grep -q "inet "
+}
+
+get_ipv4() {
+    ip -4 addr show "$IFACE" 2>/dev/null | grep -oP "(?<=inet )\d+\.\d+\.\d+\.\d+"
+}
+
+check_gateway() {
+    local gw
+    gw=$(ip route show dev "$IFACE" default 2>/dev/null | awk '{print $3; exit}')
+    [[ -z "$gw" ]] && return 1
+    ping -c1 -W2 -I "$IFACE" "$gw" &>/dev/null
+}
+
+check_dns() {
+    if resolvectl query "$DNS_TEST_HOST" &>/dev/null; then
+        return 0
+    fi
+
+    for srv in "${DNS_SERVERS[@]}"; do
+        if dig +short +time=2 +tries=1 "@$srv" "$DNS_TEST_HOST" &>/dev/null; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+check_dhcp_lease() {
+    networkctl status "$IFACE" 2>/dev/null | grep -q "Address:"
+}
+
+check_iwd_connected() {
+    iwctl station "$IFACE" show 2>/dev/null | grep -q "connected"
+}
+
+heal_dhcp() {
+    log_warn "Requesting new DHCP lease..."
+    networkctl renew "$IFACE" 2>/dev/null || true
+    sleep 3
+    if check_ipv4; then
+        log_ok "DHCP renew succeeded: $(get_ipv4)"
+        return 0
+    fi
+    return 1
+}
+
+heal_networkd_reconfigure() {
+    log_warn "Reconfiguring networkd for $IFACE..."
+    networkctl reconfigure "$IFACE" 2>/dev/null || true
+    sleep 5
+    if check_ipv4; then
+        log_ok "Reconfigure succeeded: $(get_ipv4)"
+        return 0
+    fi
+    return 1
+}
+
+heal_iwd_reconnect() {
+    log_warn "Reconnecting via iwd..."
+    local ssid
+    ssid=$(iwctl station "$IFACE" show 2>/dev/null | grep -i "connected network" | awk '{print $NF}')
+    if [[ -n "$ssid" ]]; then
+        iwctl station "$IFACE" disconnect 2>/dev/null || true
+        sleep 2
+        iwctl station "$IFACE" connect "$ssid" 2>/dev/null || true
+    else
+        iwctl station "$IFACE" scan 2>/dev/null || true
+        sleep 3
+        iwctl station "$IFACE" connect-hidden 2>/dev/null || true
+    fi
+    sleep 5
+    if check_ipv4; then
+        log_ok "iwd reconnect succeeded: $(get_ipv4)"
+        return 0
+    fi
+    return 1
+}
+
+heal_restart_iwd() {
+    log_warn "Restarting iwd service..."
+    systemctl restart iwd
+    sleep 8
+    if check_ipv4; then
+        log_ok "iwd restart succeeded: $(get_ipv4)"
+        return 0
+    fi
+    return 1
+}
+
+heal_restart_networkd() {
+    log_warn "Restarting systemd-networkd..."
+    systemctl restart systemd-networkd
+    sleep 5
+    if check_ipv4; then
+        log_ok "networkd restart succeeded: $(get_ipv4)"
+        return 0
+    fi
+    return 1
+}
+
+heal_restart_resolved() {
+    log_warn "Restarting systemd-resolved..."
+    systemctl restart systemd-resolved
+    sleep 2
+}
+
+print_status() {
+    local ipv4 iwd_state gw_ok dns_ok lease_ok
+    ipv4=$(get_ipv4)
+    iwd_state=$(iwctl station "$IFACE" show 2>/dev/null | grep "State" | awk '{print $NF}')
+    check_gateway  && gw_ok="${GREEN}OK${NC}"   || gw_ok="${RED}FAIL${NC}"
+    check_dns      && dns_ok="${GREEN}OK${NC}"  || dns_ok="${RED}FAIL${NC}"
+    check_dhcp_lease && lease_ok="${GREEN}OK${NC}" || lease_ok="${RED}FAIL${NC}"
+
+    echo -e ""
+    echo -e "  ${CYAN}Interface${NC}  : $IFACE"
+    echo -e "  ${CYAN}iwd state${NC}  : ${iwd_state:-unknown}"
+    echo -e "  ${CYAN}IPv4${NC}       : ${ipv4:-${RED}none${NC}}"
+    echo -e "  ${CYAN}DHCP lease${NC} : $lease_ok"
+    echo -e "  ${CYAN}Gateway${NC}    : $gw_ok"
+    echo -e "  ${CYAN}DNS${NC}        : $dns_ok"
+    echo -e ""
+}
+
+run_heal() {
+    local attempt=0
+    notify "WiFi issue detected, attempting to heal..."
+
+    while (( attempt < MAX_HEAL_ATTEMPTS )); do
+        (( attempt++ ))
+        log "Heal attempt $attempt/$MAX_HEAL_ATTEMPTS"
+
+        if ! check_ipv4; then
+            heal_dhcp && { notify "WiFi healed (DHCP renew)"; return 0; }
+        fi
+
+        if ! check_ipv4; then
+            heal_networkd_reconfigure && { notify "WiFi healed (networkd reconfigure)"; return 0; }
+        fi
+
+        if ! check_iwd_connected || ! check_ipv4; then
+            heal_iwd_reconnect && { notify "WiFi healed (iwd reconnect)"; return 0; }
+        fi
+
+        if ! check_ipv4; then
+            heal_restart_iwd && { notify "WiFi healed (iwd restart)"; return 0; }
+        fi
+
+        if ! check_ipv4; then
+            heal_restart_networkd
+            heal_restart_iwd && { notify "WiFi healed (full restart)"; return 0; }
+        fi
+
+        sleep "$FAIL_INTERVAL"
+    done
+
+    log_err "All heal attempts failed after $MAX_HEAL_ATTEMPTS tries"
+    notify "WiFi heal FAILED after $MAX_HEAL_ATTEMPTS attempts"
+    return 1
+}
+
+monitor() {
+    log "Starting WiFi monitor on $IFACE"
+    log "Check interval: ${CHECK_INTERVAL}s | Heal attempts: $MAX_HEAL_ATTEMPTS"
+
+    local consecutive_fail=0
+    local last_ip=""
+    local healing=false
+
+    while true; do
+        local ipv4_ok=true dhcp_ok=true dns_ok=true
+
+        if ! check_ipv4; then
+            ipv4_ok=false
+            log_err "No IPv4 address on $IFACE"
+        fi
+
+        if ! check_dhcp_lease; then
+            dhcp_ok=false
+            log_err "No active DHCP lease"
+        fi
+
+        if $ipv4_ok && ! check_dns; then
+            dns_ok=false
+            log_err "DNS resolution failed"
+        fi
+
+        if $ipv4_ok && $dhcp_ok && $dns_ok; then
+            local cur_ip
+            cur_ip=$(get_ipv4)
+            if [[ "$cur_ip" != "$last_ip" ]]; then
+                log_ok "Network healthy — IP: $cur_ip"
+                last_ip="$cur_ip"
+            fi
+            consecutive_fail=0
+            healing=false
+            sleep "$CHECK_INTERVAL"
+            continue
+        fi
+
+        (( consecutive_fail++ ))
+        log_warn "Failure #$consecutive_fail detected (ipv4=$ipv4_ok dhcp=$dhcp_ok dns=$dns_ok)"
+
+        if (( consecutive_fail >= 2 )) && ! $healing; then
+            healing=true
+            run_heal
+            last_ip=$(get_ipv4)
+        fi
+
+        sleep "$FAIL_INTERVAL"
+    done
+}
+
+case "${1:-monitor}" in
+    monitor)  monitor ;;
+    status)   print_status ;;
+    heal)     run_heal ;;
+    *)
+        echo "Usage: $0 [monitor|status|heal]"
+        exit 1
+        ;;
+esac
