@@ -40,28 +40,14 @@ hl.bind(mainMod .. " + V", hl.dsp.exec_cmd(codeEditor))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("python " .. gamemode))
 
-if activeTheme == "Caelestia" then
-  hl.bind(mainMod .. " + Space", hl.dsp.global("caelestia:launcher"))
-  hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("python " .. rofiLauncher .. " calc"))
-  hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("python " .. rofiLauncher .. " theme"))
-  hl.bind(mainMod .. " + W", hl.dsp.global("caelestia:nexus"))
-  -- hl.bind(mainMod .. " + S", hl.dsp.global("caelestia:nexus"))
-  
-  hl.bind(mainMod .. " + S", hl.dsp.global("caelestia:nexus"))
-  hl.bind(mainMod .. " + SHIFT + CTRL + ALT + Space", hl.dsp.exec_cmd("caelestia emoji --picker"))
-  hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("caelestia clipboard"))
-  hl.bind("XF86PowerOff", hl.dsp.global("caelestia:session"))
-  hl.bind(mainMod .. " + D", hl.dsp.global("caelestia:dashboard"))
-else
-  hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("python " .. rofiLauncher .. " menu"))
-  hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("python " .. rofiLauncher .. " calc"))
-  hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("python " .. rofiLauncher .. " theme"))
-  hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("python " .. rofiLauncher .. " wall"))
-  hl.bind(mainMod .. " + S", hl.dsp.exec_cmd("python " .. rofiLauncher .. " config"))
-  hl.bind(mainMod .. " + SHIFT + CTRL + ALT + Space", hl.dsp.exec_cmd("python " .. rofiLauncher .. " emoji"))
-  hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("python " .. rofiLauncher .. " clip"))
-  hl.bind("XF86PowerOff", hl.dsp.exec_cmd("python " .. rofiLauncher .. " session"))
-end
+hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("python " .. rofiLauncher .. " menu"))
+hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("python " .. rofiLauncher .. " calc"))
+hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("python " .. rofiLauncher .. " theme"))
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("python " .. rofiLauncher .. " wall"))
+hl.bind(mainMod .. " + S", hl.dsp.exec_cmd("python " .. rofiLauncher .. " config"))
+hl.bind(mainMod .. " + SHIFT + CTRL + ALT + Space", hl.dsp.exec_cmd("python " .. rofiLauncher .. " emoji"))
+hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("python " .. rofiLauncher .. " clip"))
+hl.bind("XF86PowerOff", hl.dsp.exec_cmd("python " .. rofiLauncher .. " session"))
 hl.bind("XF86Launch2", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/remoteWin10 start"))
 hl.bind("F12", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/remoteWin10 stop"))
 
@@ -76,15 +62,9 @@ hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("hyprlock"))
 hl.bind(mainMod .. " + ALT + M", hl.dsp.exit())
 
 -- Screenshot
-if activeTheme == "Caelestia" then
-  hl.bind("Print", hl.dsp.global("caelestia:screenshotFreeze"))
-  hl.bind(mainMod .. " + Print", hl.dsp.global("caelestia:screenshot"))
-  hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.global("caelestia:screenshotFreezeClip"))
-else
-  hl.bind("Print", hl.dsp.exec_cmd("python " .. rofiLauncher .. " cap"))
-  hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd("hyprshot -m window"))
-  hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd("hyprshot -m region"))
-end
+hl.bind("Print", hl.dsp.exec_cmd("python " .. rofiLauncher .. " cap"))
+hl.bind(mainMod .. " + Print", hl.dsp.exec_cmd("hyprshot -m window"))
+hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.exec_cmd("hyprshot -m region"))
 
 -- Group
 hl.bind("CTRL + ALT + G", hl.dsp.group.toggle())
@@ -166,16 +146,14 @@ hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("python " .. audio .. " raiseVol
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("python " .. audio .. " lowerVolume"), { repeat_ = true, locked = true })
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd("python " .. audio .. " muteToggle"), { repeat_ = true, locked = true })
 hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("python " .. audio .. " micToggle"), { repeat_ = true, locked = true })
-if activeTheme == "Caelestia" then
-  hl.bind("XF86MonBrightnessUp", hl.dsp.global("caelestia:brightnessUp"), { repeat_ = true, locked = true })
-  hl.bind("XF86MonBrightnessDown", hl.dsp.global("caelestia:brightnessDown"), { repeat_ = true, locked = true })
-else
-  hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("python " .. brightness .. " up"), { repeat_ = true, locked = true })
-  hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("python " .. brightness .. " down"), { repeat_ = true, locked = true })
-end
+hl.bind("XF86MonBrightnessUp", hl.dsp.exec_cmd("python " .. brightness .. " up"), { repeat_ = true, locked = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("python " .. brightness .. " down"), { repeat_ = true, locked = true })
 
 -- Requires playerctl
 hl.bind("XF86AudioNext", hl.dsp.exec_cmd("playerctl next"), { locked = true })
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true })
+
+-- Dynamically load theme-specific keybindings if they exist
+pcall(require, "Themes." .. activeTheme .. ".keybinds")
