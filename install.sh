@@ -456,12 +456,17 @@ install_themes_task() {
 disable_services_task() {
     print_header "Disabling Services"
     manage_services "disable --now" iwd systemd-networkd-wait-online ModemManager
-    manage_services mask NetworkManager-wait-online ModemManager
+    manage_services mask NetworkManager-wait-online systemd-networkd-wait-online ModemManager
 }
 
 mask_service_task() {
     print_header "Masking Services"
-    manage_services "mask --user" swaync systemd-networkd-wait-online
+    if systemctl --user list-unit-files swaync.service &>/dev/null; then
+        systemctl --user mask swaync >/dev/null 2>&1
+        print_success "swaync (user)"
+    else
+        print_warning "swaync not found"
+    fi
 }
 
 enable_services_task() {
@@ -473,81 +478,6 @@ enable_services_task() {
     systemctl --user enable captive-portal.service && print_success "captive-portal (user)" || print_warning "captive-portal not found"
 }
 
-lock_dns_to_resolved() {
-    for file in /etc/systemd/network/*.network; do
-        [[ -f $file ]] || continue
-        grep -q "^\[DHCPv4\]" "$file" || continue
-        sed -n '/^\[DHCPv4\]/,/^\[/p' "$file" | grep -q "^UseDNS=" || sudo sed -i '/^\[DHCPv4\]/a UseDNS=no' "$file"
-        grep -q "^\[IPv6AcceptRA\]" "$file" && ! sed -n '/^\[IPv6AcceptRA\]/,/^\[/p' "$file" | grep -q "^UseDNS=" \
-            && sudo sed -i '/^\[IPv6AcceptRA\]/a UseDNS=no' "$file"
-    done
-}
-
-unlock_dns_to_dhcp() {
-    for file in /etc/systemd/network/*.network; do
-        [[ -f $file ]] || continue
-        sudo sed -i '/^\[DHCPv4\]/{n;/^UseDNS=no$/d}' "$file"
-        sudo sed -i '/^\[IPv6AcceptRA\]/{n;/^UseDNS=no$/d}' "$file"
-    done
-}
-
-configure_dns_task() {
-    print_header "Configuring DNS Resolver"
-
-    local choice
-    choice=$(gum choose --height 8 --header "Select DNS provider" \
-        Cloudflare Google DHCP Custom "Skip (Current)")
-
-    case "$choice" in
-        Cloudflare)
-            print_step "Setting up Cloudflare DNS..."
-            write_resolved_conf "[Resolve]
-DNS=1.1.1.1#cloudflare-dns.com 1.0.0.1#cloudflare-dns.com
-FallbackDNS=9.9.9.9 149.112.112.112
-DNSOverTLS=opportunistic"
-            lock_dns_to_resolved
-            print_success "Cloudflare DNS configured"
-            ;;
-        Google)
-            print_step "Setting up Google DNS..."
-            write_resolved_conf "[Resolve]
-DNS=8.8.8.8#dns.google 8.8.4.4#dns.google
-FallbackDNS=9.9.9.9 149.112.112.112
-DNSOverTLS=opportunistic"
-            lock_dns_to_resolved
-            print_success "Google DNS configured"
-            ;;
-        DHCP)
-            print_step "Reverting to DHCP DNS..."
-            write_resolved_conf "[Resolve]
-DNSOverTLS=no"
-            unlock_dns_to_dhcp
-            print_success "DHCP DNS restored"
-            ;;
-        Custom)
-            local servers
-            servers=$(gum input --placeholder "Enter DNS servers (space-separated, e.g. 1.1.1.1 8.8.8.8)")
-            [[ -z "$servers" ]] && return
-            write_resolved_conf "[Resolve]
-DNS=$servers
-FallbackDNS=9.9.9.9 149.112.112.112"
-            lock_dns_to_resolved
-            print_success "Custom DNS configured"
-            ;;
-        *)
-            print_info "Skipping DNS configuration"; return
-            ;;
-    esac
-
-    print_step "Finalizing resolv.conf symlink..."
-    sudo chattr -i /etc/resolv.conf 2>/dev/null
-    sudo rm -f /etc/resolv.conf
-    sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
-
-    print_step "Restarting network services..."
-    sudo systemctl restart systemd-networkd systemd-resolved
-    print_success "DNS configuration applied"
-}
 
 configure_hosts_task() {
     print_header "Configuring Hosts File"
@@ -585,11 +515,6 @@ configure_nsswitch_task() {
 
 install_system_configs_task() {
     print_header "Installing System Configurations"
-
-    print_step "Configuring systemd-networkd..."
-    copy_system_config "$DOTFILES_DIR/etc/systemd/network/20-wired.network" "/etc/systemd/network/20-wired.network" "systemd-networkd wired config"
-    copy_system_config "$DOTFILES_DIR/etc/systemd/network/20-wlan.network" "/etc/systemd/network/20-wlan.network" "systemd-networkd wifi config"
-    echo ""
 
     print_step "Configuring faster shutdown..."
     copy_system_config "$DOTFILES_DIR/etc/systemd/system.conf.d/99-timeout.conf" "/etc/systemd/system.conf.d/99-timeout.conf" "DefaultTimeoutStopSec=10s"
@@ -647,10 +572,6 @@ EOF
 
     print_step "Installing polkit rules..."
     copy_system_config "$DOTFILES_DIR/etc/polkit-1/rules.d/10-manage-iwd.rules" "/etc/polkit-1/rules.d/10-manage-iwd.rules" "iwd polkit rule (wheel group)"
-    echo ""
-
-    print_step "Installing WiFi restart service..."
-    copy_system_config "$DOTFILES_DIR/etc/systemd/system/wifi-restart.service" "/etc/systemd/system/wifi-restart.service" "WiFi restart service"
     echo ""
 }
 
@@ -876,7 +797,6 @@ full_install() {
     disable_services_task
     enable_services_task
     mask_service_task
-    configure_dns_task
     configure_hosts_task
     configure_nsswitch_task
     configure_git_task
