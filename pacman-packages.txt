@@ -9,7 +9,7 @@ xdg-desktop-portal-hyprland
 xdg-user-dirs
 polkit-gnome
 kitty
-swww
+awww
 hyprlock
 hypridle
 bluetui
@@ -17,7 +17,6 @@ simple-scan
 cliphist
 bluez-utils
 blueman
-impala
 mpv
 loupe
 qt6ct
@@ -43,9 +42,7 @@ zsh
 upower
 mysql-workbench
 tailscale
-kwallet
-kwalletmanager
-kwallet-pam
+keepassxc
 kio
 hyprland
 qemu-full
@@ -58,7 +55,7 @@ dnsmasq
 edk2-ovmf
 networkmanager
 network-manager-applet
-pcmanfm
+dolphin
 papirus-icon-theme 
 uv
 nvm
@@ -77,9 +74,6 @@ plymouth
 ark
 lazygit
 lutris
-xorg-server
-xorg-xauth   
-xorg-server-xephyr        
-xclip
-netbeans
 nss-mdns
+libsecret
+desktop-file-utils

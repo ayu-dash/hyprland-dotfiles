@@ -32,8 +32,8 @@ def enable_game_mode() -> None:
     hyprctl_keyword("windowrule", "opacity 1 override 1 override 1 override, ^(.*)$")
 
     # Kill background processes
-    log.debug("Killing swww, waybar, and swaync")
-    Wallpaper.swww_kill()
+    log.debug("Killing awww, waybar, and swaync")
+    Wallpaper.awww_kill()
     kill_all("waybar")
     kill_all("swaync")
 
@@ -47,8 +47,8 @@ def disable_game_mode() -> None:
     hyprctl_reload()
 
     # Restart wallpaper daemon
-    log.debug("Restarting swww")
-    Wallpaper.swww_run()
+    log.debug("Restarting awww")
+    Wallpaper.awww_run()
 
     # Reload active theme (this will restart waybar and swaync with correct config)
     log.debug("Reloading active theme")

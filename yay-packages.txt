@@ -8,11 +8,9 @@ onlyoffice-bin
 visual-studio-code-bin
 hyprpicker
 hyprsunset
-antigravity
+antigravity-ide
 localsend-bin
 greetd-tuigreet
 google-chrome
-zen-browser-bin
 wlctl-bin
 brave-bin
-matchbox-window-manager     

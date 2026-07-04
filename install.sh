@@ -306,6 +306,8 @@ install_dotfiles_task() {
     print_header "Installing Dotfiles"
     mkdir -p "$CONFIG_DIR" "$BIN_DIR" "$THEMES_DIR" "$ICONS_DIR"
     xdg-user-dirs-update 2>&1
+    update-desktop-database ~/.local/share/applications
+    sudo update-desktop-database /usr/share/applications
 
     print_step "Copying configuration files..."
     for dir in "$DOTFILES_DIR/config/"*; do
@@ -332,16 +334,6 @@ install_dotfiles_task() {
             cp "$desktop_file" "$apps_dir/" && print_success "$name" || print_error "$name"
         done
         update-desktop-database "$apps_dir" 2>/dev/null
-    fi
-
-    local sys_netbeans="/usr/share/applications/netbeans.desktop"
-    if [[ -f "$sys_netbeans" ]]; then
-        print_step "Updating system-level NetBeans entry..."
-        if sudo sed -i "s|^Exec=.*|Exec=sh -c 'exec ~/.local/bin/netbeansWrapper %F'|" "$sys_netbeans" 2>/dev/null; then
-            print_success "System-level path updated"
-        else
-            print_warning "Could not update system entry (non-critical)"
-        fi
     fi
 }
 

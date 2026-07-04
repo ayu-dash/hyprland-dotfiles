@@ -1,6 +1,6 @@
 """
 Wallpaper management module.
-Handles wallpaper setting and swww daemon control.
+Handles wallpaper setting and awww daemon control.
 """
 
 import argparse
@@ -20,8 +20,8 @@ CACHE_DIR: Path = Path.home() / ".cache"
 WAL_DEST: Path = CACHE_DIR / ".wal.jpg"
 BAN_DEST: Path = CACHE_DIR / ".ban.jpg"
 
-# Swww transition settings
-SWWW_PARAMS: list[str] = [
+# Awww transition settings
+AWWW_PARAMS: list[str] = [
     "--transition-fps", "60",
     "--transition-type", "wipe",
     "--transition-duration", "1"
@@ -35,16 +35,16 @@ def get_monitors() -> list[str]:
 
 
 def start_daemon() -> None:
-    """Start swww-daemon if not already running."""
-    if not is_running("swww-daemon"):
-        log.debug("Starting swww-daemon")
-        run_bg(["swww-daemon"])
+    """Start awww-daemon if not already running."""
+    if not is_running("awww-daemon"):
+        log.debug("Starting awww-daemon")
+        run_bg(["awww-daemon"])
 
 
-def swww_kill() -> None:
-    """Kill the swww daemon."""
-    log.debug("Killing swww daemon")
-    run_silent(["swww", "kill"])
+def awww_kill() -> None:
+    """Kill the awww daemon."""
+    log.debug("Killing awww daemon")
+    run_silent(["awww", "kill"])
 
 
 HYPR_THEMES_DIR: Path = Path.home() / ".config/hypr/Themes"
@@ -65,11 +65,11 @@ def _get_default_wallpaper() -> str | None:
     return None
 
 
-def swww_run() -> None:
-    """Start swww daemon and restore previous wallpaper."""
+def awww_run() -> None:
+    """Start awww daemon and restore previous wallpaper."""
     start_daemon()
     if WAL_DEST.exists():
-        run_silent(["swww", "restore"])
+        run_silent(["awww", "restore"])
         return
     # Fresh install: set default wallpaper
     wp = _get_default_wallpaper()
@@ -98,7 +98,7 @@ def set_wallpaper(image_path: str) -> None:
     monitors = get_monitors()
     log.debug(f"Applying to monitors: {monitors}")
     for monitor in monitors:
-        run_silent(["swww", "img", image_path, "--outputs", monitor] + SWWW_PARAMS)
+        run_silent(["awww", "img", image_path, "--outputs", monitor] + AWWW_PARAMS)
 
     # Create blurred banner for lock screen
     run_silent(["magick", str(WAL_DEST), "-resize", "10%", str(BAN_DEST)])
@@ -125,7 +125,7 @@ def main() -> None:
             if args.path:
                 set_wallpaper(args.path)
         case "run":
-            swww_run()
+            awww_run()
 
 
 if __name__ == "__main__":
