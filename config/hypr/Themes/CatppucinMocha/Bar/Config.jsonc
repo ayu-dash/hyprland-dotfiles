@@ -1,0 +1,50 @@
+{
+  "layer": "top",
+  "spacing": 10,
+  "margin-top": 10,
+  "margin-left": 10,
+  "margin-right": 10,
+  "modules-left": [
+    "group/left"
+  ],
+  "modules-center": [
+    "group/center"
+  ],
+  "modules-right": [
+    "group/right"
+  ],
+  "reload_style_on_change": true,
+  "include": [
+    "$HOME/.config/hypr/Themes/CatppucinMocha/Bar/Modules.jsonc",
+    "$HOME/.config/hypr/Themes/CatppucinMocha/Bar/CustomModules.jsonc"
+  ],
+  "group/right": {
+    "orientation": "horizontal",
+    "modules": [
+      "backlight",
+      "pulseaudio",
+      "network",
+      "battery",
+      "tray",
+      "custom/kahfein",
+      "custom/power"
+    ]
+  },
+  "group/center": {
+    "orientation": "horizontal",
+    "modules": [
+      "custom/notification",
+      "hyprland/workspaces",
+      "clock"
+    ]
+  },
+  "group/left": {
+    "orientation": "horizontal",
+    "modules": [
+      "cpu",
+      "memory",
+      "temperature",
+      "hyprland/window"
+    ]
+  }
+}
