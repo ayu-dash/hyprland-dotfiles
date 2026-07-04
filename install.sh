@@ -103,12 +103,20 @@ extract_archives() {
 install_packages_from_file() {
     local file="$1" installer="$2"
     local total=$(count_packages "$file") current=0 failed=()
+    
+    local -a cmd=($installer -S --noconfirm)
+    [[ "$installer" == "yay" ]] && cmd+=(--answerclean All --answerdiff None --answeredit None --answerupgrade All)
 
     while IFS= read -r pkg || [[ -n "$pkg" ]]; do
         [[ -z "$pkg" || "$pkg" =~ ^# ]] && continue
         ((current++))
         echo -e "\n${GRAY}($current/$total)${NC} Installing ${CYAN}$pkg${NC}..."
-        $installer -S --noconfirm "$pkg" || failed+=("$pkg")
+        
+        if [[ "$installer" == "yay" ]]; then
+            yes "" | "${cmd[@]}" "$pkg" || failed+=("$pkg")
+        else
+            "${cmd[@]}" "$pkg" || failed+=("$pkg")
+        fi
     done < "$file"
 
     echo ""
@@ -139,6 +147,18 @@ manage_services() {
             print_success "$svc"
         else
             print_warning "$svc not found"
+        fi
+    done
+}
+
+manage_user_services() {
+    local action="$1"; shift
+    for svc in "$@"; do
+        if systemctl --user list-unit-files "${svc}.service" &>/dev/null; then
+            systemctl --user $action "$svc" >/dev/null 2>&1
+            print_success "$svc (user)"
+        else
+            print_warning "$svc (user) not found"
         fi
     done
 }
@@ -461,12 +481,7 @@ disable_services_task() {
 
 mask_service_task() {
     print_header "Masking Services"
-    if systemctl --user list-unit-files swaync.service &>/dev/null; then
-        systemctl --user mask swaync >/dev/null 2>&1
-        print_success "swaync (user)"
-    else
-        print_warning "swaync not found"
-    fi
+    manage_user_services mask swaync
 }
 
 enable_services_task() {
@@ -763,20 +778,17 @@ configure_plymouth_task() {
     if [[ -d /boot/loader/entries ]]; then
         for entry in /boot/loader/entries/*.conf; do
             [[ -f "$entry" ]] || continue
-            if ! grep -q "splash" "$entry"; then
-                sudo sed -i "/^options/s/$/ $params/" "$entry"
-                print_success "Updated: $(basename "$entry")"
-            else
-                print_info "Already configured: $(basename "$entry")"
-            fi
+            grep -q "splash" "$entry" && print_info "Already configured: $(basename "$entry")" && continue
+            sudo sed -i "/^options/s/$/ $params/" "$entry"
+            print_success "Updated: $(basename "$entry")"
         done
     elif [[ -f /etc/default/grub ]]; then
-        if ! grep -q "splash" /etc/default/grub; then
-            sudo sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\"\(.*\)\"/GRUB_CMDLINE_LINUX_DEFAULT=\"\1 $params\"/" /etc/default/grub
-            sudo grub-mkconfig -o /boot/grub/grub.cfg
-            print_success "GRUB config updated"
-        else
+        if grep -q "splash" /etc/default/grub; then
             print_info "GRUB already configured"
+        else
+            sudo sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=\"\(.*\)\"/GRUB_CMDLINE_LINUX_DEFAULT=\"\1 $params\"/" /etc/default/grub
+            sudo grub-mkconfig -o /boot/grub/grub.cfg >/dev/null 2>&1
+            print_success "GRUB config updated"
         fi
     else
         print_warning "Bootloader not detected, add manually: $params"
