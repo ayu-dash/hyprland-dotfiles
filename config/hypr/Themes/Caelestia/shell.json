@@ -1,0 +1,197 @@
+{
+    "appearance": {
+        "anim": {
+            "durations": {
+                "scale": 1
+            }
+        },
+        "deformScale": 1,
+        "font": {
+            "scale": 1
+        },
+        "padding": {
+            "scale": 1
+        },
+        "rounding": {
+            "scale": 1
+        },
+        "spacing": {
+            "scale": 1
+        },
+        "transparency": {
+            "base": 0.88,
+            "enabled": true,
+            "layers": 0.4
+        }
+    },
+    "background": {
+        "wallpaperEnabled": true
+    },
+    "bar": {
+        "clock": {
+            "showDate": false,
+            "showIcon": true
+        },
+        "entries": [
+            {
+                "enabled": true,
+                "id": "logo"
+            },
+            {
+                "enabled": true,
+                "id": "workspaces"
+            },
+            {
+                "enabled": true,
+                "id": "spacer"
+            },
+            {
+                "enabled": true,
+                "id": "activeWindow"
+            },
+            {
+                "enabled": true,
+                "id": "spacer"
+            },
+            {
+                "enabled": true,
+                "id": "tray"
+            },
+            {
+                "enabled": true,
+                "id": "clock"
+            },
+            {
+                "enabled": true,
+                "id": "statusIcons"
+            },
+            {
+                "enabled": true,
+                "id": "power"
+            }
+        ],
+        "persistent": true,
+        "scrollActions": {
+            "brightness": true,
+            "volume": true,
+            "workspaces": true
+        },
+        "showOnHover": true,
+        "status": {
+            "showBattery": true,
+            "showBluetooth": true,
+            "showLockStatus": true,
+            "showNetwork": true,
+            "showWifi": true
+        },
+        "workspaces": {
+            "activeIndicator": true,
+            "perMonitorWorkspaces": true,
+            "showWindows": true,
+            "shown": 6
+        }
+    },
+    "dashboard": {
+        "enabled": true,
+        "performance": {
+            "showBattery": true,
+            "showCpu": true,
+            "showGpu": true,
+            "showMemory": true,
+            "showNetwork": true,
+            "showStorage": true
+        },
+        "showDashboard": true,
+        "showMedia": true,
+        "showPerformance": true,
+        "showWeather": true
+    },
+    "enabled": true,
+    "general": {
+        "apps": {
+            "audio": [
+                "pavucontrol"
+            ],
+            "explorer": [
+                "dolphin"
+            ],
+            "playback": [
+                "mpv"
+            ],
+            "terminal": [
+                "kitty"
+            ]
+        },
+        "idle": {
+            "inhibitWhenAudio": true,
+            "lockBeforeSleep": true,
+            "timeouts": [
+                {
+                    "idleAction": "lock",
+                    "timeout": 300
+                },
+                {
+                    "idleAction": "dpms off",
+                    "returnAction": "dpms on",
+                    "timeout": 600
+                },
+                {
+                    "idleAction": [
+                        "systemctl",
+                        "suspend-then-hibernate"
+                    ],
+                    "timeout": 900
+                }
+            ]
+        },
+        "showOverFullscreen": true
+    },
+    "launcher": {
+        "enabled": true,
+        "maxShown": 7,
+        "maxWallpapers": 9
+    },
+    "notifs": {
+        "defaultExpireTimeout": 5000,
+        "expire": true
+    },
+    "osd": {
+        "enableBrightness": true,
+        "enabled": true,
+        "hideDelay": 2000
+    },
+    "paths": {
+        "wallpaperDir": "$HOME/.config/hypr/Themes/Caelestia/Wallpapers"
+    },
+    "services": {
+        "audioIncrement": 0.09,
+        "brightnessIncrement": 0.1,
+        "defaultPlayer": "Spotify",
+        "maxVolume": 1,
+        "smartScheme": true,
+        "useFahrenheit": false,
+        "useTwelveHourClock": false
+    },
+    "session": {
+        "commands": {
+            "hibernate": [
+                "systemctl",
+                "hibernate"
+            ],
+            "logout": [
+                "loginctl",
+                "terminate-user",
+                ""
+            ],
+            "reboot": [
+                "systemctl",
+                "reboot"
+            ],
+            "shutdown": [
+                "systemctl",
+                "poweroff"
+            ]
+        },
+        "enabled": true
+    }
+}

@@ -1,0 +1,54 @@
+/* =============================================================================
+ * Celestia Color Palette for GTK/CSS
+ * ============================================================================= */
+
+@define-color background        #0f1119;
+@define-color background_alt    #161822;
+
+@define-color foreground        #e2e2e9;
+@define-color foreground_alt    #a3a4b1;
+
+@define-color surface_0         #0f1119;
+@define-color surface_1         #1a1c28;
+@define-color surface_2         #222536;
+@define-color surface_3         #2c2f44;
+
+@define-color accent            #b4a0ff;
+@define-color accent_alt        #d0c4ff;
+@define-color accent_dim        #7c6bc4;
+
+@define-color success           #7dd3a0;
+@define-color warning           #f5c06b;
+@define-color info              #7abaeb;
+@define-color danger            #f07085;
+
+@define-color border            #2c2f44;
+@define-color border_focus      #b4a0ff;
+@define-color border_urgent     #f07085;
+
+@define-color selection_bg      #33365c;
+@define-color selection_fg      #f0f0f8;
+@define-color cursor            #b4a0ff;
+
+@define-color overlay           rgba(0, 0, 0, 0.53);
+@define-color shadow            rgba(0, 0, 0, 0.60);
+@define-color highlight         #33365c;
+@define-color disabled          #5a5c71;
+
+@define-color color0            #0f1119;
+@define-color color1            #f07085;
+@define-color color2            #7dd3a0;
+@define-color color3            #f5c06b;
+@define-color color4            #7abaeb;
+@define-color color5            #b4a0ff;
+@define-color color6            #6ed4da;
+@define-color color7            #e2e2e9;
+
+@define-color color8            #2c2f44;
+@define-color color9            #ff8fa2;
+@define-color color10           #a0f0c0;
+@define-color color11           #ffd68e;
+@define-color color12           #9dd0f5;
+@define-color color13           #d0c4ff;
+@define-color color14           #90e8ef;
+@define-color color15           #f0f0f8;

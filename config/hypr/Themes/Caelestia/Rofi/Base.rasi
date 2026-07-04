@@ -1,0 +1,22 @@
+configuration {
+    modi: "drun";
+    sidebar-mode: false;
+    show-icons: true;
+    application-fallback-icon: "Adwaita";
+    disable-history: true;
+
+    hover-select: true;
+    me-select-entry: "";
+    me-accept-entry: "MousePrimary";
+
+    kb-row-up: "Up";
+    kb-row-down: "Down";
+    kb-row-left: "Left";
+    kb-row-right: "Right";
+    kb-move-char-back: "Control+Left";
+    kb-move-char-forward: "Control+Right";   
+    kb-move-word-back: "Alt+Left";
+    kb-move-word-forward: "Alt+Right";
+}
+
+@import "~/.config/hypr/Themes/Caelestia/Colors/Rofi.css"

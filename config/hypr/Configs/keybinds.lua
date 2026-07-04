@@ -40,7 +40,7 @@ hl.bind(mainMod .. " + V", hl.dsp.exec_cmd(codeEditor))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + G", hl.dsp.exec_cmd("python " .. gamemode))
 
-if activeTheme == "Celestia" then
+if activeTheme == "Caelestia" then
   hl.bind(mainMod .. " + Space", hl.dsp.global("caelestia:launcher"))
   hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("python " .. rofiLauncher .. " calc"))
   hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("python " .. rofiLauncher .. " theme"))
@@ -76,7 +76,7 @@ hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("hyprlock"))
 hl.bind(mainMod .. " + ALT + M", hl.dsp.exit())
 
 -- Screenshot
-if activeTheme == "Celestia" then
+if activeTheme == "Caelestia" then
   hl.bind("Print", hl.dsp.global("caelestia:screenshotFreeze"))
   hl.bind(mainMod .. " + Print", hl.dsp.global("caelestia:screenshot"))
   hl.bind(mainMod .. " + SHIFT + Print", hl.dsp.global("caelestia:screenshotFreezeClip"))
@@ -166,7 +166,7 @@ hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("python " .. audio .. " raiseVol
 hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("python " .. audio .. " lowerVolume"), { repeat_ = true, locked = true })
 hl.bind("XF86AudioMute", hl.dsp.exec_cmd("python " .. audio .. " muteToggle"), { repeat_ = true, locked = true })
 hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("python " .. audio .. " micToggle"), { repeat_ = true, locked = true })
-if activeTheme == "Celestia" then
+if activeTheme == "Caelestia" then
   hl.bind("XF86MonBrightnessUp", hl.dsp.global("caelestia:brightnessUp"), { repeat_ = true, locked = true })
   hl.bind("XF86MonBrightnessDown", hl.dsp.global("caelestia:brightnessDown"), { repeat_ = true, locked = true })
 else

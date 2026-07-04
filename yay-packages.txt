@@ -14,3 +14,4 @@ greetd-tuigreet
 google-chrome
 wlctl-bin
 brave-bin
+caelestia-cli

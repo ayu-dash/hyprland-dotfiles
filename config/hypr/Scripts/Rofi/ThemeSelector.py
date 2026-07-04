@@ -82,8 +82,31 @@ def run_rofi(items: list[tuple[str, str]]) -> tuple[str, str] | None:
         return None
 
 
+def get_active_theme() -> str:
+    """Parse ThemeVariables.conf to find the currently active theme."""
+    variables_conf = THEME_DIR / "ThemeVariables.conf"
+    if not variables_conf.exists():
+        return "NierAutomata"
+    try:
+        content = variables_conf.read_text(encoding="utf-8")
+        import re
+        match = re.search(r'\$theme_dir\s*=\s*\S+/Themes/([\w_-]+)', content)
+        if match:
+            return match.group(1)
+    except Exception:
+        pass
+    return "NierAutomata"
+
+
 def apply_theme(folder_name: str) -> None:
     """Activate the selected theme by running its Activate script."""
+    # Deactivate the current theme if it has a deactivation script
+    active_theme = get_active_theme()
+    deactivate_script = THEME_DIR / active_theme / "Deactivate.sh"
+    if deactivate_script.exists():
+        os.chmod(deactivate_script, 0o755)
+        run_silent([str(deactivate_script)])
+
     theme_path = THEME_DIR / folder_name
     
     sh_script = theme_path / "Activate.sh"
@@ -92,6 +115,7 @@ def apply_theme(folder_name: str) -> None:
         os.chmod(sh_script, 0o755)
         result = run_silent([str(sh_script)])
         if result == 0:
+            run_silent(["hyprctl", "reload"])
             notify("preferences-desktop-theme", f"Theme Applied: {folder_name}")
             return
     

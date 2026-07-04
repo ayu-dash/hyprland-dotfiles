@@ -1,0 +1,56 @@
+@import "Base.rasi"
+
+configuration {
+   calc {
+        hint-result:            "> ";
+        hint-welcome:           "";
+    }
+}
+
+window {
+    transparency:                "real";
+    location:                    center;
+    anchor:                      center;
+    fullscreen:                  false;
+    width:                       480px;
+    border:                      1px solid;
+    border-color:                @border-color;
+}
+
+mainbox {
+    enabled:                     true;
+    background-color:            @background;
+    children:                    [ "inputbar", "message" ];
+}
+
+inputbar {
+    padding:                     6px;
+    background-color:            @background;
+    text-color:                  @color1;
+    children:                    [ "prompt", "entry" ];
+}
+
+prompt {
+    enabled:                     false;
+}
+
+entry {
+    enabled:                     true;
+    background-color:            transparent;
+    text-color:                  @foreground;
+    cursor:                      text;
+    placeholder:                 "calc";
+    font:                       "Josefin Sans 12";
+}
+
+textbox {
+    padding:                     6px;
+    background-color:            @background;
+    text-color:                  @foreground;
+    vertical-align:              0.5;
+    horizontal-align:            0.0;
+    highlight:                   none;
+    placeholder: ">";
+
+    font:                       "Josefin Sans 12";
+}
