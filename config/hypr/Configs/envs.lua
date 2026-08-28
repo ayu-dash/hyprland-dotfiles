@@ -21,6 +21,7 @@ hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("KDE_SESSION_VERSION", "6")
 
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
+hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
 hl.env("QT_STYLE_OVERRIDE", "kvantum")
 hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
 
@@ -31,8 +32,16 @@ hl.env("OZONE_PLATFORM", "wayland")
 hl.env("EDITOR", "micro")
 
 hl.env("XDG_SESSION_DESKTOP", "Hyprland")
-hl.env("XDG_SESSION_TYPE", "wayland")
+hl.env("XDG_SESSION_TYPE", "Wayland")
 hl.env("XDG_MENU_PREFIX", "arch-")
+
+-- Ensure XDG_DATA_DIRS contains flatpak paths
+local xdg_data_dirs = os.getenv("XDG_DATA_DIRS") or "/usr/local/share:/usr/share"
+if not xdg_data_dirs:find("flatpak") then
+  xdg_data_dirs = os.getenv("HOME") .. "/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:" .. xdg_data_dirs
+end
+hl.env("XDG_DATA_DIRS", xdg_data_dirs)
+
 
 
 hl.config({

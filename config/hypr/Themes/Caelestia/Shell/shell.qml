@@ -15,6 +15,7 @@ ShellRoot {
     settings.watchFiles: true
 
     GSFLoader {}
+    IconFontLoader {}
 
     Background {}
     Drawers {}

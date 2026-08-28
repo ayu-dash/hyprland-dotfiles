@@ -40,8 +40,7 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("python " .. scriptDir .. "/Battery.py")
 
   -- Applets
-  hl.exec_cmd("blueman-applet")
-
+  
   -- Utilities
   hl.exec_cmd("udiskie")
   hl.exec_cmd("hypridle")

@@ -1,0 +1,114 @@
+@import "Base.rasi"
+
+configuration {
+    display-drun:               " ";
+    drun-display-format:        "󰝤  {name}";
+}
+
+window {
+    margin: 10px;
+    transparency:               "real";
+    location:                   north west;
+    anchor:                     north west;
+    fullscreen:                 false;
+    width:                      520px;
+    height: 100%;
+    x-offset:                   0px;
+    y-offset:                   0px;
+    background-color:           @crust;
+    border:                     1px solid; 
+    border-color:               @border-color;
+    border-radius:              8px;
+}
+
+mainbox {
+    enabled:                    true;
+    background-color:           @crust;
+    orientation:                vertical;
+    children:                   [ "inputbar", "listbox" ];
+}
+
+
+
+listbox {
+    spacing:                    15px;
+    padding:                    6px;
+    background-color:           transparent;
+    children:                   [ "listview" ];
+}
+
+listview {
+    enabled:                    true;
+    columns:                    1;
+    lines:                      12;
+    cycle:                      true;
+    dynamic:                    true;
+    scrollbar:                  false;
+    layout:                     vertical;
+    reverse:                    false;
+    fixed-height:               false;
+    fixed-columns:              false;
+    spacing:                    10px;
+    background-color:           transparent;
+    cursor:                     "default";
+}
+
+inputbar {
+    enabled:                    true;
+    spacing:                    10px;
+    margin:                     0;
+    padding:                    10px 15px;
+    background-color:           @crust;
+    text-color:                 #cdd6f4;
+    orientation:                horizontal;
+    children:                   [ "prompt", "entry" ];
+}
+
+prompt {
+    enabled:                    false;
+}
+
+entry {
+    enabled:                    true;
+    background-color:           transparent;
+    text-color:                 #cdd6f4;
+    cursor:                     text;
+    placeholder:                "Clipboard Search...";
+    placeholder-color:          #a6adc8;
+    font:                       "JetBrainsMono Nerd Font 12";
+}
+
+element {
+    padding:                    8px;
+    background-color:           #181825;
+    cursor:                     pointer;
+    orientation:                vertical;
+    text-color:                 #cdd6f4;
+    children:                   [ element-icon, element-text ];
+    border-radius:                6px;
+}
+
+element selected.normal,
+element selected.active,
+element selected.urgent {
+    background-color: @surface0;
+    text-color: @mauve;
+}
+
+element-icon {
+    // expand:                      true;
+    background-color:            transparent;
+    text-color:                  inherit;
+    size:                        4em;
+    cursor:                      inherit;
+}
+
+element-text {
+    padding:                    6px;
+    vertical-align:             0.5;
+    background-color:           transparent;
+    cursor:                     inherit;
+    text-color:                 inherit;
+    highlight:                  underline;
+    font:                       "Josefin Sans 12";
+}

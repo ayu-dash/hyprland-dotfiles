@@ -189,6 +189,10 @@ Singleton {
         return NetworkManager.hasSavedProfile(ssid);
     }
 
+    function connectingSsid(): string {
+        return NetworkManager.connectingSsid();
+    }
+
     function getWifiStatus(): void {
         NetworkManager.getWifiStatus(enabled => {
             root.wifiEnabled = enabled;

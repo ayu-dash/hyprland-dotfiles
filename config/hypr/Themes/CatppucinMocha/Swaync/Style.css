@@ -1,290 +1,256 @@
-@import "../Colors/CatppuccinMocha.css";
+@import "../Colors/Gtk.css";
+@import "../../../Resources/size.css";
 
 * {
     all: unset;
-    font-size: 14px;
     transition: 200ms;
 }
 
-trough highlight {
-    background: #cdd6f4;
-}
 
-scale trough {
-    margin: 0rem 1rem;
-    background-color: #313244;
-    min-height: 8px;
-    min-width: 70px;
-}
-
-slider {
-    background-color: #89b4fa;
-}
-
-.floating-notifications.background .notification-row .notification-background {
-    box-shadow:
-        0 0 8px 0 rgba(0, 0, 0, 0.8),
-        inset 0 0 0 1px @lavender;
-
+/* control center */
+.control-center {
+   box-shadow:
+        0 0 8px 0 rgba(0, 0, 0, 0.8);
     border-radius: 12.6px;
-    margin: 18px;
     background-color: @crust;
     color: #cdd6f4;
+    padding: 0 14px;
+}
+
+.control-center .notification-background {
+    border-radius: 7px;
+    color: #cdd6f4;
+    background-color: @base;
+    box-shadow: inset 0 0 0 1px #45475a;
+    margin: 7px;
+}
+
+.control-center .notification {
+    border: none;
+    color: @text;
+    font-weight: 700;
+    border-radius: 0;
+}
+
+.control-center .notification .summary {
+    color: @text;
+}
+
+.control-center .notification .body {
+    color: @subtext1;
+    font-weight: 400;
+}
+
+.control-center .notification progress {
+    background: @pink;
+    margin: 0;
+}
+
+.control-center .notification progress::-gtk-progress-bar {
+    background: @accent;
+}
+
+control-center .notification>*:last-child>* .notification-action {
+    background: @overlay2;
+    border: none;
+    color: @text;
+    border-radius: 0;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.control-center .notification>*:last-child>* .notification-action:hover {
+    background: @red;
+}
+
+.control-center .notification-background .close-button,
+.notification-group-close-button {
+    opacity: 0;
+}
+
+/* notification */
+.notification {
+    padding: 0 5px;
+    border-radius: 0;
+    color: @text;
+}
+
+.notification-background {
+    background: @crust;
+    border: 1px solid @lavender;
+    border-radius: 10px;
+    margin: 10px;
+}
+
+.notification .notification-content {
+    margin: 10px;
+}
+
+.notification-content .text-box {
+    margin: 4px;
+}
+
+.notification-content .time {
+    font-size: 0.85rem;
+    padding: 2px 0;
+    font-weight: 400;
+    color: @pink;
+}
+
+.notification .summary {
+    font-weight: 800;
+    margin-bottom: 2px;
+    padding: 2px 0;
+    font-size: 1rem;
+    color: @subtext1;
+}
+
+.notification .body {
+    color: @foreground-alt;
+    font-size: 0.8rem;
+}
+
+.notification.critical {
+    border-color: @danger;
+}
+
+.notification progress,
+.notification.low progress,
+.notification.normal progress,
+.notification.critical progress {
+    color: @pink;
+    background: @pink;
+    border-radius: 0;
+    min-height: 6px;
+    margin: 0;
     padding: 0;
 }
 
-.floating-notifications.background .notification-row .notification-background .notification {
-    padding: 7px;
-    border-radius: 12.6px;
+.notification progressbar trough {
+    background: @surface1;
+    border-radius: 10px;
+    min-height: 6px;
+    margin: 0;
+    padding: 0;
 }
 
-.floating-notifications.background .notification-row .notification-background .notification.critical {
-    box-shadow: inset 0 0 7px 0 #f38ba8;
-}
-
-.floating-notifications.background .notification-row .notification-background .notification .notification-content {
-    margin: 7px;
-}
-
-.floating-notifications.background .notification-row .notification-background .notification .notification-content .summary {
-    color: #cdd6f4;
-}
-
-.floating-notifications.background .notification-row .notification-background .notification .notification-content .time {
-    color: #a6adc8;
-}
-
-.floating-notifications.background .notification-row .notification-background .notification .notification-content .body {
-    color: #cdd6f4;
-    margin: -10px;
-}
-
-.floating-notifications.background .notification-row .notification-background .notification>*:last-child>* {
-    min-height: 3.4em;
-}
-
-.floating-notifications.background .notification-row .notification-background .notification>*:last-child>* .notification-action {
-    border-radius: 7px;
-    color: #cdd6f4;
-    background-color: #313244;
-    box-shadow: inset 0 0 0 1px #45475a;
-    margin: 7px;
-}
-
-.floating-notifications.background .notification-row .notification-background .notification>*:last-child>* .notification-action:hover {
-    box-shadow: inset 0 0 0 1px #45475a;
-    background-color: #313244;
-    color: #cdd6f4;
-}
-
-.floating-notifications.background .notification-row .notification-background .notification>*:last-child>* .notification-action:active {
-    box-shadow: inset 0 0 0 1px #45475a;
-    background-color: #74c7ec;
-    color: #cdd6f4;
-}
-
-.floating-notifications.background .notification-row .notification-background .close-button {
-    margin: 7px;
+.notification-background .close-button {
+    margin: 6px;
     padding: 2px;
-    border-radius: 6.3px;
-    color: #1e1e2e;
-    background-color: #f38ba8;
+    border-radius: 0;
+    background: transparent;
+    color: @red;
 }
 
-.floating-notifications.background .notification-row .notification-background .close-button:hover {
-    background-color: #eba0ac;
-    color: #1e1e2e;
+.notification>*:last-child>* {
+    min-height: 3.2em;
 }
 
-.floating-notifications.background .notification-row .notification-background .close-button:active {
-    background-color: #f38ba8;
-    color: #1e1e2e;
+.notification>*:last-child>* .notification-action {
+    background: @red;
+    margin: 0 6px 9px 6px;
+    border-radius: 0;
+    border: 1px solid @surface1;
+    color: @text;
 }
 
-.control-center {
-    box-shadow:
-        0 0 8px 0 rgba(0, 0, 0, 0.8),
-        inset 0 0 0 1px #313244;
-    border-radius: 12.6px;
-    /* margin: 18px; */
-    background-color: #1e1e2e;
-    color: #cdd6f4;
-    padding: 14px;
+
+.notification>*:last-child>* .notification-action:hover {
+    background: @red;
 }
 
-.control-center .widget-title>label {
-    color: #cdd6f4;
-    font-size: 1.3em;
+.notification>*:last-child>* .notification-action:active {
+    background: @red;
 }
 
-.control-center .widget-title button {
-    border-radius: 7px;
-    color: #cdd6f4;
-    background-color: #313244;
-    box-shadow: inset 0 0 0 1px #45475a;
-    padding: 8px;
+.notification-row .inline-reply-entry {
+    padding: 5px 10px;
+    background: @surface1;
+    border-radius: 0;
+    border: 1px solid @surface1;
+    color: @text;
 }
 
-.control-center .widget-title button:hover {
-    box-shadow: inset 0 0 0 1px #45475a;
-    background-color: #585b70;
-    color: #cdd6f4;
+.notification-row .inline-reply-button {
+    padding: 5px 10px;
+    border-radius: 0;
+    background: @surface1;
+    border: 1px solid @surface1;
+    color: @text;
 }
 
-.control-center .widget-title button:active {
-    box-shadow: inset 0 0 0 1px #45475a;
-    background-color: #74c7ec;
-    color: #1e1e2e;
+.notification-row .inline-reply .inline-reply-button:hover {
+    background: @surface1;
 }
 
-.control-center .notification-row .notification-background {
-    border-radius: 7px;
-    color: #cdd6f4;
-    background-color: #313244;
-    box-shadow: inset 0 0 0 1px #45475a;
-    margin-top: 14px;
-}
-
-.control-center .notification-row .notification-background .notification {
-    padding: 7px;
-    border-radius: 7px;
-}
-
-.control-center .notification-row .notification-background .notification.critical {
-    box-shadow: inset 0 0 7px 0 #f38ba8;
-}
-
-.control-center .notification-row .notification-background .notification .notification-content {
-    margin: 7px;
-}
-
-.control-center .notification-row .notification-background .notification .notification-content .summary {
-    color: #cdd6f4;
-}
-
-.control-center .notification-row .notification-background .notification .notification-content .time {
-    color: #a6adc8;
-}
-
-.control-center .notification-row .notification-background .notification .notification-content .body {
-    color: #cdd6f4;
-}
-
-.control-center .notification-row .notification-background .notification>*:last-child>* {
-    min-height: 3.4em;
-}
-
-.control-center .notification-row .notification-background .notification>*:last-child>* .notification-action {
-    border-radius: 7px;
-    color: #cdd6f4;
-    background-color: #11111b;
-    box-shadow: inset 0 0 0 1px #45475a;
-    margin: 7px;
-}
-
-.control-center .notification-row .notification-background .notification>*:last-child>* .notification-action:hover {
-    box-shadow: inset 0 0 0 1px #45475a;
-    background-color: #313244;
-    color: #cdd6f4;
-}
-
-.control-center .notification-row .notification-background .notification>*:last-child>* .notification-action:active {
-    box-shadow: inset 0 0 0 1px #45475a;
-    background-color: #74c7ec;
-    color: #cdd6f4;
-}
-
-.control-center .notification-row .notification-background .close-button {
-    margin: 7px;
-    padding: 2px;
-    border-radius: 6.3px;
-    color: #1e1e2e;
-    background-color: #eba0ac;
-}
-
-.close-button {
-    border-radius: 6.3px;
-}
-
-.control-center .notification-row .notification-background .close-button:hover {
-    background-color: #f38ba8;
-    color: #1e1e2e;
-}
-
-.control-center .notification-row .notification-background .close-button:active {
-    background-color: #f38ba8;
-    color: #1e1e2e;
-}
-
-.control-center .notification-row .notification-background:hover {
-    box-shadow: inset 0 0 0 1px #45475a;
-    background-color: #7f849c;
-    color: #cdd6f4;
-}
-
-.control-center .notification-row .notification-background:active {
-    box-shadow: inset 0 0 0 1px #45475a;
-    background-color: #74c7ec;
-    color: #cdd6f4;
-}
-
-.notification.critical progress {
-    background-color: #f38ba8;
-}
-
-.notification.low progress,
-.notification.normal progress {
-    background-color: #89b4fa;
-}
-
-.control-center-dnd {
-    margin-top: 5px;
-    border-radius: 8px;
-    background: #313244;
-    border: 1px solid #45475a;
-    box-shadow: none;
-}
-
-.control-center-dnd:checked {
-    background: #313244;
-}
-
-.control-center-dnd slider {
-    background: #45475a;
-    border-radius: 8px;
-}
-
+/* Widget dnd */
 .widget-dnd {
-    margin-bottom: 10px;
-    font-size: 1.1rem;
+    margin-top: 12px;
+    margin-bottom: 12px;
+    color: @text;
+    border: none;
 }
 
-.widget-dnd>switch {
-    font-size: initial;
-    border-radius: 8px;
-    background: #313244;
-    border: 1px solid #45475a;
+.widget-dnd>label {
+    font-size: 1rem;
+}
+
+.widget-dnd switch {
+    background: @surface1;
+    border-radius: 10px;
     box-shadow: none;
+    padding: 2px;
+    border: none;
+}
+
+.widget-dnd switch slider {
+    background: @lavender;
+    border-radius: 10px;
 }
 
 .widget-dnd>switch:checked {
     background: @lavender;
 }
 
-.widget-dnd>switch slider {
-    background: #45475a;
+.widget-dnd switch:checked slider {
+    background: @surface1;
+    border-radius: 10px;
+}
+
+.widget-dnd switch:hover {
+    background: @surface0;
+}
+
+/* widget mpris */
+.widget-mpris {
+    margin-bottom: 12px;
     border-radius: 8px;
-    border: 1px solid #6c7086;
+    background: @crust;
 }
 
 .widget-mpris>box {
     border-radius: 8px;
-    background: #313244;
+    background: @crust;
 }
 
-.widget-mpris .widget-mpris-player {
-    background: #313244;
-    padding: 7px;
+.mpris-overlay {
+    background: @base;
+    border-radius: 8px;
+    color: @text;
+    padding: 8px;
+    margin-bottom: 0px;
+}
+
+.widget-mpris-album-art {
+    border-radius: 8px;
+    margin: 2px;
+    border: none;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.15);
+}
+
+.widget-mpris-player {
+    border-radius: 8px;
+    color: @text;
+    background: @crust;
 }
 
 .widget-mpris .widget-mpris-title {
@@ -295,60 +261,48 @@ slider {
     font-size: 0.8rem;
 }
 
-.widget-menubar>box>.menu-button-bar>button>label {
-    font-size: 3rem;
-    padding: 0.5rem 2rem;
+.widget-mpris-title,
+.widget-mpris-subtitle {
+    font-weight: 700;
+    margin: 0 3px;
 }
 
-.widget-menubar>box>.menu-button-bar> :last-child {
-    color: #f38ba8;
+.widget-mpris-title {
+    font-size: 1.2rem;
+    color: @text;
 }
 
-.power-buttons button:hover,
-.powermode-buttons button:hover,
-.screenshot-buttons button:hover {
-    background: #313244;
+.widget-mpris-subtitle {
+    font-size: 0.9rem;
+    color: @subtext1;
 }
 
-.control-center .widget-label>label {
-    color: #cdd6f4;
-    font-size: 2rem;
+/* notification group */
+.notification-group {
+    margin: 0px 12px;
 }
 
-.widget-buttons-grid {
-    padding-top: 1rem;
+.notification-group-headers {
+    font-weight: bold;
+    color: @text;
 }
 
-.widget-buttons-grid>flowbox>flowboxchild>button label {
-    font-size: 2.5rem;
+.notification-group-headers>label {
+    margin: 0 3px;
+    font-size: 1rem;
 }
 
-.widget-volume {
-    padding-top: 1rem;
+.notification-group-close-all-button {
+    background: transparent;
+    color: @red;
+    margin: 4px;
+    border-radius: 0;
+    padding: 4px;
 }
 
-.widget-volume label {
-    font-size: 1.5rem;
-    color: #74c7ec;
+.notification-group-close-all-button:hover {
+    background: @red;
+    color: @text;
+    border-radius: 50px;
 }
 
-.widget-volume trough highlight {
-    background: #74c7ec;
-}
-
-.widget-backlight trough highlight {
-    background: #f9e2af;
-}
-
-.widget-backlight label {
-    font-size: 1.5rem;
-    color: #f9e2af;
-}
-
-.widget-backlight .KB {
-    padding-bottom: 1rem;
-}
-
-.image {
-    padding-right: 0.5rem;
-}

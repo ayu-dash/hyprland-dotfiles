@@ -83,7 +83,7 @@
         ],
         "format-disconnected": "󰤭",
         "tooltip-format": "  {bandwidthUpBytes}   |     {bandwidthDownBytes}",
-        "on-click-right": "kitty nmtui",
+        "on-click": "kitty wlctl"
     },
     "backlight": {
         "device": "intel_backlight",
@@ -120,8 +120,10 @@
         },
     },
     "clock": {
+
+        "on-click": "python ~/.config/hypr/Themes/CatppucinMocha/Bar/Scripts/ToggleGsimplecal.py --margin-y 55 --center --pin",
         "format": "{:%H:%M}",
-        "tooltip": true,
+        "tooltip": false,
         "tooltip-format": "<tt><small>{calendar}</small></tt>",
         "calendar": {
             "mode": "year",
@@ -138,11 +140,11 @@
         },
     },
     "cpu": {
-        "format": "<span color='#74c7ec'></span>  {usage}%",
+        "format": "<span color='#74c7ec'></span>   {usage}%",
         "tooltip": false,
     },
     "memory": {
-        "format": "<span color='#94e2d5'></span>  {percentage}%",
+        "format": "<span color='#94e2d5'></span>   {percentage}%",
         "tooltip": false,
     },
     "temperature": {
@@ -151,12 +153,16 @@
         "critical-threshold": 80,
         "tooltip": false,
     },
-    "custom/wifi": {
-        "format": "{}",
-        "exec": "python $HOME/.config/hypr/Themes/CatppucinMocha/Bar/Scripts/WifiSignal.py",
-        "return-type": "json",
-        "interval": 1,
-        "on-click": "kitty impala",
-        "tooltip": true,
-    },
+    "bluetooth": {
+        "format-on": "<span color='#89b4fa'></span>",
+        "format-off": "<span color='#f38ba8'>󰂲</span>",
+        "format-disabled": "",
+        "format-no-controller": "",
+        "format-connected": "<b></b>",
+        "tooltip-format": "{controller_alias}\t{controller_address}\n\n{num_connections} connected",
+        "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{num_connections} connected\n\n{device_enumerate}",
+        "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+        "tooltip-format-enumerate-connected-battery": "{device_alias}\t{device_address}\t{device_battery_percentage}%",
+        "on-click": "kitty bluetui",
+    }
 }

@@ -25,3 +25,12 @@ Thumbs.db
 
 # Cache
 .cache/
+
+# Build artifacts and compiled objects
+build/
+**/build/
+*.gch
+*.o
+CMakeFiles/
+CMakeCache.txt
+

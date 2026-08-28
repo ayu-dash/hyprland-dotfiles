@@ -1,7 +1,7 @@
 {
     "custom/power": {
         "format": "<span color='#f38ba8'>⏻</span>",
-        "on-click": "python $HOME/.config/hypr/Scripts/Wlogout.py",
+        "on-click": "python $HOME/.config/hypr/Scripts/RofiLauncher.py session",
         "tooltip": false,
     },
     "custom/kahfein": {
@@ -29,21 +29,8 @@
         "return-type": "json",
         "exec-if": "which swaync-client",
         "exec": "swaync-client -swb",
-        "on-click": "swaync-client -t -sw",
+        "on-click": "python ~/.config/hypr/Themes/CatppucinMocha/Swaync/GenerateSize.py && swaync-client -t -sw",
         "on-click-right": "swaync-client -d -sw",
         "escape": true,
-    },
-    "custom/battery": {
-        "format": "<sub>{}</sub>",
-        "exec": "python $HOME/.config/hypr/Themes/NierAutomata/Bar/Scripts/BatteryAnimation.py",
-        "return-type": "json",
-        "interval": 1,
-        "tooltip": false,
-    },
-    "custom/battery-text": {
-        "format": "<sub>{}</sub>",
-        "exec": "cat /sys/class/power_supply/BAT*/capacity | head -1 | xargs -I{} echo '{}%'",
-        "interval": 30,
-        "tooltip": false,
-    },
+    }
 }

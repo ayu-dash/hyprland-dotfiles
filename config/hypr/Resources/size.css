@@ -1,0 +1,10 @@
+#waybar.eDP-1 {
+  font-size: 16px;
+  min-height: 42px;
+}
+
+
+#waybar.HDMI-A-1 {
+  font-size: 12px;
+  min-height: 30px;
+}

@@ -25,6 +25,14 @@ hl.window_rule({
 
 hl.window_rule({
   match = {
+    class = "^(org.freedesktop.impl.portal.desktop.kde)$"
+  },
+  float = true,
+  center = true
+})
+
+hl.window_rule({
+  match = {
     class = "^(xdg-desktop-portal-gtk)$"
   },
   tile = true
@@ -37,3 +45,11 @@ hl.window_rule({
   center = true
 })
 
+-- fix ozone
+hl.window_rule({
+	match = {
+		class = "^()$",
+		title = "^()$"
+	},
+	no_blur = true
+})

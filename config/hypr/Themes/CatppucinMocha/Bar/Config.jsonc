@@ -1,6 +1,10 @@
 {
   "layer": "top",
   "spacing": 10,
+  "output": [
+    "eDP-1",
+    "HDMI-A-1"
+  ],
   "margin-top": 10,
   "margin-left": 10,
   "margin-right": 10,
@@ -26,6 +30,7 @@
       "network",
       "battery",
       "tray",
+      "bluetooth",
       "custom/kahfein",
       "custom/power"
     ]

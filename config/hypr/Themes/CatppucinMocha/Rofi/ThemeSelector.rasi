@@ -1,0 +1,71 @@
+@import "Base.rasi"
+
+configuration {
+    show-icons:                 false;
+}
+
+window {
+    transparency: "real";
+    location: center;
+    anchor: center;
+    fullscreen: false;
+    width: 260px;
+    padding: 1px;
+    background-color: @crust;
+    border: 1px solid;
+    border-color: @border-color;
+    border-radius: 8px;
+}
+
+mainbox {
+    enabled: true;
+    background-color: @crust;
+    orientation: vertical;
+    children: [ "listbox" ];
+}
+
+listbox {
+    spacing: 10px;
+    padding: 8px;
+    background-color: transparent;
+    children: [ "listview" ];
+}
+
+listview {
+    enabled: true;
+    columns: 1;
+    lines: 10;
+    cycle: true;
+    dynamic: true;
+    scrollbar: false;
+    layout: vertical;
+    reverse: false;
+    fixed-height: false;
+    fixed-columns: false;
+    spacing: 8px;
+    background-color: transparent;
+    cursor: "default";
+}
+
+element {
+    padding: 8px 10px;
+    background-color: @mantle;
+    cursor: pointer;
+    orientation: horizontal;
+    text-color: @text;
+    border-radius: 6px;
+}
+
+element selected.normal {
+    background-color: @surface0;
+    text-color: @mauve;
+}
+
+element-text {
+    vertical-align: 0.5;
+    background-color: transparent;
+    cursor: inherit;
+    text-color: inherit;
+    font: "JetBrainsMono Nerd Font 12";
+}
+

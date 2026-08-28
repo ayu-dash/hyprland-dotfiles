@@ -103,7 +103,7 @@ extract_archives() {
 install_packages_from_file() {
     local file="$1" installer="$2"
     local total=$(count_packages "$file") current=0 failed=()
-    
+
     local -a cmd=($installer -S --noconfirm)
     [[ "$installer" == "yay" ]] && cmd+=(--answerclean All --answerdiff None --answeredit None --answerupgrade All)
 
@@ -111,7 +111,7 @@ install_packages_from_file() {
         [[ -z "$pkg" || "$pkg" =~ ^# ]] && continue
         ((current++))
         echo -e "\n${GRAY}($current/$total)${NC} Installing ${CYAN}$pkg${NC}..."
-        
+
         if [[ "$installer" == "yay" ]]; then
             yes "" | "${cmd[@]}" "$pkg" || failed+=("$pkg")
         else

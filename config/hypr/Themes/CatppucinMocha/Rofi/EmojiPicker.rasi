@@ -1,0 +1,105 @@
+@import "Base.rasi"
+
+configuration {
+    show-icons:                 false;
+	font:						"JetBrains Mono Semibold 11";
+}
+
+window {
+    transparency: "real";
+    location: center;
+    anchor: center;
+    fullscreen: false;
+    width: 380px;
+    padding: 2px;
+    background-color: @crust;
+    border: 1px solid;
+    border-color: #cba6f7;
+    border-radius: 8px;
+}
+
+mainbox {
+    enabled:                    true;
+    background-color:           @crust;
+    orientation:                vertical;
+    children:                   [ "inputbar", "listbox" ];
+}
+
+
+listbox {
+    spacing:                    15px;
+    padding:                    6px;
+    background-color:           transparent;
+    children:                   [ "listview" ];
+}
+
+listview {
+    enabled:                    true;
+    columns:                    8;
+    lines:                      10;
+    cycle:                      true;
+    dynamic:                    true;
+    scrollbar:                  false;
+    layout:                     vertical;
+    reverse:                    false;
+    fixed-height:               false;
+    fixed-columns:              false;
+    spacing:                    10px;
+    background-color:           transparent;
+    cursor:                     "default";
+}
+
+inputbar {
+    enabled: true;
+    spacing: 10px;
+    margin: 0;
+    padding: 10px 15px;
+    background-color: @crust;
+    text-color: #cdd6f4;
+    orientation: horizontal;
+    children: [ "prompt", "entry" ];
+}
+
+prompt {
+    enabled:                    false;
+}
+
+entry {
+    enabled: true;
+    background-color: transparent;
+    text-color: #cdd6f4;
+    cursor: text;
+    placeholder: "Emoji Search...";
+    placeholder-color: #a6adc8;
+    font: "JetBrainsMono Nerd Font 12";
+}
+
+element {
+    padding: 8px;
+    background-color: #181825;
+    cursor: pointer;
+    orientation: horizontal;
+    text-color: #cdd6f4;
+    border-radius: 8px;
+}
+
+element normal.normal,
+element alternate.normal {
+    background-color: #181825;
+    text-color: #cdd6f4;
+}
+
+element selected.normal,
+element selected.active,
+element selected.urgent {
+    background-color: @surface0;
+    text-color: @mauve;
+}
+
+element-text {
+    vertical-align:             0.5;
+    horizontal-align:           0.5;
+    background-color:           transparent;
+    cursor:                     inherit;
+}
+

@@ -1,0 +1,140 @@
+@import "Base.rasi"
+
+configuration {
+	modi: 						"drun";
+	icon-theme: 				"Papirus-Dark";
+	application-fallback-icon: 	"Adwaita";
+    show-icons:                 true;
+	drun-display-format:        "{name}";
+	disable-history:            true;
+	sidebar-mode: 				false;
+	
+	hover-select:				true;
+	me-select-entry:			"";
+	me-accept-entry:			"MousePrimary";
+}
+
+window {
+    transparency:                "real";
+    location:                    center;
+    anchor:                      center;
+    fullscreen:                  false;
+    width:                       550px;
+    x-offset:                    0px;
+    y-offset:                    0px;
+    enabled:                     true;
+    border-radius:               12px;
+    cursor:                      "default";
+    padding:                     1px;
+    background-color:            @crust;
+    border:                      1px solid;
+    border-color:                #cba6f7;
+}
+
+
+mainbox {
+    enabled:                     true;
+    spacing:                     0px;
+    border-radius:               12px;
+    background-color:            @crust;
+    orientation:                 vertical;
+    children:                    [ "inputbar", "listbox" ];
+}
+
+listbox {
+    spacing:                     10px;
+    padding:                     15px 15px;
+    background-color:            transparent;
+    orientation:                 vertical;
+    children:                    [ "listview" ];
+}
+
+inputbar {
+    enabled:                     true;
+    spacing:                     10px;
+    padding:                     50px 100px;
+    background-color:            @crust;
+    background-image:            var(img-background);
+    text-color:                  #cdd6f4;
+    orientation:                 horizontal;
+    children:                    [ "textbox-prompt-colon", "entry" ];
+}
+
+textbox-prompt-colon {
+    enabled:                     true;
+    expand:                      false;
+    font:                        "JetBrainsMono NF Bold 9";
+    str:                         "";
+    padding:                     12px 19px 0 15px;
+    border-radius:               8px;
+    background-color:            @crust;
+    text-color:                  #cdd6f4;
+}
+
+entry {
+    enabled:                     true;
+    expand:                      true;
+    padding:                     12px 12px;
+    border-radius:               8px;
+    background-color:            @crust;
+    text-color:                  #cdd6f4;
+    cursor:                      text;
+    placeholder:                 "Search";
+    placeholder-color:           #a6adc8;
+}
+
+listview {
+    enabled:                     true;
+    columns:                     2;
+    lines:						 2;
+    cycle:                       true;
+    dynamic:                     true;
+    scrollbar:                   false;
+    layout:                      vertical;
+    reverse:                     false;
+    fixed-height:                true;
+    fixed-columns:               true;
+    spacing:                     3px;
+    background-color:            transparent;
+    text-color:                  @text;
+    cursor:                      "default";
+}
+
+element {
+    enabled:                     true;
+    border-radius:               4px;
+    background-color:            transparent;
+    text-color:                  @text;
+    cursor:                      pointer;
+    orientation:                 vertical;
+    padding:                     10px;
+    spacing:                     -90px;
+    children:                    [element-icon, element-text];
+}
+
+element normal.normal {
+    background-color:            inherit;
+    text-color:                  inherit;
+}
+
+element selected.normal,
+element selected.active,
+element selected.urgent {
+    background-color: @surface0;
+    text-color: @mauve;
+}
+
+element-icon {
+    background-color:            transparent;
+    text-color:                  inherit;
+    size:                        240px;
+    vertical-align:              0;
+    cursor:                      inherit;
+}
+
+element-text {
+    background-color:            transparent;
+    horizontal-align:            0.5;
+    text-color:                  inherit;
+    cursor:                      inherit;
+}

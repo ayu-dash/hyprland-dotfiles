@@ -1,0 +1,88 @@
+@import "Base.rasi"
+
+configuration {
+    show-icons:                 false;
+}
+
+window {
+    transparency: "real";
+    location: center;
+    anchor: center;
+    fullscreen: false;
+    width: 270px;
+    padding: 2px;
+    background-color: @crust;
+    border: 1px solid;
+    border-color: @border-color;
+    border-radius: 8px;
+}
+
+mainbox {
+    enabled: true;
+    background-color: @crust;
+    orientation: vertical;
+    children: [ "listbox" ];
+}
+
+listbox {
+    spacing: 10px;
+    padding: 8px;
+    background-color: transparent;
+    children: [ "listview" ];
+}
+
+listview {
+    enabled: true;
+    columns: 1;
+    lines: 10;
+    cycle: true;
+    dynamic: true;
+    scrollbar: false;
+    layout: vertical;
+    reverse: false;
+    fixed-height: false;
+    fixed-columns: false;
+    spacing: 8px;
+    background-color: transparent;
+    cursor: "default";
+}
+
+element {
+    padding: 10px 12px;
+    background-color: #181825;
+    cursor: pointer;
+    orientation: horizontal;
+    text-color: #cdd6f4;
+    border-radius: 6px;
+}
+
+element normal.normal,
+element alternate.normal {
+    background-color: #181825;
+    text-color: #cdd6f4;
+}
+
+element normal.active,
+element alternate.active,
+element selected.normal,
+element selected.active,
+element selected.urgent,
+element alternate.urgent {
+    background-color: @surface0;
+    text-color: @mauve;
+}
+
+element normal.urgent,
+element alternate.urgent {
+    background-color: #181825;
+    text-color: #f38ba8;
+}
+
+element-text {
+    vertical-align: 0.5;
+    background-color: transparent;
+    cursor: inherit;
+    text-color: inherit;
+    font: "JetBrainsMono Nerd Font 12";
+}
+
